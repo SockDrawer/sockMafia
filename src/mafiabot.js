@@ -520,7 +520,15 @@ function verifyPlayerCanVote(game, voter) {
 
 function revokeCurrentVote(game, voter, post, type) {
 	const promiseArray = [];
-	return dao.getCurrentActionByPlayer(game, voter, type).then((votes) => {
+
+	return new Promise((resolve) => { 
+		if (type) {
+			resolve(dao.getCurrentActionByPlayer(game, voter, type));
+		} else {
+			resolve(dao.getCurrentVoteByPlayer(game, voter));
+		}
+	})
+	.then((votes) => {
 		if (!votes) {
 			return true;
 		}
