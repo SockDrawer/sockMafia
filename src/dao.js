@@ -606,7 +606,7 @@ module.exports = {
 		});
 	},
 
-	getCurrentActionByPlayer(game, player, action) {
+	getCurrentActionByPlayer: function(game, player, action) {
 		return Promise.join(
 			module.exports.getGameById(game),
 			module.exports.getPlayerByName(player),
@@ -624,7 +624,7 @@ module.exports = {
 		);
 	},
 
-	getCurrentActions(game) {
+	getCurrentActions: function (game) {
 		return module.exports.getGameById(game)
 			.then((gameInstance) => {
 				return Models.actions.findAll({
