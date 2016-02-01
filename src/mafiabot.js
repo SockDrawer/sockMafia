@@ -122,6 +122,16 @@ function reportError (command, preface, error) {
 	);
 }
 
+/*eslint-disable no-console*/
+function logErrorToConsole(error) {
+	//Only log when we're not in a test
+	if (typeof global.it !== 'function') {
+		console.log('ERROR: ' + error.toString());
+		console.log(error.stack);
+	}
+}
+/*eslint-enable no-console*/
+
 function respondWithTemplate(templateFile, data, command) {
 	return readFile(__dirname + '/' + templateFile)
 	.then((buffer) => {
@@ -819,6 +829,9 @@ function doVote(game, post, voter, target, input, voteNum) {
 			.then((text) => {
 				text += '\n<hr />\n';
 				text += getVoteAttemptText(false);
+
+				//Log error
+				logErrorToConsole(reason);
 				internals.browser.createPost(game, post, text, () => 0);
 			});
 		});
