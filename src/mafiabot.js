@@ -12,9 +12,11 @@
 // Requisites
 
 const dao = require('./dao.js');
+const modController = require('./mod_controller');
 const Promise = require('bluebird');
 const readFile = require('fs-readfile-promise');
 const Handlebars = require('handlebars');
+const validator = require('./validator');
 Handlebars.registerHelper('voteChart', require('./templates/helpers/voteChart'));
 Handlebars.registerHelper('listNames', require('./templates/helpers/listNames'));
 
@@ -32,10 +34,9 @@ const internals = {
 exports.internals = internals;
 
 // Local extensions
-
 /*eslint-disable no-extend-native*/
 Array.prototype.contains = function(element){
-    return this.indexOf(element) > -1;
+	return this.indexOf(element) > -1;
 };
 /*eslint-enable no-extend-native*/
 
@@ -71,6 +72,15 @@ exports.defaultConfig = {
 };
 
 // Helper functions
+// 
+
+function patchIn(module) {
+	for (const property in module) {
+		if (typeof property === 'function' && module.hasOwnProperty(property)) {
+			exports.property = property;
+		}
+	}
+}
 
 function lynchPlayer(game, target) {
 	return dao.setCurrentTime(game, dao.gameTime.night)
@@ -86,32 +96,6 @@ function lynchPlayer(game, target) {
 		});
 }
 
-
-function mustBeTrue(check, args, error) {
-	return check.apply(null, args).then((result) => {
-		if (result) {
-			return Promise.resolve();
-		} else {
-			return Promise.reject(error);
-		}
-	});
-}
-
-function mustBeFalse(check, args, error) {
-	return check.apply(null, args).then((result) => {
-		if (!result) {
-			return Promise.resolve();
-		} else {
-			return Promise.reject(error);
-		}
-	});
-}
-
-function isDaytime(game) {
-	return dao.getCurrentTime(game).then((time) => {
-		return time === dao.gameTime.day;
-	});
-}
 
 function reportError (command, preface, error) {
 	internals.browser.createPost(
@@ -172,6 +156,7 @@ function registerPlayerCommands(events) {
 }
 
 function registerModCommands(events) {
+	patchIn(modController);
 	events.onCommand('prepare', 'Start a new game', exports.prepHandler, () => 0);
 	events.onCommand('start', 'move a game into active play (mod only)', exports.startHandler, () => 0);
 	events.onCommand('new-day', 'move on to a new day (mod only)', exports.dayHandler, () => 0);
@@ -211,276 +196,6 @@ function registerPlayers(game, players) {
 
 // Exported functions and objects
 
-// Mod commands
- 
- /**
-  * Prepare: A mod function that starts a new game in the Prep phase.
-  * Must be used in the game thread. The user becomes the mod.
-  * Game rules:
-  *  - A new game can only be started in a thread that does not already have a game
-  *
-  * @example !prepare gameName
-  *
-  * @param  {commands.command} command The command that was passed in.
-  * @returns {Promise}        A promise that will resolve when the game is ready
-  */
-exports.prepHandler = function (command) {
-	const id = command.post.topic_id;
-	const player = command.post.username;
-	const gameName = command.args[0];
-
-	return dao.getGameStatus(id)
-		.then(
-			(status) => {
-				if (status === dao.gameStatus.auto) {
-					return dao.convertAutoToPrep(id, gameName);
-				}
-				return Promise.reject('Game is in the wrong status. The game is ' + status);
-			},
-			() => dao.addGame(id, gameName))
-		.then(() => dao.addMod(id, player))
-		.then(() => {
-			internals.browser.createPost(command.post.topic_id,
-				command.post.post_number,
-				'Game "' + gameName + '" created! The mod is @' + player, () => 0);
-		})
-		.catch((err) => {
-			reportError(command, 'Error when starting game: ', err);
-		});
-};
-
- /**
-  * Start: A mod function that starts day 1 of a game
-  * Must be used in the game thread.
-  *
-  * Game rules:
-  *  - A game can only be started if it is in the prep phase
-  *  - A game can only be started by the mod
-  *  - When the game starts, it starts on Daytime of Day 1
-  *
-  * @example !start
-  *
-  * @param  {commands.command} command The command that was passed in.
-  * @returns {Promise}        A promise that will resolve when the game is ready
-  */
-exports.startHandler = function (command) {
-	const game = command.post.topic_id;
-	const mod = command.post.username;
-	
-	return dao.getGameStatus(game)
-		.then((status) => {
-			if (status === dao.gameStatus.prep) {
-				return Promise.resolve();
-			}
-			if (status === dao.gameStatus.auto) {
-				return Promise.reject('Game not in prep phase. Try `!prepare`.');
-			}
-			return Promise.reject('Game already ' + status);
-		})
-		.then(() => mustBeTrue(dao.isPlayerMod, [game, mod], 'Poster is not mod'))
-		.then(() => dao.setGameStatus(game, dao.gameStatus.running))
-		.then(() => dao.incrementDay(game))
-		.then(() => dao.setCurrentTime(game, dao.gameTime.day))
-		.then(() => {
-			return respondWithTemplate('templates/modSuccess.handlebars', {
-				command: 'Start game',
-				results: 'Game is now ready to play',
-				game: game
-			}, command);
-		})
-		.catch((err) => reportError(command, 'Error when starting game: ', err));
-};
-
-exports.setHandler = function (command) {
-	const game = command.post.topic_id;
-	const mod = command.post.username;
-	const target = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
-	const property = command.args[1];
-	
-	const validProperties = [
-		'loved',
-		'hated',
-		'doublevoter'
-	];
-	
-	return dao.getGameStatus(game)
-		.then((status) => {
-			if (status === dao.gameStatus.finished) {
-				return Promise.reject('The game is over!');
-			}
-			return Promise.resolve();
-		})
-		.then(() => mustBeTrue(dao.isPlayerMod, [game, mod], 'Poster is not mod'))
-		.then(() => mustBeTrue(dao.isPlayerInGame, [game, target], 'Target not valid'))
-		.then(() => {
-			if (!validProperties.contains(property.toLowerCase())) {
-				return Promise.reject('Property not valid.\n Valid properties: ' + validProperties.join(', '));
-			}
-		})
-		.then(() => dao.addPropertyToPlayer(game, target, property.toLowerCase()))
-		.then(() => {
-			return respondWithTemplate('templates/modSuccess.handlebars', {
-				command: 'Set property',
-				results: 'Player ' + target + ' is now ' + property,
-				game: game
-			}, command);
-		})
-		.catch((err) => reportError(command, 'Error setting player property: ', err));
-};
-
- /**
-  * New-day: A mod function that starts a new day
-  * Must be used in the game thread.
-  *
-  * Game rules:
-  *  - A game can only advance to day when it is in the night phase
-  *  - A game can only be advanced by the mod
-  *  - When a new day starts, the vote counts from the previous day are reset
-  *  - When a new day starts, the list of players is output for convenience
-  *  - When a new day starts, the "to-lynch" count is output for convenience
-  *
-  * @example !new-day
-  *
-  * @param  {commands.command} command The command that was passed in.
-  * @returns {Promise}        A promise that will resolve when the game is ready
-  */
-exports.dayHandler = function (command) {
-	const game = command.post.topic_id;
-	const mod = command.post.username;
-	const data = {
-		numPlayers: 0,
-		toExecute: 0,
-		day: 0,
-		names: []
-	};
-
-	return dao.getGameStatus(game)
-		.then((status) => {
-			if (status === dao.gameStatus.running) {
-				return Promise.resolve();
-			}
-			return Promise.reject('Game not started. Try `!start`.');
-		})
-		.then(() => dao.getCurrentTime(game))
-		.then((time) => {
-			if (time === dao.gameTime.night) {
-				return Promise.resolve();
-			}
-			return Promise.reject('Cannot move to a new day until it is night.');
-		})
-		.then(() => mustBeTrue(dao.isPlayerMod, [game, mod], 'Poster is not mod'))
-		.then(() => dao.incrementDay(game))
-		.then(() => dao.getGameById(game))
-		.then((gameInstance) => {
-			data.day = gameInstance.day;
-			const text = 'Incremented day for ' + gameInstance.name;
-			internals.browser.createPost(command.post.topic_id, command.post.post_number, text, () => 0);
-			return dao.setCurrentTime(game, dao.gameTime.day);
-		}).then(() => {
-			return Promise.join(
-				dao.getNumToLynch(game),
-				dao.getLivingPlayers(game),
-				readFile(__dirname + '/templates/newDayTemplate.handlebars'),
-				(toLynch, livingPlayers, sourceFile) => {
-					data.toExecute = toLynch;
-					data.numPlayers = livingPlayers.length;
-					const source = sourceFile.toString();
-
-					data.names = livingPlayers.map((row) => {
-						return row.player.properName;
-					});
-
-					const template = Handlebars.compile(source);
-
-					const output = template(data);
-					internals.browser.createPost(game, command.post.post_number, output, () => 0);
-				}
-			);
-		})
-		.catch((err) => reportError(command, 'Error incrementing day: ', err));
-};
-
- /**
-  * Kill: A mod function that modkills or nightkills a player.
-  * Must be used in the game thread.
-  *
-  * Game rules:
-  *  - A player can only be killed if they are already in the game.
-  *  - A player can only be killed if they are alive.
-  *  - A player can only be !killed by the mod.
-  *
-  * @example !kill playerName
-  *
-  * @param  {commands.command} command The command that was passed in.
-  * @returns {Promise}        A promise that will resolve when the game is ready
-  */
-exports.killHandler = function (command) {
-	const game = command.post.topic_id;
-	const mod = command.post.username;
-	// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
-	// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
-	const target = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
-	
-	return dao.getGameStatus(game)
-		.then((status) => {
-			if (status === dao.gameStatus.running) {
-				return Promise.resolve();
-			}
-			return Promise.reject('Game not started. Try `!start`.');
-		})
-		.then(() => mustBeTrue(dao.isPlayerMod, [game, mod], 'Poster is not mod'))
-		.then(() => mustBeTrue(dao.isPlayerInGame, [game, target], 'Target not in game'))
-		.then(() => mustBeTrue(dao.isPlayerAlive, [game, target], 'Target not alive'))
-		.then(() => dao.killPlayer(game, target))
-		.then(() => dao.getGameById(game))
-		.then(() => {
-			return respondWithTemplate('templates/modSuccess.handlebars', {
-				command: 'Kill',
-				results: 'Killed @' + target,
-				game: game
-			}, command);
-		})
-		.catch((err) => reportError(command, 'Error killing player: ', err));
-};
-
- /**
-  * End: A mod function that ends the game
-  * Must be used in the game thread.
-  *
-  * Game rules:
-  *  - A game can only be ended if it is running
-  *  - A game can only be ended by the mod
-  *  - When the game ends, surviving players are listed for convenience
-  *
-  * @example !end
-  *
-  * @param  {commands.command} command The command that was passed in.
-  * @returns {Promise}        A promise that will resolve when the game is ready
-  */
-exports.finishHandler = function (command) {
-	const game = command.post.topic_id;
-	const mod = command.post.username;
-
-	return dao.getGameStatus(game)
-		.then((status) => {
-			if (status === dao.gameStatus.running) {
-				return Promise.resolve();
-			}
-			return Promise.reject('Game not started. Try `!start`.');
-		})
-		.then(() => mustBeTrue(dao.isPlayerMod, [game, mod], 'Poster is not mod'))
-		.then(() => dao.incrementDay(game))
-		.then(() => dao.setGameStatus(game, dao.gameStatus.finished))
-		.then(() => exports.listAllPlayersHandler(command))
-		.then(() => {
-			return respondWithTemplate('templates/modSuccess.handlebars', {
-				command: 'End game',
-				results: 'Game now finished.',
-				game: game
-			}, command);
-		})
-		.catch((err) => reportError(command, 'Error finalizing game: ', err));
-};
 
 // Player commands
 
@@ -565,11 +280,11 @@ exports.voteHandler = function (command) {
 		})
 		.then(() => {
 			return Promise.all([
-				mustBeTrue(dao.isPlayerInGame, [game, voter], 'Voter not in game'),
-				mustBeTrue(dao.isPlayerAlive, [game, voter], 'Voter not alive'),
-				mustBeTrue(dao.isPlayerInGame, [game, target], 'Target not in game'),
-				mustBeTrue(dao.isPlayerAlive, [game, target], 'Target not alive'),
-				mustBeTrue(isDaytime, [game], 'It is not day')
+				validator.mustBeTrue(dao.isPlayerInGame, [game, voter], 'Voter not in game'),
+				validator.mustBeTrue(dao.isPlayerAlive, [game, voter], 'Voter not alive'),
+				validator.mustBeTrue(dao.isPlayerInGame, [game, target], 'Target not in game'),
+				validator.mustBeTrue(dao.isPlayerAlive, [game, target], 'Target not alive'),
+				validator.mustBeTrue(validator.isDaytime, [game], 'It is not day')
 			]);
 		})
 		.then(() => dao.addVote(game, post, voter, target))
@@ -694,7 +409,7 @@ exports.joinHandler = function (command) {
 			}
 			return Promise.reject('Cannot join game in progress.');
 		})
-		.then(() => mustBeFalse(dao.isPlayerInGame, [id, player], 'You are already in this game, @' + player + '!'))
+		.then(() => validator.mustBeFalse(dao.isPlayerInGame, [id, player], 'You are already in this game, @' + player + '!'))
 		.then(() => dao.addPlayerToGame(id, player))
 		.then(() => internals.browser.createPost(id, post, 'Welcome to the game, @' + player, () => 0))
 		.catch((err) => reportError(command, 'Error when adding to game: ', err));
