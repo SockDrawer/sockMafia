@@ -751,6 +751,7 @@ module.exports = {
 		return module.exports.getPlayerByName(player)
 			.then((playerInstance) => {
 				return module.exports.getCurrentVotes(game, day)
+					.filter((vote) => vote.action !== module.exports.action.nolynch)
 					.filter((vote) => vote.target.id === playerInstance.id)
 					.then((votes) => votes.length);
 			});
