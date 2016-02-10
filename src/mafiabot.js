@@ -84,52 +84,39 @@ function patchIn(module) {
 	}
 }
 
-function reportError (command, preface, error) {
-	internals.browser.createPost(
-		command.post.topic_id,
-		command.post.post_number,
-		'' + preface + error,
-		() => 0
-	);
+/*eslint-disable no-console*/
+function handleCallback(err) {
+	if (err) {
+		console.log('ERROR: ' + err.toString());
+	}
 }
-
-function respondWithTemplate(templateFile, data, command) {
-	return readFile(__dirname + '/' + templateFile)
-	.then((buffer) => {
-		const source = buffer.toString();
-		const template = Handlebars.compile(source);
-
-		const output = template(data);
-		internals.browser.createPost(command.post.topic_id, command.post.post_number, output, () => 0);
-	});
-}
-
+/*eslint-enable no-console*/
 
 function registerPlayerCommands(events) {
 	patchIn(playerController);
-	events.onCommand('for', 'vote for a player to be executed', exports.voteHandler, () => 0);
-	events.onCommand('join', 'join current mafia game', exports.joinHandler, () => 0);
-	events.onCommand('list-all-players', 'list all players, dead and alive', exports.listAllPlayersHandler, () => 0);
-	events.onCommand('list-all-votes', 'list all votes from the game\'s start', exports.listAllVotesHandler, () => 0);
-	events.onCommand('list-players', 'list all players still alive', exports.listPlayersHandler, () => 0);
-	events.onCommand('list-votes', 'list all votes from the day\'s start', exports.listVotesHandler, () => 0);
-	events.onCommand('no-lynch', 'vote for noone to be lynched', exports.nolynchHandler, () => 0);
-	events.onCommand('nolynch', 'vote for noone to be lynched', exports.nolynchHandler, () => 0);
-	events.onCommand('unvote', 'rescind your vote', exports.unvoteHandler, () => 0);
-	events.onCommand('vote', 'vote for a player to be executed (alt. form)', exports.voteHandler, () => 0);
+	events.onCommand('for', 'vote for a player to be executed', exports.voteHandler, handleCallback);
+	events.onCommand('join', 'join current mafia game', exports.joinHandler, handleCallback);
+	events.onCommand('list-all-players', 'list all players, dead and alive', exports.listAllPlayersHandler, handleCallback);
+	events.onCommand('list-all-votes', 'list all votes from the game\'s start', exports.listAllVotesHandler, handleCallback);
+	events.onCommand('list-players', 'list all players still alive', exports.listPlayersHandler, handleCallback);
+	events.onCommand('list-votes', 'list all votes from the day\'s start', exports.listVotesHandler, handleCallback);
+	events.onCommand('no-lynch', 'vote for noone to be lynched', exports.nolynchHandler, handleCallback);
+	events.onCommand('nolynch', 'vote for noone to be lynched', exports.nolynchHandler, handleCallback);
+	events.onCommand('unvote', 'rescind your vote', exports.unvoteHandler, handleCallback);
+	events.onCommand('vote', 'vote for a player to be executed (alt. form)', exports.voteHandler, handleCallback);
 }
 
 function registerModCommands(events) {
 	patchIn(modController);
-	events.onCommand('prepare', 'Start a new game', exports.prepHandler, () => 0);
-	events.onCommand('start', 'move a game into active play (mod only)', exports.startHandler, () => 0);
-	events.onCommand('new-day', 'move on to a new day (mod only)', exports.dayHandler, () => 0);
-	events.onCommand('kill', 'kill a player (mod only)', exports.killHandler, () => 0);
-	events.onCommand('end', 'end the game (mod only)', exports.finishHandler, () => 0);
+	events.onCommand('prepare', 'Start a new game', exports.prepHandler, handleCallback);
+	events.onCommand('start', 'move a game into active play (mod only)', exports.startHandler, handleCallback);
+	events.onCommand('new-day', 'move on to a new day (mod only)', exports.dayHandler, handleCallback);
+	events.onCommand('kill', 'kill a player (mod only)', exports.killHandler, handleCallback);
+	events.onCommand('end', 'end the game (mod only)', exports.finishHandler, handleCallback);
 }
 
 function registerCommands(events) {
-	events.onCommand('echo', 'echo a bunch of post info (for diagnostic purposes)', exports.echoHandler, () => 0);
+	events.onCommand('echo', 'echo a bunch of post info (for diagnostic purposes)', exports.echoHandler, handleCallback);
 	registerPlayerCommands(events);
 	registerModCommands(events);
 }
