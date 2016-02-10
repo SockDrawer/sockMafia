@@ -15,6 +15,8 @@ const mafia = require('../src/mafiabot');
 const mafiaDAO = require('../src/dao.js');
 const Handlebars = require('handlebars');
 const view = require('../src/view.js');
+const modController = require('../src/mod_controller');
+const playerController = require('../src/player_controller');
 
 const fakeConfig = {
 	mergeObjects: sinon.stub().returns({
@@ -71,9 +73,65 @@ describe('mafia', () => {
 				commandSpy.calledWith('list-all-players').should.be.true;
 				commandSpy.calledWith('list-players').should.be.true;
 				commandSpy.calledWith('list-votes').should.be.true;
-				commandSpy.calledWith('kill').should.be.true;
-				commandSpy.calledWith('new-day').should.be.true;
+				
+			});
+		});
+
+		it('Should path in mod commands', () => {
+			const events = {
+				onCommand: commandSpy,
+				onNotification: notificationSpy
+			};
+			sandbox.stub(mafiaDAO, 'createDB').resolves();
+			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
+			sandbox.stub(modController);
+			sandbox.stub(playerController);
+
+			mafia.prepare(null, fakeConfig, events, undefined).then(() => {
+				expect(mafia.prepHandler).to.be.a('function');
+				expect(mafia.startHandler).to.be.a('function');
+				expect(mafia.setHandler).to.be.a('function');
+				expect(mafia.dayHandler).to.be.a('function');
+				expect(mafia.killHandler).to.be.a('function');
+				expect(mafia.finishHandler).to.be.a('function');
+
+				commandSpy.calledWith('prepare').should.be.true;
+				commandSpy.calledWith('start').should.be.true;
 				commandSpy.calledWith('set').should.be.true;
+				commandSpy.calledWith('new-day').should.be.true;
+				commandSpy.calledWith('kill').should.be.true;
+				commandSpy.calledWith('end').should.be.true;
+				
+			});
+		});
+
+		it('Should path in player commands', () => {
+			const events = {
+				onCommand: commandSpy,
+				onNotification: notificationSpy
+			};
+			sandbox.stub(mafiaDAO, 'createDB').resolves();
+			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
+			sandbox.stub(modController);
+			sandbox.stub(playerController);
+
+			mafia.prepare(null, fakeConfig, events, undefined).then(() => {
+				expect(mafia.nolynchHandler).to.be.a('function');
+				expect(mafia.unvoteHandler).to.be.a('function');
+				expect(mafia.voteHandler).to.be.a('function');
+				expect(mafia.joinHandler).to.be.a('function');
+				expect(mafia.listPlayersHandler).to.be.a('function');
+				expect(mafia.listAllPlayersHandler).to.be.a('function');
+				expect(mafia.listVotesHandler).to.be.a('function');
+
+				commandSpy.calledWith('nolynch').should.be.true;
+				commandSpy.calledWith('unvote').should.be.true;
+				commandSpy.calledWith('vote').should.be.true;
+				commandSpy.calledWith('for').should.be.true;
+				commandSpy.calledWith('list-players').should.be.true;
+				commandSpy.calledWith('list-all-players').should.be.true;
+				commandSpy.calledWith('list-votes').should.be.true;
+				
 			});
 		});
 	});
