@@ -122,6 +122,16 @@ function reportError (command, preface, error) {
 	);
 }
 
+/*eslint-disable no-console*/
+function logErrorToConsole(error) {
+	//Only log when we're not in a test
+	if (typeof global.it !== 'function') {
+		console.log('ERROR: ' + error.toString());
+		console.log(error.stack);
+	}
+}
+/*eslint-enable no-console*/
+
 function respondWithTemplate(templateFile, data, command) {
 	return readFile(__dirname + '/' + templateFile)
 	.then((buffer) => {
@@ -159,7 +169,7 @@ function shuffle(array) {
 }
 
 function registerPlayerCommands(events) {
-	events.onCommand('for', 'vote for a player to be executed', exports.voteHandler, () => 0);
+	events.onCommand('for', 'vote for a player to be executed', exports.forHandler, () => 0);
 	events.onCommand('join', 'join current mafia game', exports.joinHandler, () => 0);
 	events.onCommand('list-all-players', 'list all players, dead and alive', exports.listAllPlayersHandler, () => 0);
 	events.onCommand('list-all-votes', 'list all votes from the game\'s start', exports.listAllVotesHandler, () => 0);
@@ -177,6 +187,7 @@ function registerModCommands(events) {
 	events.onCommand('new-day', 'move on to a new day (mod only)', exports.dayHandler, () => 0);
 	events.onCommand('kill', 'kill a player (mod only)', exports.killHandler, () => 0);
 	events.onCommand('end', 'end the game (mod only)', exports.finishHandler, () => 0);
+	events.onCommand('set', 'set a property on a player (mod only)', exports.setHandler, () => 0);
 }
 
 function registerCommands(events) {
@@ -184,6 +195,30 @@ function registerCommands(events) {
 	registerPlayerCommands(events);
 	registerModCommands(events);
 }
+
+/**
+ * Register the mods listed in the configuration.
+ *
+ * @param {Number} game Thread number for the game.
+ * @param {string[]} mods Array of mod names to add to the game.
+ */
+/*eslint-disable no-console*/
+function registerMods(game, mods) {
+	return dao.ensureGameExists(game)
+		.then(() => Promise.mapSeries(
+			mods,
+			function(mod) {
+				console.log('Mafia: Adding mod: ' + mod);
+				return dao.addMod(game, mod)
+					.catch((err) => {
+						console.log('Mafia: Adding mod: failed to add mod: ' + mod
+							+ '\n\tReason: ' + err);
+						return Promise.resolve();
+					});
+			}
+		));
+}
+/*eslint-enable no-console*/
 
 /**
  * Register the players listed in the configuration.
@@ -292,15 +327,16 @@ exports.startHandler = function (command) {
 };
 
 exports.setHandler = function (command) {
-	const game = command.post.topic_id;
 	const mod = command.post.username;
-	const target = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
+	const target = command.args[0].replace(/^@?(.*?)[.!?, ]?$/, '$1');
 	const property = command.args[1];
+	const game = command.args[2];
 	
 	const validProperties = [
-		'loved',
-		'hated',
-		'doublevoter'
+		dao.playerProperty.loved,
+		dao.playerProperty.hated,
+		dao.playerProperty.doubleVoter,
+		dao.playerProperty.vanilla
 	];
 	
 	return dao.getGameStatus(game)
@@ -419,7 +455,7 @@ exports.killHandler = function (command) {
 	const mod = command.post.username;
 	// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
 	// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
-	const target = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
+	const target = command.args[0].replace(/^@?(.*?)[.!?, ]?$/, '$1');
 	
 	return dao.getGameStatus(game)
 		.then((status) => {
@@ -484,6 +520,70 @@ exports.finishHandler = function (command) {
 
 // Player commands
 
+/*Voting helpers*/
+
+function verifyPlayerCanVote(game, voter) {
+	return mustBeTrue(dao.isPlayerInGame, [game, voter], 'Voter not in game')
+		.then(() => mustBeTrue(dao.isPlayerAlive, [game, voter], 'Voter not alive'))
+		.then(() => mustBeTrue(isDaytime, [game], 'It is not day'));
+}
+
+function revokeCurrentVote(game, voter, post, type) {
+	const promiseArray = [];
+
+	return new Promise((resolve) => { 
+		if (type) {
+			resolve(dao.getCurrentActionByPlayer(game, voter, type));
+		} else {
+			resolve(dao.getCurrentVoteByPlayer(game, voter));
+		}
+	})
+	.then((votes) => {
+		if (!votes) {
+			return true;
+		}
+		for (let i = 0; i < votes.length; i++) {
+			promiseArray.push(dao.revokeAction(game, votes[i].post, post));
+		}
+		
+		return Promise.all(promiseArray);
+	});
+}
+
+function revokeCurrentVoteFor(game, voter, target, post) {
+	return dao.getCurrentVoteByPlayer(game, voter).then((votes) => {
+		for (let i = 0; i < votes.length; i++) {
+			if (votes[i].target.name.toLowerCase() === target.toLowerCase()) {
+				return dao.revokeAction(game, votes[i].post, post);
+			}
+		}
+		throw new Error('No such vote was found to revoke');
+	});
+}
+
+function getVotingErrorText(reason, voter, target) {
+	let text = ':wtf:';
+
+	if (reason === 'Voter not in game') {
+		text = '@' + voter + ': You are not yet a player.\n'
+			+ 'Please use `@' + internals.configuration.username + ' join` to join the game.';
+	} else if (reason === 'Voter not alive') {
+		text = 'Aaagh! Ghosts!\n'
+			+ '(@' + voter + ': You are no longer among the living.)';
+	} else if (reason === 'Target not in game') {
+		text = 'Who? I\'m sorry, @' + voter + ' but your princess is in another castle.\n'
+			+ '(' + target + ' is not in this game.)';
+	} else if (reason === 'Target not alive') {
+		text = '@' + voter + ': You would be wise to not speak ill of the dead.';
+	} else if (reason === 'Vote failed') {
+		text = ':wtf:\nSorry, @' + voter + ': your vote failed.  No, I don\'t know why.'
+			+ ' You\'ll have to ask @' + internals.configuration.owner + ' about that.';
+	} else {
+		text += '\n' + reason;
+	}
+	return Promise.resolve(text);
+}
+
 /**
   * nolynch: Vote to not lynch this day
   * Must be used in the game thread.
@@ -501,9 +601,46 @@ exports.finishHandler = function (command) {
   * @returns {Promise}        A promise that will resolve when the game is ready
   */
 exports.nolynchHandler = function (command) {
-	command.input = '!vote for nolynch';
-	command.args[0] = 'nolynch';
-	return exports.voteHandler(command);
+	const game = command.post.topic_id;
+	const post = command.post.post_number;
+	const voter = command.post.username;
+	
+	function getVoteAttemptText(success) {
+		let text = '@' + command.post.username +  (success ? ' voted for ' : ' tried to vote for ') + 'no-lynch ';
+
+		text = text	+ 'in post #<a href="https://what.thedailywtf.com/t/'
+				+ command.post.topic_id + '/' + command.post.post_number + '">'
+				+ command.post.post_number + '</a>.\n\n'
+				+ 'Vote text:\n[quote]\n' + command.input + '\n[/quote]';
+		return text;
+	}
+	
+	/*Validation*/
+	return dao.ensureGameExists(game)
+		.then( () => dao.getGameStatus(game))
+		.then((status) => {
+			if (status === dao.gameStatus.running) {
+				return Promise.resolve();
+			}
+			return Promise.reject('Game already ' + status);
+		})
+		.then(() => verifyPlayerCanVote(game, voter))
+		.then(() => revokeCurrentVote(game, voter, post))/* Revoke current vote, now a Controller responsibility */
+		.then(() => dao.addActionWithoutTarget(game, post, voter, 'nolynch'))
+		.then(() => {
+			const text = getVoteAttemptText(true);
+			internals.browser.createPost(command.post.topic_id, command.post.post_number, text, () => 0);
+			return true;
+		})
+		.catch((reason) => {
+			/*Error handling*/
+			return getVotingErrorText(reason, voter)
+			.then((text) => {
+				text += '\n<hr />\n';
+				text += getVoteAttemptText(false);
+				internals.browser.createPost(command.post.topic_id, command.post.post_number, text, () => 0);
+			});
+		});
 };
 
 /**
@@ -519,10 +656,56 @@ exports.nolynchHandler = function (command) {
   * @returns {Promise}        A promise that will resolve when the game is ready
   */
 exports.unvoteHandler = function (command) {
-	command.input = '!vote for unvote';
-	command.args[0] = 'unvote';
-	return exports.voteHandler(command);
+	const game = command.post.topic_id;
+	const post = command.post.post_number;
+	const voter = command.post.username;
+	let target = undefined;
+	
+	if (command.args.length > 0) {
+		target = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
+	}
+	
+	function getVoteAttemptText(success) {
+		let text = '@' + command.post.username + (success ? ' unvoted ' : ' tried to unvote ');
 
+		text = text	+ 'in post #<a href="https://what.thedailywtf.com/t/'
+				+ game + '/' + post + '">'
+				+ post + '</a>.\n\n'
+				+ 'Vote text:\n[quote]\n' + command.input + '\n[/quote]';
+		return text;
+	}
+	
+	/*Validation*/
+	return dao.ensureGameExists(game)
+		.then( () => dao.getGameStatus(game))
+		.then((status) => {
+			if (status === dao.gameStatus.running) {
+				return Promise.resolve();
+			}
+			return Promise.reject('Game already ' + status);
+		})
+		.then(() => verifyPlayerCanVote(game, voter))
+		.then(() => {
+			if (target) {
+				return revokeCurrentVoteFor(game, voter, target, post);
+			} else {
+				return revokeCurrentVote(game, voter, post);
+			}
+		})/* Revoke current vote, now a Controller responsibility */
+		.then(() => {
+			const text = getVoteAttemptText(true);
+			internals.browser.createPost(command.post.topic_id, command.post.post_number, text, () => 0);
+			return true;
+		})
+		.catch((reason) => {
+			/*Error handling*/
+			return getVotingErrorText(reason, voter)
+			.then((text) => {
+				text += '\n<hr />\n';
+				text += getVoteAttemptText(false);
+				internals.browser.createPost(command.post.topic_id, command.post.post_number, text, () => 0);
+			});
+		});
 };
 
 /**
@@ -550,12 +733,49 @@ exports.voteHandler = function (command) {
 	const voter = command.post.username;
 	// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
 	// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
-	let target = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
-	if (target.toLowerCase() === 'no-lynch') {
-		target = 'nolynch';
+	const target = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
+	
+	return dao.getPlayerProperty(game, voter).then((property) => {
+		if (property === dao.playerProperty.doubleVoter) {
+			return doVote(game, post, voter, target, command.input, 2);
+		} else {
+			return doVote(game, post, voter, target, command.input, 1);
+		}
+	});
+};
+
+exports.forHandler = function (command) {
+	const game = command.post.topic_id;
+	const post = command.post.post_number;
+	const voter = command.post.username;
+	// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
+	// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
+	const target = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
+	
+	return dao.getPlayerProperty(game, voter).then((property) => {
+		return doVote(game, post, voter, target, command.input, 1);
+	});
+};
+
+function doVote(game, post, voter, target, input, voteNum) {
+	let action;
+	if (voteNum === 2) {
+		action = dao.action.dblVote;
+	} else {
+		action = dao.action.vote;
+	}
+			
+	function getVoteAttemptText(success) {
+		let text = '@' + voter + (success ? ' voted for ' : ' tried to vote for ') + '@' + target;
+
+		text = text	+ ' in post #<a href="https://what.thedailywtf.com/t/'
+				+ game + '/' + post + '">'
+				+ post + '</a>.\n\n'
+				+ 'Vote text:\n[quote]\n' + input + '\n[/quote]';
+		return text;
 	}
 	
-	return dao.ensureGameExists(game)
+	return dao.ensureGameExists(game) /*Validation*/
 		.then( () => dao.getGameStatus(game))
 		.then((status) => {
 			if (status === dao.gameStatus.running) {
@@ -563,36 +783,25 @@ exports.voteHandler = function (command) {
 			}
 			return Promise.reject('Game already ' + status);
 		})
+		.then(() => verifyPlayerCanVote(game, voter))
 		.then(() => {
 			return Promise.all([
-				mustBeTrue(dao.isPlayerInGame, [game, voter], 'Voter not in game'),
-				mustBeTrue(dao.isPlayerAlive, [game, voter], 'Voter not alive'),
 				mustBeTrue(dao.isPlayerInGame, [game, target], 'Target not in game'),
-				mustBeTrue(dao.isPlayerAlive, [game, target], 'Target not alive'),
-				mustBeTrue(isDaytime, [game], 'It is not day')
+				mustBeTrue(dao.isPlayerAlive, [game, target], 'Target not alive')
 			]);
-		})
-		.then(() => dao.addVote(game, post, voter, target))
+		})     /* Revoke current vote, now a Controller responsibility */
+		.then(() => revokeCurrentVote(game, voter, post, action))  /* Add new vote */
+		.then(() => dao.addActionWithTarget(game, post, voter, action, target))
 		.then((result) => {
 			if (!result) {
 				return Promise.reject('Vote failed');
 			}
-			let text;
-
-			if (target.toLowerCase() === dao.playerStatus.unvote) {
-				text = '@' + command.post.username + ' rescinded their vote';
-			} else {
-				text = '@' + command.post.username + ' voted for @' + target;
-			}
-
-			text = text	+ ' in post #<a href="https://what.thedailywtf.com/t/'
-				+ command.post.topic_id + '/' + command.post.post_number + '">'
-				+ command.post.post_number + '</a>.\n\n'
-				+ 'Vote text:\n[quote]\n' + command.input + '\n[/quote]';
-			internals.browser.createPost(command.post.topic_id, command.post.post_number, text, () => 0);
+			
+			const text = getVoteAttemptText(true);
+			internals.browser.createPost(game, post, text, () => 0);
 			return true;
 		})
-		.then(() => dao.getCurrentDay(game))
+		.then(() => dao.getCurrentDay(game))   /*Check for auto-lynch*/
 		.then((day) => {
 			return Promise.join(
 				dao.getNumToLynch(game),
@@ -613,37 +822,18 @@ exports.voteHandler = function (command) {
 					}
 				}
 			);
-		}).catch((reason) => {
-			let text = ':wtf:';
+		})
+		.catch((reason) => {
+			/*Error handling*/
+			return getVotingErrorText(reason, voter, target)
+			.then((text) => {
+				text += '\n<hr />\n';
+				text += getVoteAttemptText(false);
 
-			if (reason === 'Voter not in game') {
-				text = '@' + voter + ': You are not yet a player.\n'
-					+ 'Please use `@' + internals.configuration.username + ' join` to join the game.';
-			} else if (reason === 'Voter not alive') {
-				text = 'Aaagh! Ghosts!\n'
-					+ '(@' + voter + ': You are no longer among the living.)';
-			} else if (reason === 'Target not in game') {
-				text = 'Who? I\'m sorry, @' + voter + ' but your princess is in another castle.\n'
-					+ '(' + target + ' is not in this game.)';
-			} else if (reason === 'Target not alive') {
-				text = '@' + voter + ': You would be wise to not speak ill of the dead.';
-			} else if (reason === 'Vote failed') {
-				text = ':wtf:\nSorry, @' + voter + ': your vote failed.  No, I don\'t know why.'
-					+ ' You\'ll have to ask @' + internals.configuration.owner + ' about that.';
-			} else {
-				text += '\n' + reason;
-			}
-
-			text += '\n<hr />\n';
-			text += '@' + command.post.username + ' tried to vote for ' + target
-				+ ' in post #<a href="https://what.thedailywtf.com/t/'
-				+ command.post.topic_id + '/' + command.post.post_number + '">'
-				+ command.post.post_number + '</a>.\n\n'
-				+ 'Vote text:\n[quote="' + command.post.username
-				+ ', post:' + command.post.post_number
-				+ ', topic:' + command.post.topic_id + '"]\n'
-				+ command.input + '\n[/quote]';
-			internals.browser.createPost(command.post.topic_id, command.post.post_number, text, () => 0);
+				//Log error
+				logErrorToConsole(reason);
+				internals.browser.createPost(game, post, text, () => 0);
+			});
 		});
 };
 
@@ -848,6 +1038,7 @@ exports.listAllPlayersHandler = function (command) {
   * @returns {Promise}        A promise that will resolve when the game is ready
   */
 exports.listVotesHandler = function (command) {
+	const noLynchDisplayName = 'No lynch';
 	const data = {
 		day: 0,
 		votes: {},
@@ -855,6 +1046,15 @@ exports.listVotesHandler = function (command) {
 		notVoting: [],
 		toExecute: 0
 	};
+	
+	//Sample format:
+	data.votes[noLynchDisplayName] =  {
+				names: [],
+				num: 0,
+				target: noLynchDisplayName,
+				percent: 0,
+				mod: 0
+			};
 
 	const currentlyVoting = [];
 
@@ -869,8 +1069,8 @@ exports.listVotesHandler = function (command) {
 			return dao.getAllVotesForDaySorted(id, data.day);
 		}).then((rows) => {
 			rows.forEach((row) => {
-				const votee = row.target.properName;
-				const voter = row.voter.properName;
+				const voter = row.player.properName;
+				const votee = (row.action === dao.action.nolynch ? noLynchDisplayName : row.target.properName);
 
 				if (!data.votes.hasOwnProperty(votee)) {
 					data.votes[votee] = {
@@ -883,14 +1083,13 @@ exports.listVotesHandler = function (command) {
 
 				if (row.isCurrent) {
 					data.votes[votee].num++;
-					data.votes[votee].percent = (data.votes[votee].num / data.toExecute) * 100;
 					currentlyVoting.push(voter);
 				}
 
 				data.votes[votee].names.push({
 					voter: voter,
 					retracted: !row.isCurrent,
-					retractedAt: row.rescindedAt,
+					retractedAt: row.retractedInPost,
 					post: row.post,
 					game: id
 				});
@@ -913,14 +1112,14 @@ exports.listVotesHandler = function (command) {
 			let currLookup;
 			players.forEach((target) => {
 				if (data.votes.hasOwnProperty(target)) {
-					currLookup = dao.getPlayerProperty(target).then((property) => {
+					currLookup = dao.getPlayerProperty(id, target).then((property) => {
 						let mod;
-						if (property === 'loved') {
-							mod = 1;
-						} else if (property === 'hated') {
-							mod = -1;
+						if (property === dao.playerProperty.loved) {
+							mod = dao.lynchModifier.loved;
+						} else if (property === dao.playerProperty.hated) {
+							mod = dao.lynchModifier.hated;
 						} else {
-							mod = 0;
+							mod = dao.lynchModifier.vanilla;
 						}
 						
 						data.votes[target].mod = mod;
@@ -928,7 +1127,7 @@ exports.listVotesHandler = function (command) {
 					pendingLookups.push(currLookup);
 				}
 			});
-			
+						
 			return Promise.all(pendingLookups).then(() => readFile(__dirname + '/templates/voteTemplate.handlebars'));
 		}).then((buffer) => {
 			const source = buffer.toString();
@@ -985,6 +1184,8 @@ exports.prepare = function prepare(plugConfig, config, events, browser) {
 	}
 	internals.events = events;
 	internals.browser = browser;
+	internals.owner = config.core.owner;
+	internals.username = config.core.username;
 	internals.configuration = config.mergeObjects(true, exports.defaultConfig, plugConfig);
 	return dao.createDB(internals.configuration)
 		.then(() => dao.ensureGameExists(plugConfig.thread))
@@ -1006,13 +1207,10 @@ exports.prepare = function prepare(plugConfig, config, events, browser) {
 		})
 		.then(() => {
 			if (plugConfig.mods) {
-				return Promise.each(
-					plugConfig.mods,
-					(mod) => dao.addMod(plugConfig.thread, mod)
-				);
+				return registerMods(plugConfig.thread, plugConfig.mods);
 			} else {
 				return Promise.resolve();
-			}			
+			}
 		})
 		.then(() => {
 			registerCommands(events);
