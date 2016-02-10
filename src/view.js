@@ -19,6 +19,15 @@ exports.respond = function(command, output) {
 	);
 };
 
+exports.respondInThread = function(thread, output) {
+	browser.createPost(
+		thread,
+		null,
+		output,
+		() => 0
+	);
+};
+
 exports.respondWithTemplate  = function(templateFile, data, command) {
 	return readFile(__dirname + '/' + templateFile)
 	.then((buffer) => {
