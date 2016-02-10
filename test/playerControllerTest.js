@@ -53,7 +53,7 @@ describe('player controller', () => {
 				input: '!for @noLunch'
 			};
 
-			sandbox.stub(view, 'respond');
+			sandbox.stub(view, 'respondInThread');
 			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
 			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
 			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(false);
@@ -63,9 +63,9 @@ describe('player controller', () => {
 			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
 
 			return mafia.voteHandler(command).then(() => {
-				view.respond.called.should.be.true;
+				view.respondInThread.called.should.be.true;
 				
-				const output = view.respond.getCall(0).args[1];
+				const output = view.respondInThread.getCall(0).args[1];
 				output.should.include('You are not yet a player.');
 			});
 		});
@@ -81,7 +81,7 @@ describe('player controller', () => {
 				input: '!for @noLunch'
 			};
 
-			sandbox.stub(view, 'respond');
+			sandbox.stub(view, 'respondInThread');
 			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
 			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
 			sandbox.stub(mafiaDAO, 'isPlayerInGame').onFirstCall().resolves(true).onSecondCall().resolves(false);
@@ -91,9 +91,9 @@ describe('player controller', () => {
 			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
 
 			return mafia.voteHandler(command).then(() => {
-				view.respond.called.should.be.true;
+				view.respondInThread.called.should.be.true;
 				
-				const output = view.respond.getCall(0).args[1];
+				const output = view.respondInThread.getCall(0).args[1];
 				output.should.include('your princess is in another castle.');
 			});
 		});
@@ -109,7 +109,7 @@ describe('player controller', () => {
 				input: '!for @noLunch'
 			};
 
-			sandbox.stub(view, 'respond');
+			sandbox.stub(view, 'respondInThread');
 			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
 			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
 			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
@@ -119,9 +119,9 @@ describe('player controller', () => {
 			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
 
 			return mafia.voteHandler(command).then(() => {
-				view.respond.called.should.be.true;
+				view.respondInThread.called.should.be.true;
 				
-				const output = view.respond.getCall(0).args[1];
+				const output = view.respondInThread.getCall(0).args[1];
 				output.should.include('You would be wise to not speak ill of the dead.');
 			});
 		});
@@ -137,7 +137,7 @@ describe('player controller', () => {
 				input: '!for @noLunch'
 			};
 
-			sandbox.stub(view, 'respond');
+			sandbox.stub(view, 'respondInThread');
 			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
 			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
 			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
@@ -147,9 +147,9 @@ describe('player controller', () => {
 			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
 
 			return mafia.voteHandler(command).then(() => {
-				view.respond.called.should.be.true;
+				view.respondInThread.called.should.be.true;
 				
-				const output = view.respond.getCall(0).args[1];
+				const output = view.respondInThread.getCall(0).args[1];
 				output.should.include('Aaagh! Ghosts!');
 			});
 		});
@@ -165,7 +165,7 @@ describe('player controller', () => {
 				input: '!for @noLunch'
 			};
 
-			sandbox.stub(view, 'respond');
+			sandbox.stub(view, 'respondInThread');
 			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
 			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
 			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
@@ -175,9 +175,9 @@ describe('player controller', () => {
 			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
 
 			return mafia.voteHandler(command).then(() => {
-				view.respond.called.should.be.true;
+				view.respondInThread.called.should.be.true;
 				
-				const output = view.respond.getCall(0).args[1];
+				const output = view.respondInThread.getCall(0).args[1];
 				output.should.include('It is not day');
 			});
 		});
@@ -193,19 +193,20 @@ describe('player controller', () => {
 				input: '!for @noLunch'
 			};
 
-			sandbox.stub(view, 'respond');
+			sandbox.stub(view, 'respondInThread');
 			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
 			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
 			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
 			sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(true);
-			sandbox.stub(mafiaDAO, 'getCurrentTime').resolves(mafiaDAO.gameTime.day);
+			sandbox.stub(validator, 'isDaytime').resolves(true);
+			sandbox.stub(mafiaDAO, 'getCurrentActionByPlayer').resolves();
 			sandbox.stub(mafiaDAO, 'addActionWithTarget').resolves(false);
 			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
 
 			return mafia.voteHandler(command).then(() => {
-				view.respond.called.should.be.true;
+				view.respondInThread.called.should.be.true;
 				
-				const output = view.respond.getCall(0).args[1];
+				const output = view.respondInThread.getCall(0).args[1];
 				output.should.include(':wtf:\nSorry, @tehNinja: your vote failed.  No, I don\'t know why.');
 			});
 		});
@@ -221,7 +222,7 @@ describe('player controller', () => {
 				input: '!for @noLunch'
 			};
 
-			sandbox.stub(view, 'respond');
+			sandbox.stub(view, 'respondInThread');
 			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
 			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
 			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
@@ -230,13 +231,14 @@ describe('player controller', () => {
 			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(100);
 			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(1);
 			sandbox.stub(mafiaDAO, 'getNumVotesForPlayer').resolves(1);
+			sandbox.stub(mafiaDAO, 'getCurrentActionByPlayer').resolves();
 			sandbox.stub(mafiaDAO, 'addActionWithTarget').resolves(true);
 			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
 
 			return mafia.voteHandler(command).then(() => {
-				view.respond.called.should.be.true;
+				view.respondInThread.called.should.be.true;
 				
-				const output = view.respond.getCall(0).args[1];
+				const output = view.respondInThread.getCall(0).args[1];
 				output.should.include('@tehNinja voted for @noLunch in post ' +
 					'#<a href="https://what.thedailywtf.com/t/12345/98765">98765</a>.');
 			});
@@ -874,7 +876,7 @@ describe('player controller', () => {
 			return mafia.nolynchHandler(command).then(() => {
 				const output = view.respond.getCall(0).args[1];
 				output.should.include('@tehNinja voted for no-lynch in post ');
-				
+
 				mafiaDAO.addActionWithoutTarget.called.should.be.true;
 				view.respond.called.should.be.true;
 

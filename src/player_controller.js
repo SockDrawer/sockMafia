@@ -348,7 +348,7 @@ function doVote(game, post, voter, target, input, voteNum) {
 			}
 			
 			const text = getVoteAttemptText(true);
-			view.respondInThread(game, post);
+			view.respondInThread(game, text);
 			return true;
 		})
 		.then(() => dao.getCurrentDay(game))   /*Check for auto-lynch*/
@@ -382,174 +382,10 @@ function doVote(game, post, voter, target, input, voteNum) {
 
 				//Log error
 				logErrorToConsole(reason);
-				view.respondInThread(game, post);
+				view.respondInThread(game, text);
 			});
 		});
 	};
-
-/**
-  * nolynch: Vote to not lynch this day
-  * Must be used in the game thread.
-  *
-  * Game rules:
-  *  - A vote can only be registered by a player in the game
-  *  - A vote can only be registered by a living player
-  *  - If a simple majority of players vote for no lynch:
-  *    - The game enters the night phase
-  *    - No information is revealed
-  *
-  * @example !nolynch
-  *
-  * @param  {commands.command} command The command that was passed in.
-  * @returns {Promise}        A promise that will resolve when the game is ready
-  */
-exports.nolynchHandler = function (command) {
-	command.input = '!vote for nolynch';
-	command.args[0] = 'nolynch';
-	return exports.voteHandler(command);
-};
-
-/**
-  * unvote: Rescind previous vote without registering a new vote
-  * Must be used in the game thread.
-  *
-  * Game rules:
-  *  - An unvote can only occur if a vote has previously occurred
-  *
-  * @example !unvote
-  *
-  * @param  {commands.command} command The command that was passed in.
-  * @returns {Promise}        A promise that will resolve when the game is ready
-  */
-exports.unvoteHandler = function (command) {
-	command.input = '!vote for unvote';
-	command.args[0] = 'unvote';
-	return exports.voteHandler(command);
-
-};
-
-/**
-  * Vote: Vote to lynch a player
-  * Must be used in the game thread. Expects one argument
-  *
-  * Game rules:
-  *  - A vote can only be registered by a player in the game
-  *  - A vote can only be registered by a living player
-  *  - A vote can only be registered for a player in the game
-  *  - A vote cna only be registered for a living player
-  *  - If a simple majority of players vote for a single player:
-  *    - The game enters the night phase
-  *    - That player's information is revealed
-  *
-  * @example !vote playerName
-  * @example !for playerName
-  *
-  * @param  {commands.command} command The command that was passed in.
-  * @returns {Promise}        A promise that will resolve when the game is ready
-  */
-exports.voteHandler = function (command) {
-	const game = command.post.topic_id;
-	const post = command.post.post_number;
-	const voter = command.post.username;
-	// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
-	// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
-	let target = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
-	if (target.toLowerCase() === 'no-lynch') {
-		target = 'nolynch';
-	}
-	
-	return dao.ensureGameExists(game)
-		.then( () => dao.getGameStatus(game))
-		.then((status) => {
-			if (status === dao.gameStatus.running) {
-				return Promise.resolve();
-			}
-			return Promise.reject('Game already ' + status);
-		})
-		.then(() => {
-			return Promise.all([
-				validator.mustBeTrue(dao.isPlayerInGame, [game, voter], 'Voter not in game'),
-				validator.mustBeTrue(dao.isPlayerAlive, [game, voter], 'Voter not alive'),
-				validator.mustBeTrue(dao.isPlayerInGame, [game, target], 'Target not in game'),
-				validator.mustBeTrue(dao.isPlayerAlive, [game, target], 'Target not alive'),
-				validator.mustBeTrue(validator.isDaytime, [game], 'It is not day')
-			]);
-		})
-		.then(() => dao.addActionWithTarget(game, post, voter, dao.action.vote, target))
-		.then((result) => {
-			if (!result) {
-				return Promise.reject('Vote failed');
-			}
-			let text;
-
-			if (target.toLowerCase() === dao.playerStatus.unvote) {
-				text = '@' + command.post.username + ' rescinded their vote';
-			} else {
-				text = '@' + command.post.username + ' voted for @' + target;
-			}
-
-			text = text	+ ' in post #<a href="https://what.thedailywtf.com/t/'
-				+ command.post.topic_id + '/' + command.post.post_number + '">'
-				+ command.post.post_number + '</a>.\n\n'
-				+ 'Vote text:\n[quote]\n' + command.input + '\n[/quote]';
-			view.respond(command, text);
-			return true;
-		})
-		.then(() => dao.getCurrentDay(game))
-		.then((day) => {
-			return Promise.join(
-				dao.getNumToLynch(game),
-				dao.getNumVotesForPlayer(game, day, target),
-				dao.getPlayerProperty(game, target),
-				function (numToLynch, numReceived, property) {
-					if (property === 'loved') {
-						numToLynch += 1;
-					}
-					if (property === 'hated') {
-						numToLynch -= 1;
-					}
-
-					if (numToLynch <= numReceived) {
-						return lynchPlayer(game, target);
-					} else {
-						return Promise.resolve();
-					}
-				}
-			);
-		}).catch((reason) => {
-			let text = ':wtf:';
-
-			if (reason === 'Voter not in game') {
-				text = '@' + voter + ': You are not yet a player.\n'
-					+ 'Please use `@' + myName + ' join` to join the game.';
-			} else if (reason === 'Voter not alive') {
-				text = 'Aaagh! Ghosts!\n'
-					+ '(@' + voter + ': You are no longer among the living.)';
-			} else if (reason === 'Target not in game') {
-				text = 'Who? I\'m sorry, @' + voter + ' but your princess is in another castle.\n'
-					+ '(' + target + ' is not in this game.)';
-			} else if (reason === 'Target not alive') {
-				text = '@' + voter + ': You would be wise to not speak ill of the dead.';
-			} else if (reason === 'Vote failed') {
-				text = ':wtf:\nSorry, @' + voter + ': your vote failed.  No, I don\'t know why.'
-					+ ' You\'ll have to ask @' + myOwner + ' about that.';
-			} else {
-				text += '\n' + reason;
-			}
-
-			text += '\n<hr />\n';
-			text += '@' + command.post.username + ' tried to vote for ' + target
-				+ ' in post #<a href="https://what.thedailywtf.com/t/'
-				+ command.post.topic_id + '/' + command.post.post_number + '">'
-				+ command.post.post_number + '</a>.\n\n'
-				+ 'Vote text:\n[quote="' + command.post.username
-				+ ', post:' + command.post.post_number
-				+ ', topic:' + command.post.topic_id + '"]\n'
-				+ command.input + '\n[/quote]';
-			view.respond(command, text);
-		});
-};
-
 
 
 /**
