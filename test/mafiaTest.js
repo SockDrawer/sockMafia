@@ -21,7 +21,11 @@ const playerController = require('../src/player_controller');
 const fakeConfig = {
 	mergeObjects: sinon.stub().returns({
 		db: './mafiadbTesting'
-	})
+	}),
+	core: {
+		owner: 'tehNinja',
+		username: 'votebot'
+	}
 };
 
 const browser = {
@@ -58,7 +62,7 @@ describe('mafia', () => {
 		expect(mafia.stop).to.not.throw();
 	});
 
-	describe('prepare()', () => {	
+	describe('prepare()', () => {
 		it('Should register commands', () => {
 			const events = {
 				onCommand: commandSpy,

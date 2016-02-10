@@ -122,6 +122,30 @@ function registerCommands(events) {
 }
 
 /**
+ * Register the mods listed in the configuration.
+ *
+ * @param {Number} game Thread number for the game.
+ * @param {string[]} mods Array of mod names to add to the game.
+ */
+/*eslint-disable no-console*/
+function registerMods(game, mods) {
+	return dao.ensureGameExists(game)
+		.then(() => Promise.mapSeries(
+			mods,
+			function(mod) {
+				console.log('Mafia: Adding mod: ' + mod);
+				return dao.addMod(game, mod)
+					.catch((err) => {
+						console.log('Mafia: Adding mod: failed to add mod: ' + mod
+							+ '\n\tReason: ' + err);
+						return Promise.resolve();
+					});
+			}
+		));
+}
+/*eslint-enable no-console*/
+
+/**
  * Register the players listed in the configuration.
  *
  * @param {Number} game Thread number for the game.
@@ -143,6 +167,7 @@ function registerPlayers(game, players) {
 			}
 		));
 }
+
 /*eslint-enable no-console*/
 
 // Open commands
@@ -172,6 +197,7 @@ exports.echoHandler = function (command) {
  */
 exports.start = function start() {};
 
+
 /**
  * Stop the plugin prior to exit or reload
  */
@@ -200,6 +226,8 @@ exports.prepare = function prepare(plugConfig, config, events, browser) {
 	}
 	internals.events = events;
 	internals.browser = browser;
+	internals.owner = config.core.owner;
+	internals.username = config.core.username;
 	internals.configuration = config.mergeObjects(true, exports.defaultConfig, plugConfig);
 	return dao.createDB(internals.configuration)
 		.then(() => dao.ensureGameExists(plugConfig.thread))
@@ -221,13 +249,10 @@ exports.prepare = function prepare(plugConfig, config, events, browser) {
 		})
 		.then(() => {
 			if (plugConfig.mods) {
-				return Promise.each(
-					plugConfig.mods,
-					(mod) => dao.addMod(plugConfig.thread, mod)
-				);
+				return registerMods(plugConfig.thread, plugConfig.mods);
 			} else {
 				return Promise.resolve();
-			}			
+			}
 		})
 		.then(() => {
 			view.setBrowser(browser);
