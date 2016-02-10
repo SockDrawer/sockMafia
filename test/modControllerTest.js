@@ -385,6 +385,7 @@ describe('mod controller', () => {
 			sandbox.stub(mafiaDAO, 'setCurrentTime').resolves();
 			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(54);
 			sandbox.stub(mafiaDAO, 'getLivingPlayers').resolves(players);
+			sandbox.stub(view, 'respondWithTemplate');
 			const fakeTemplate = sandbox.stub().returns('Some string output');
 			sandbox.stub(Handlebars, 'compile').returns(fakeTemplate);
 			
@@ -405,11 +406,8 @@ describe('mod controller', () => {
 				modOutput.should.include('Incremented day for testMafia');
 				
 				//Output to game
-				browser.createPost.calledWith(12345, command.post.post_number).should.be.true;
-				browser.createPost.getCall(1).args[2].should.include('Some string output');
-				
-				fakeTemplate.called.should.be.true;
-				const gameOutputData = fakeTemplate.getCall(0).args[0];
+				view.respondWithTemplate.called.should.be.true;
+				const gameOutputData = view.respondWithTemplate.getCall(0).args[1];
 				gameOutputData.toExecute.should.equal(54);
 				gameOutputData.numPlayers.should.equal(2);
 				gameOutputData.names.should.include('accalia');
