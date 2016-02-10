@@ -78,8 +78,8 @@ exports.defaultConfig = {
 
 function patchIn(module) {
 	for (const property in module) {
-		if (typeof property === 'function' && module.hasOwnProperty(property)) {
-			exports.property = property;
+		if (typeof module[property] === 'function' && module.hasOwnProperty(property)) {
+			exports[property] = module[property];
 		}
 	}
 }
