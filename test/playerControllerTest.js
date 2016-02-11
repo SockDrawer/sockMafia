@@ -245,7 +245,21 @@ describe('player controller', () => {
 		});
 	});
 	
-	describe('Auto-lynch functionality', () => {		
+	describe('Auto-lynch functionality', () => {
+		beforeEach(() => {
+			sandbox.stub(view, 'respond');
+			sandbox.stub(view, 'respondInThread');
+			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
+			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
+			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
+			sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(true);
+			sandbox.stub(validator, 'isDaytime').resolves(true);
+			sandbox.stub(mafiaDAO, 'getCurrentVoteByPlayer').resolves(undefined);
+			sandbox.stub(mafiaDAO, 'getCurrentActionByPlayer').resolves(undefined);
+			sandbox.stub(mafiaDAO, 'addActionWithTarget').resolves(true);
+			sandbox.stub(mafiaDAO, 'setCurrentTime').resolves();
+		});
+		
 		it('should auto-lynch at the threshold', () => {
 			const command = {
 				post: {
@@ -257,31 +271,20 @@ describe('player controller', () => {
 				input: '!for @noLunch'
 			};
 
-			sandbox.stub(view, 'respond');
-			sandbox.stub(view, 'respondInThread');
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(true);
-			sandbox.stub(mafiaDAO, 'getCurrentTime').resolves(mafiaDAO.gameTime.day);
+
 			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(3);
 			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(1);
 			sandbox.stub(mafiaDAO, 'getNumVotesForPlayer').resolves(3);
 			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
-			sandbox.stub(mafiaDAO, 'addActionWithTarget').resolves(true);
-			
 			sandbox.stub(mafiaDAO, 'killPlayer').resolves({player: {properName: 'noLunch'}});
-			sandbox.stub(mafiaDAO, 'setCurrentTime').resolves();
-
 
 			return mafia.voteHandler(command).then(() => {
+		
 				mafiaDAO.killPlayer.called.should.be.true;
 				mafiaDAO.setCurrentTime.calledWith(12345, mafiaDAO.gameTime.night).should.be.true;
-				view.respond.called.should.be.true;
 				view.respondInThread.called.should.be.true;
-				
-				const output = view.respondInThread.getCall(0).args[1];
-				output.should.include('@noLunch has been lynched! Stay tuned for the flip. <b>It is now Night.</b>');
+				const output = view.respondInThread.getCall(1).args[1];
+				output.should.include('@noLunch has been lynched! Stay tuned for the flip. <b>It is now Night.</b>');			
 			});
 		});
 	
@@ -296,24 +299,16 @@ describe('player controller', () => {
 				input: '!for @noLunch'
 			};
 
-			sandbox.stub(view, 'respond');
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(true);
-			sandbox.stub(mafiaDAO, 'getCurrentTime').resolves(mafiaDAO.gameTime.day);
+
 			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(3);
 			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(1);
 			sandbox.stub(mafiaDAO, 'getNumVotesForPlayer').resolves(3);
-			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('loved');
-			sandbox.stub(mafiaDAO, 'addActionWithTarget').resolves(true);
-			
+			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('loved');	
 			sandbox.stub(mafiaDAO, 'killPlayer').resolves({player: {properName: 'noLunch'}});
-			sandbox.stub(mafiaDAO, 'setCurrentTime').resolves();
 
 
 			return mafia.voteHandler(command).then(() => {
-				view.respond.called.should.be.true;
+				view.respondInThread.called.should.be.true;
 				mafiaDAO.killPlayer.called.should.be.false;
 			});
 		});
@@ -329,30 +324,21 @@ describe('player controller', () => {
 				input: '!for @noLunch'
 			};
 
-			sandbox.stub(view, 'respond');
-			sandbox.stub(view, 'respondInThread');
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(true);
-			sandbox.stub(mafiaDAO, 'getCurrentTime').resolves(mafiaDAO.gameTime.day);
+
 			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(3);
 			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(1);
 			sandbox.stub(mafiaDAO, 'getNumVotesForPlayer').resolves(4);
 			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('loved');
-			sandbox.stub(mafiaDAO, 'addActionWithTarget').resolves(true);
 			
 			sandbox.stub(mafiaDAO, 'killPlayer').resolves({player: {properName: 'noLunch'}});
-			sandbox.stub(mafiaDAO, 'setCurrentTime').resolves();
 
 
 			return mafia.voteHandler(command).then(() => {
 				mafiaDAO.killPlayer.called.should.be.true;
 				mafiaDAO.setCurrentTime.calledWith(12345, mafiaDAO.gameTime.night).should.be.true;
-				view.respond.called.should.be.true;
 				view.respondInThread.called.should.be.true;
 				
-				const output = view.respondInThread.getCall(0).args[1];
+				const output = view.respondInThread.getCall(1).args[1];
 				output.should.include('@noLunch has been lynched! Stay tuned for the flip. <b>It is now Night.</b>');
 			});
 		});
@@ -368,24 +354,16 @@ describe('player controller', () => {
 				input: '!for @noLunch'
 			};
 
-			sandbox.stub(view, 'respond');
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(true);
-			sandbox.stub(mafiaDAO, 'getCurrentTime').resolves(mafiaDAO.gameTime.day);
 			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(3);
 			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(1);
 			sandbox.stub(mafiaDAO, 'getNumVotesForPlayer').resolves(2);
 			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
-			sandbox.stub(mafiaDAO, 'addActionWithTarget').resolves(true);
 			
 			sandbox.stub(mafiaDAO, 'killPlayer').resolves({player: {properName: 'noLunch'}});
-			sandbox.stub(mafiaDAO, 'setCurrentTime').resolves();
 
 
 			return mafia.voteHandler(command).then(() => {
-				view.respond.called.should.be.true;
+				view.respondInThread.called.should.be.true;
 				mafiaDAO.killPlayer.called.should.be.false;
 			});
 		});
@@ -401,31 +379,21 @@ describe('player controller', () => {
 				input: '!for @noLunch'
 			};
 
-			sandbox.stub(view, 'respond');
-			sandbox.stub(view, 'respondInThread');
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(true);
-			sandbox.stub(mafiaDAO, 'getCurrentTime').resolves(mafiaDAO.gameTime.day);
 			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(3);
 			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(1);
 			sandbox.stub(mafiaDAO, 'getNumVotesForPlayer').resolves(2);
 			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('hated');
-			sandbox.stub(mafiaDAO, 'addActionWithTarget').resolves(true);
 			
 			sandbox.stub(mafiaDAO, 'killPlayer').resolves({player: {properName: 'noLunch'}});
-			sandbox.stub(mafiaDAO, 'setCurrentTime').resolves();
 
 
 			return mafia.voteHandler(command).then(() => {
 				mafiaDAO.killPlayer.called.should.be.true;
 				mafiaDAO.setCurrentTime.calledWith(12345, mafiaDAO.gameTime.night).should.be.true;
 
-				view.respond.called.should.be.true;
 				view.respondInThread.called.should.be.true;
 				
-				const output = view.respondInThread.getCall(0).args[1];
+				const output = view.respondInThread.getCall(1).args[1];
 				output.should.include('@noLunch has been lynched! Stay tuned for the flip. <b>It is now Night.</b>');
 			});
 		});

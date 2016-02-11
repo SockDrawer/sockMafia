@@ -324,7 +324,7 @@ function doVote(game, post, voter, target, input, voteNum) {
 				+ 'Vote text:\n[quote]\n' + input + '\n[/quote]';
 		return text;
 	}
-	
+						
 	return dao.ensureGameExists(game) /*Validation*/
 		.then( () => dao.getGameStatus(game))
 		.then((status) => {
