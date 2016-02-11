@@ -81,7 +81,7 @@ function verifyPlayerCanVote(game, voter) {
 function revokeCurrentVote(game, voter, post, type) {
 	const promiseArray = [];
 
-	return new Promise((resolve) => { 
+	return new Promise((resolve) => {
 		if (type) {
 			resolve(dao.getCurrentActionByPlayer(game, voter, type));
 		} else {
@@ -302,9 +302,7 @@ exports.forHandler = function (command) {
 	// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
 	const target = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
 	
-	return dao.getPlayerProperty(game, voter).then((property) => {
-		return doVote(game, post, voter, target, command.input, 1);
-	});
+	return doVote(game, post, voter, target, command.input, 1);
 };
 
 function doVote(game, post, voter, target, input, voteNum) {
@@ -385,8 +383,7 @@ function doVote(game, post, voter, target, input, voteNum) {
 				view.respondInThread(game, text);
 			});
 		});
-	};
-
+}
 
 /**
   * Join: Join a game
@@ -403,7 +400,6 @@ function doVote(game, post, voter, target, input, voteNum) {
   */
 exports.joinHandler = function (command) {
 	const id = command.post.topic_id;
-	const post = command.post.post_number;
 	const player = command.post.username;
 	
 	return dao.ensureGameExists(id)
@@ -539,7 +535,7 @@ exports.listAllPlayersHandler = function (command) {
 		}
 
 		output += '###Mod(s):\n';
-		if (mods.length <= 0) {
+		if (numMod <= 0) {
 			output += 'None. Weird.';
 		} else {
 			mods.forEach((mod) => {

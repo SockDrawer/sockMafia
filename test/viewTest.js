@@ -10,9 +10,6 @@ const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 
 chai.should();
-const expect = chai.expect;
-
-const Handlebars = require('handlebars');
 
 const listNamesHelper = require('../src/templates/helpers/listNames');
 const voteChartHelper = require('../src/templates/helpers/voteChart');
@@ -20,7 +17,7 @@ const voteChartHelper = require('../src/templates/helpers/voteChart');
 
 describe('View helpers', () => {
 
-	let sandbox, notificationSpy, commandSpy;
+	let sandbox;
 	beforeEach(() => {
 		sandbox = sinon.sandbox.create();
 	});
@@ -29,7 +26,7 @@ describe('View helpers', () => {
 		sandbox.restore();
 	});
 
-	describe('listNames()', () => {	
+	describe('listNames()', () => {
 		beforeEach(() => {
 			sandbox.stub(Math, 'random').returns(0);
 		});
@@ -106,8 +103,8 @@ describe('View helpers', () => {
 		});
 	});
 	
-	describe('listNames()', () => {	
-		
+	describe('listNames()', () => {
+
 		const colors = {
 			DARK_RED: '#560000',
 			RED: '#AC1717',

@@ -16,12 +16,6 @@ const modController = require('./mod_controller');
 const playerController = require('./player_controller');
 const view = require('./view');
 const Promise = require('bluebird');
-const readFile = require('fs-readfile-promise');
-const Handlebars = require('handlebars');
-const validator = require('./validator');
-Handlebars.registerHelper('voteChart', require('./templates/helpers/voteChart'));
-Handlebars.registerHelper('listNames', require('./templates/helpers/listNames'));
-
 // Constants
 
 const unvoteNicks = ['unvote', 'no-lynch', 'nolynch'];
@@ -74,7 +68,6 @@ exports.defaultConfig = {
 };
 
 // Helper functions
-// 
 
 function patchIn(module) {
 	for (const property in module) {

@@ -9,18 +9,11 @@ require('sinon-as-promised');
 require('chai-as-promised');
 
 chai.should();
-const expect = chai.expect;
 
 const mafia = require('../src/mod_controller');
 const mafiaDAO = require('../src/dao.js');
 const Handlebars = require('handlebars');
 const view = require('../src/view.js');
-
-const fakeConfig = {
-	mergeObjects: sinon.stub().returns({
-		db: './mafiadbTesting'
-	})
-};
 
 const browser = {
 	createPost: sinon.stub().yields()
@@ -28,12 +21,10 @@ const browser = {
 
 describe('mod controller', () => {
 
-	let sandbox, notificationSpy, commandSpy;
+	let sandbox;
 	beforeEach(() => {
 		sandbox = sinon.sandbox.create();
 		mafia.createDB = sandbox.stub();
-		notificationSpy = sinon.spy();
-		commandSpy = sinon.spy();
 		browser.createPost.reset();
 	});
 	afterEach(() => {

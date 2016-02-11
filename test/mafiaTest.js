@@ -13,7 +13,6 @@ const expect = chai.expect;
 
 const mafia = require('../src/mafiabot');
 const mafiaDAO = require('../src/dao.js');
-const Handlebars = require('handlebars');
 const view = require('../src/view.js');
 const modController = require('../src/mod_controller');
 const playerController = require('../src/player_controller');
@@ -161,10 +160,15 @@ describe('mafia', () => {
 			mafia.internals.browser = browser;
 
 			return mafia.echoHandler(command).then( () => {
-				view.respond.calledWith(command, 'topic: ' + command.post.topic_id + '\n' + 'post: ' + command.post.post_number + '\n' + 'input: `' +
-				command.input + '`\n' + 'command: `' + command.command + '`\n' + 'args: `' + command.args + '`\n' +
-				'mention: `' + command.mention + '`\n' + 'post:\n[quote]\n' + command.post.cleaned +
-				'\n[/quote]').should.be.true;
+				view.respond.calledWith(command,
+				'topic: ' + command.post.topic_id + '\n'
+				+ 'post: ' + command.post.post_number + '\n'
+				+ 'input: `' +	command.input + '`\n'
+				+ 'command: `' + command.command + '`\n'
+				+ 'args: `' + command.args + '`\n' +
+				'mention: `' + command.mention + '`\n'
+				+ 'post:\n[quote]\n' + command.post.cleaned + '\n[/quote]'
+				).should.be.true;
 			});
 		});
 	});

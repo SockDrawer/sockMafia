@@ -191,7 +191,7 @@ exports.dayHandler = function (command) {
 						return row.player.properName;
 					});
 
-					view.respondWithTemplate('/templates/newDayTemplate.handlebars', data, command);					
+					view.respondWithTemplate('/templates/newDayTemplate.handlebars', data, command);
 				}
 			);
 		})

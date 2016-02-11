@@ -1,6 +1,8 @@
 'use strict';
 const readFile = require('fs-readfile-promise');
 const Handlebars = require('handlebars');
+Handlebars.registerHelper('voteChart', require('./templates/helpers/voteChart'));
+Handlebars.registerHelper('listNames', require('./templates/helpers/listNames'));
 
 let browser = {
 	createPost: () => 0

@@ -9,7 +9,6 @@ require('sinon-as-promised');
 require('chai-as-promised');
 
 chai.should();
-const expect = chai.expect;
 
 const mafia = require('../src/player_controller');
 const mafiaDAO = require('../src/dao.js');
@@ -17,24 +16,16 @@ const Handlebars = require('handlebars');
 const view = require('../src/view.js');
 const validator = require('../src/validator.js');
 
-const fakeConfig = {
-	mergeObjects: sinon.stub().returns({
-		db: './mafiadbTesting'
-	})
-};
-
 const browser = {
 	createPost: sinon.stub().yields()
 };
 
 describe('player controller', () => {
 
-	let sandbox, notificationSpy, commandSpy;
+	let sandbox;
 	beforeEach(() => {
 		sandbox = sinon.sandbox.create();
 		mafia.createDB = sandbox.stub();
-		notificationSpy = sinon.spy();
-		commandSpy = sinon.spy();
 		browser.createPost.reset();
 	});
 	afterEach(() => {
@@ -284,7 +275,9 @@ describe('player controller', () => {
 				mafiaDAO.setCurrentTime.calledWith(12345, mafiaDAO.gameTime.night).should.be.true;
 				view.respondInThread.called.should.be.true;
 				const output = view.respondInThread.getCall(1).args[1];
-				output.should.include('@noLunch has been lynched! Stay tuned for the flip. <b>It is now Night.</b>');			
+				output.should.include(
+					'@noLunch has been lynched! Stay tuned for the flip. <b>It is now Night.</b>'
+				);
 			});
 		});
 	
@@ -303,7 +296,7 @@ describe('player controller', () => {
 			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(3);
 			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(1);
 			sandbox.stub(mafiaDAO, 'getNumVotesForPlayer').resolves(3);
-			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('loved');	
+			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('loved');
 			sandbox.stub(mafiaDAO, 'killPlayer').resolves({player: {properName: 'noLunch'}});
 
 
