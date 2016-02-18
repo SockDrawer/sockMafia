@@ -1152,7 +1152,7 @@ describe('player controller', () => {
 						name: 'accalia',
 						properName: 'accalia'
 					},
-					voter: {
+					player: {
 						name: 'yamikuronue',
 						properName: 'Yamikuronue'
 					},
@@ -1214,7 +1214,7 @@ describe('player controller', () => {
 						name: 'tehninja',
 						properName: 'tehNinja'
 					},
-					voter: {
+					player: {
 						name: 'yamikuronue',
 						properName: 'Yamikuronue'
 					},
@@ -1227,7 +1227,7 @@ describe('player controller', () => {
 						name: 'accalia',
 						properName: 'accalia'
 					},
-					voter: {
+					player: {
 						name: 'yamikuronue',
 						properName: 'Yamikuronue'
 					},
@@ -1293,7 +1293,7 @@ describe('player controller', () => {
 						name: 'accalia',
 						properName: 'accalia'
 					},
-					voter: {
+					player: {
 						name: 'yamikuronue',
 						properName: 'Yamikuronue'
 					},
@@ -1344,7 +1344,7 @@ describe('player controller', () => {
 						name: 'accalia',
 						properName: 'accalia'
 					},
-					voter: {
+					player: {
 						name: 'yamikuronue',
 						properName: 'Yamikuronue'
 					},
@@ -1395,7 +1395,7 @@ describe('player controller', () => {
 						name: 'accalia',
 						properName: 'accalia'
 					},
-					voter: {
+					player: {
 						name: 'yamikuronue',
 						properName: 'Yamikuronue'
 					},
