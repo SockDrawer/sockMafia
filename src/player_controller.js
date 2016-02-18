@@ -631,7 +631,7 @@ exports.listVotesHandler = function (command) {
 			let currLookup;
 			players.forEach((target) => {
 				if (data.votes.hasOwnProperty(target)) {
-					currLookup = dao.getPlayerProperty(target).then((property) => {
+					currLookup = dao.getPlayerProperty(id, target).then((property) => {
 						let mod;
 						if (property === 'loved') {
 							mod = 1;
