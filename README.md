@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/SockDrawer/sockMafia.png?label=ready&title=Ready)](https://waffle.io/SockDrawer/sockMafia)
 [![Dependency Status](https://david-dm.org/yamikuronue/sockMafia/master.svg)](https://david-dm.org/yamikuronue/sockMafia/master)
 [![devDependency Status](https://david-dm.org/yamikuronue/sockMafia/master/dev-status.svg)](https://david-dm.org/yamikuronue/sockMafia/master#info=devDependencies)
 [![optionalDependency Status](https://david-dm.org/yamikuronue/sockMafia/master/optional-status.svg)](https://david-dm.org/yamikuronue/sockMafia/master#info=optionalDependencies)
