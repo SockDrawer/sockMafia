@@ -104,7 +104,7 @@ exports.startHandler = function (command) {
 			if (status === dao.gameStatus.auto) {
 				return Promise.reject('Game not in prep phase. Try `!prepare`.');
 			}
-			return Promise.reject('Game already ' + status);
+			return Promise.reject('Incorrect status: ' + status);
 		})
 		.then(() => validator.mustBeTrue(dao.isPlayerMod, [game, mod], 'Poster is not mod'))
 		.then(() => dao.setGameStatus(game, dao.gameStatus.running))

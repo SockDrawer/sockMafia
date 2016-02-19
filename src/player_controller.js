@@ -190,7 +190,7 @@ exports.nolynchHandler = function (command) {
 			if (status === dao.gameStatus.running) {
 				return Promise.resolve();
 			}
-			return Promise.reject('Game already ' + status);
+			return Promise.reject('Incorrect game state: ' + status);
 		})
 		.then(() => verifyPlayerCanVote(game, voter))
 		.then(() => revokeCurrentVote(game, voter, post))/* Revoke current vote, now a Controller responsibility */
@@ -255,7 +255,7 @@ exports.unvoteHandler = function (command) {
 			if (status === dao.gameStatus.running) {
 				return Promise.resolve();
 			}
-			return Promise.reject('Game already ' + status);
+			return Promise.reject('Incorrect game state: ' + status);
 		})
 		.then(() => verifyPlayerCanVote(game, voter))
 		.then(() => {
@@ -359,7 +359,7 @@ function doVote(game, post, voter, target, input, voteNum) {
 			if (status === dao.gameStatus.running) {
 				return Promise.resolve();
 			}
-			return Promise.reject('Game already ' + status);
+			return Promise.reject('Incorrect game state: ' + status);
 		})
 		.then(() => verifyPlayerCanVote(game, voter))
 		.then(() => {
