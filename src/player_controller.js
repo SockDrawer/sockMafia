@@ -5,6 +5,7 @@ const validator = require('./validator');
 const view = require('./view');
 const Promise = require('bluebird');
 
+const E_NOGAME = 'Error: No game';
 let myName, myOwner, eventLogger;
 
 exports.init = function(config, browser, events) {
@@ -45,6 +46,12 @@ function logUnhandledError(error) {
 	if (eventLogger && eventLogger.emit) {
 		eventLogger.emit('logError', 'Unrecoverable error! ' + error.toString());
 		eventLogger.emit('logError', error.stack);
+	}
+}
+
+function logWarning(error) {
+	if (eventLogger && eventLogger.emit) {
+		eventLogger.emit('logWarning', error);
 	}
 }
 
@@ -185,6 +192,10 @@ exports.nolynchHandler = function (command) {
 	
 	/*Validation*/
 	return dao.ensureGameExists(game)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + game);
+			throw(E_NOGAME);
+		})
 		.then( () => dao.getGameStatus(game))
 		.then((status) => {
 			if (status === dao.gameStatus.running) {
@@ -202,6 +213,10 @@ exports.nolynchHandler = function (command) {
 			return true;
 		})
 		.catch((reason) => {
+			/*Silent bypass*/
+			if (reason === E_NOGAME) {
+				return Promise.resolve();
+			}
 			/*Error handling*/
 			return getVotingErrorText(reason, voter)
 			.then((text) => {
@@ -250,6 +265,10 @@ exports.unvoteHandler = function (command) {
 	
 	/*Validation*/
 	return dao.ensureGameExists(game)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + game);
+			throw(E_NOGAME);
+		})
 		.then( () => dao.getGameStatus(game))
 		.then((status) => {
 			if (status === dao.gameStatus.running) {
@@ -272,6 +291,10 @@ exports.unvoteHandler = function (command) {
 			return true;
 		})
 		.catch((reason) => {
+			if (reason === E_NOGAME) {
+				return Promise.resolve();
+			}
+
 			/*Error handling*/
 			return getVotingErrorText(reason, voter)
 			.then((text) => {
@@ -313,13 +336,29 @@ exports.voteHandler = function (command) {
 	logDebug('Received vote request from ' + voter + ' for ' + target + ' in game ' + game);
 
 	
-	return dao.getPlayerProperty(game, voter).then((property) => {
-		if (property === dao.playerProperty.doubleVoter) {
-			return doVote(game, post, voter, target, command.input, 2);
-		} else {
-			return doVote(game, post, voter, target, command.input, 1);
-		}
-	});
+	return dao.ensureGameExists(game)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + game);
+			throw(E_NOGAME);
+		})
+		.then(() =>	dao.getPlayerProperty(game, voter))
+		.then((property) => {
+			if (property === dao.playerProperty.doubleVoter) {
+				return doVote(game, post, voter, target, command.input, 2);
+			} else {
+				return doVote(game, post, voter, target, command.input, 1);
+			}
+		})
+		.catch((reason) => {
+			if (reason === E_NOGAME) {
+				return Promise.resolve();
+			}
+
+			/*Error handling*/
+			logUnhandledError(reason);
+			//Preserve some secrecy in case this voter had a property that I barfed on:
+			view.reportError(command, 'Error processing vote request: ', 'I seem to be malfunctioning. Please contact ' + myOwner + ' immediately.');
+		});
 };
 
 exports.forHandler = function (command) {
@@ -354,6 +393,10 @@ function doVote(game, post, voter, target, input, voteNum) {
 	}
 						
 	return dao.ensureGameExists(game) /*Validation*/
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + game);
+			throw(E_NOGAME);
+		})
 		.then( () => dao.getGameStatus(game))
 		.then((status) => {
 			if (status === dao.gameStatus.running) {
@@ -403,6 +446,10 @@ function doVote(game, post, voter, target, input, voteNum) {
 			);
 		})
 		.catch((reason) => {
+			if (reason === E_NOGAME) {
+				return Promise.resolve();
+			}
+
 			/*Error handling*/
 			return getVotingErrorText(reason, voter, target)
 			.then((text) => {
@@ -436,6 +483,10 @@ exports.joinHandler = function (command) {
 	logDebug('Received join request from ' + player + ' in game ' + id);
 	
 	return dao.ensureGameExists(id)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + id);
+			throw(E_NOGAME);
+		})
 		.then(() => dao.getGameStatus(id))
 		.then((status) => {
 			if (status === dao.gameStatus.prep) {
@@ -447,6 +498,10 @@ exports.joinHandler = function (command) {
 		.then(() => dao.addPlayerToGame(id, player))
 		.then(() => view.respond(command, 'Welcome to the game, @' + player))
 		.catch((err) => {
+			if (err === E_NOGAME) {
+				return Promise.resolve();
+			}
+
 			view.reportError(command, 'Error when adding to game: ', err);
 			logRecoveredError('Join failed ' + err);
 		});
@@ -470,6 +525,10 @@ exports.listPlayersHandler = function (command) {
 	logDebug('Received list request from ' + command.post.username + ' in game ' + id);
 
 	return dao.ensureGameExists(id)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + id);
+			throw(E_NOGAME);
+		})
 		.then(() => dao.getAllPlayers(id))
 		.then( (rows) => {
 			let alive = [];
@@ -510,7 +569,12 @@ exports.listPlayersHandler = function (command) {
 
 			view.respond(command, output);
 			return Promise.resolve();
-		}).catch((err) => view.reportError(command, 'Error resolving list: ', err));
+		}).catch((err) => {
+			if (err === E_NOGAME) {
+				return Promise.resolve();
+			}
+			view.reportError(command, 'Error resolving list: ', err);
+		});
 };
 
 /**
@@ -532,6 +596,10 @@ exports.listAllPlayersHandler = function (command) {
 	logDebug('Received list all request from ' + command.post.username + ' in game ' + id);
 
 	return dao.ensureGameExists(id)
+	.catch(() => {
+		logWarning('Ignoring message in nonexistant game thread ' + id);
+		throw(E_NOGAME);
+	})
 	.then(() => dao.getAllPlayers(id))
 	.then( (rows) => {
 		let alive = [];
@@ -585,7 +653,12 @@ exports.listAllPlayersHandler = function (command) {
 
 		view.respond(command, output);
 		return Promise.resolve();
-	}).catch((err) => view.reportError(command, 'Error resolving list: ', err));
+	}).catch((err) => {
+		if (err === E_NOGAME) {
+			return Promise.resolve();
+		}
+		view.reportError(command, 'Error resolving list: ', err);
+	});
 };
 
 /**
@@ -620,6 +693,10 @@ exports.listVotesHandler = function (command) {
 
 	
 	return dao.ensureGameExists(id)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + id);
+			throw E_NOGAME;
+		})
 		.then(() => dao.getCurrentDay(id))
 		.then((day) => {
 			data.day = day;
@@ -692,6 +769,12 @@ exports.listVotesHandler = function (command) {
 			return Promise.all(pendingLookups);
 		}).then(() => {
 			view.respondWithTemplate('/templates/voteTemplate.handlebars', data, command);
+		})
+		.catch((reason) => {
+			if (reason === E_NOGAME) {
+				return Promise.resolve();
+			}
+			view.reportError(command, 'Error reporting votes: ', reason);
 		});
 };
 

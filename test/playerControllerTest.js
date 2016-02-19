@@ -33,6 +33,29 @@ describe('player controller', () => {
 	});
 
 	describe('for()', () => {
+		it ('should remain silent when no game is in session', () => {
+			const command = {
+				post: {
+					username: 'tehNinja',
+					'topic_id': 12345,
+					'post_number': 98765
+				},
+				args: ['@noLunch'],
+				input: '!for @noLunch'
+			};
+
+			sandbox.stub(view, 'respondInThread');
+			sandbox.stub(view, 'reportError');
+			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
+			sandbox.stub(mafiaDAO, 'ensureGameExists').rejects();
+
+			return mafia.voteHandler(command).then(() => {
+				view.respondInThread.called.should.be.false;
+				view.reportError.called.should.be.false;
+				
+			});
+		});
+
 		it('should reject votes from non-players', () => {
 			const command = {
 				post: {
@@ -393,6 +416,29 @@ describe('player controller', () => {
 	});
 
 	describe('unvote()', () => {
+
+		it ('should remain silent when no game is in session', () => {
+			const command = {
+				post: {
+					username: 'tehNinja',
+					'topic_id': 12345,
+					'post_number': 98765
+				},
+				args: ['@noLunch'],
+				input: '!for @noLunch'
+			};
+
+			sandbox.stub(view, 'respondInThread');
+			sandbox.stub(view, 'reportError');
+			sandbox.stub(mafiaDAO, 'ensureGameExists').rejects();
+
+			return mafia.unvoteHandler(command).then(() => {
+				view.respondInThread.called.should.be.false;
+				view.reportError.called.should.be.false;
+				
+			});
+		});
+
 		it('should reject unvotes from non-players', () => {
 			const command = {
 				post: {
@@ -664,6 +710,29 @@ describe('player controller', () => {
 	});
 	
 	describe('noLynch()', () => {
+		it ('should remain silent when no game is in session', () => {
+			const command = {
+				post: {
+					username: 'tehNinja',
+					'topic_id': 12345,
+					'post_number': 98765
+				},
+				args: ['@noLunch'],
+				input: '!for @noLunch'
+			};
+
+			sandbox.stub(view, 'respondInThread');
+			sandbox.stub(view, 'reportError');
+			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
+			sandbox.stub(mafiaDAO, 'ensureGameExists').rejects();
+
+			return mafia.nolynchHandler(command).then(() => {
+				view.respondInThread.called.should.be.false;
+				view.reportError.called.should.be.false;
+				
+			});
+		});
+
 		it('should reject votes from non-players', () => {
 			const command = {
 				post: {
@@ -847,6 +916,28 @@ describe('player controller', () => {
 	});
 
 	describe('join()', () => {
+		it ('should remain silent when no game is in session', () => {
+			const command = {
+				post: {
+					username: 'tehNinja',
+					'topic_id': 12345,
+					'post_number': 98765
+				},
+				args: ['@noLunch'],
+				input: '!for @noLunch'
+			};
+
+			sandbox.stub(view, 'respondInThread');
+			sandbox.stub(view, 'reportError');
+			sandbox.stub(mafiaDAO, 'ensureGameExists').rejects();
+
+			return mafia.joinHandler(command).then(() => {
+				view.respondInThread.called.should.be.false;
+				view.reportError.called.should.be.false;
+				
+			});
+		});
+
 		it('should not allow duplicates', () => {
 			const command = {
 				post: {
@@ -948,6 +1039,29 @@ describe('player controller', () => {
 	});
 	
 	describe('list-all-players()', () => {
+		it ('should remain silent when no game is in session', () => {
+			const command = {
+				post: {
+					username: 'tehNinja',
+					'topic_id': 12345,
+					'post_number': 98765
+				},
+				args: ['@noLunch'],
+				input: '!for @noLunch'
+			};
+
+			sandbox.stub(view, 'respondInThread');
+			sandbox.stub(view, 'reportError');
+			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
+			sandbox.stub(mafiaDAO, 'ensureGameExists').rejects();
+
+			return mafia.listAllPlayersHandler(command).then(() => {
+				view.respondInThread.called.should.be.false;
+				view.reportError.called.should.be.false;
+				
+			});
+		});
+
 		it('should report players', () => {
 			const command = {
 				post: {
@@ -1067,6 +1181,29 @@ describe('player controller', () => {
 	});
 	
 	describe('list-players()', () => {
+		it ('should remain silent when no game is in session', () => {
+			const command = {
+				post: {
+					username: 'tehNinja',
+					'topic_id': 12345,
+					'post_number': 98765
+				},
+				args: ['@noLunch'],
+				input: '!for @noLunch'
+			};
+
+			sandbox.stub(view, 'respondInThread');
+			sandbox.stub(view, 'reportError');
+			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
+			sandbox.stub(mafiaDAO, 'ensureGameExists').rejects();
+
+			return mafia.listPlayersHandler(command).then(() => {
+				view.respondInThread.called.should.be.false;
+				view.reportError.called.should.be.false;
+				
+			});
+		});
+
 		it('should report only living players', () => {
 			const command = {
 				post: {
@@ -1131,6 +1268,29 @@ describe('player controller', () => {
 	});
 	
 	describe('list-votes()', () => {
+		it ('should remain silent when no game is in session', () => {
+			const command = {
+				post: {
+					username: 'tehNinja',
+					'topic_id': 12345,
+					'post_number': 98765
+				},
+				args: ['@noLunch'],
+				input: '!for @noLunch'
+			};
+
+			sandbox.stub(view, 'respondInThread');
+			sandbox.stub(view, 'reportError');
+			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
+			sandbox.stub(mafiaDAO, 'ensureGameExists').rejects();
+
+			return mafia.listVotesHandler(command).then(() => {
+				view.respondInThread.called.should.be.false;
+				view.reportError.called.should.be.false;
+				
+			});
+		});
+
 		it('should output votes', () => {
 			const command = {
 				post: {
