@@ -43,7 +43,7 @@ function shuffle(array) {
 
 function logUnhandledError(error) {
 	if (eventLogger && eventLogger.emit) {
-		eventLogger.emit('logError','Unrecoverable error! ' + error.toString());
+		eventLogger.emit('logError', 'Unrecoverable error! ' + error.toString());
 		eventLogger.emit('logError', error.stack);
 	}
 }
