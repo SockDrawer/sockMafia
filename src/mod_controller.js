@@ -6,10 +6,12 @@ const view = require('./view');
 const Promise = require('bluebird');
 
 exports.internals = {};
+let eventLogger;
 
-exports.init = function(config, browser) {
+exports.init = function(config, browser, events) {
 	view.setBrowser(browser);
 	exports.internals.configuration = config;
+	eventLogger = events;
 };
 
 /*eslint-disable no-extend-native*/
@@ -17,6 +19,27 @@ Array.prototype.contains = function(element){
 	return this.indexOf(element) > -1;
 };
 /*eslint-enable no-extend-native*/
+
+function logUnhandledError(error) {
+	if (eventLogger && eventLogger.emit) {
+		eventLogger.emit('logError','Unrecoverable error! ' + error.toString());
+		eventLogger.emit('logError', error.stack);
+	}
+}
+
+function logRecoveredError(error) {
+	if (eventLogger && eventLogger.emit) {
+		eventLogger.emit('logExtended', 3, error);
+	}
+}
+
+
+function logDebug(statement) {
+	if (eventLogger && eventLogger.emit) {
+		eventLogger.emit('logExtended', 5, statement);
+	}
+}
+
 
  /**
   * Prepare: A mod function that starts a new game in the Prep phase.
@@ -34,6 +57,8 @@ exports.prepHandler = function (command) {
 	const player = command.post.username;
 	const gameName = command.args[0];
 
+	logDebug('Received new game request from ' + player + ' in thread ' + id);
+
 	return dao.getGameStatus(id)
 		.then(
 			(status) => {
@@ -45,6 +70,7 @@ exports.prepHandler = function (command) {
 			() => dao.addGame(id, gameName))
 		.then(() => dao.addMod(id, player))
 		.then(() => {
+			logDebug('Game ready to play in thread ' + id);
 			view.respond(command, 'Game "' + gameName + '" created! The mod is @' + player);
 		})
 		.catch((err) => view.reportError(command, 'Error when starting game: ', err));
@@ -67,6 +93,8 @@ exports.prepHandler = function (command) {
 exports.startHandler = function (command) {
 	const game = command.post.topic_id;
 	const mod = command.post.username;
+
+	logDebug('Received begin game request for game ' + game);
 	
 	return dao.getGameStatus(game)
 		.then((status) => {
@@ -83,13 +111,17 @@ exports.startHandler = function (command) {
 		.then(() => dao.incrementDay(game))
 		.then(() => dao.setCurrentTime(game, dao.gameTime.day))
 		.then(() => {
+			logDebug('Started game ' + game);
 			return view.respondWithTemplate('templates/modSuccess.handlebars', {
 				command: 'Start game',
 				results: 'Game is now ready to play',
 				game: game
 			}, command);
 		})
-		.catch((err) => view.reportError(command, 'Error when starting game: ', err));
+		.catch((err) => {
+			logRecoveredError('Error when starting game: ' + err);
+			view.reportError(command, 'Error when starting game: ', err);
+		});
 };
 
 exports.setHandler = function (command) {
@@ -104,6 +136,7 @@ exports.setHandler = function (command) {
 		'doublevoter'
 	];
 	
+	logDebug('Received set property request for ' + target + ' in thread ' + game);
 	return dao.getGameStatus(game)
 		.then((status) => {
 			if (status === dao.gameStatus.finished) {
@@ -120,13 +153,17 @@ exports.setHandler = function (command) {
 		})
 		.then(() => dao.addPropertyToPlayer(game, target, property.toLowerCase()))
 		.then(() => {
+			logDebug('Player ' + target + ' is now ' + property + ' in ' + game);
 			return view.respondWithTemplate('templates/modSuccess.handlebars', {
 				command: 'Set property',
 				results: 'Player ' + target + ' is now ' + property,
 				game: game
 			}, command);
 		})
-		.catch((err) => view.reportError(command, 'Error setting player property: ', err));
+		.catch((err) => {
+			logRecoveredError('Error when setting property: ' + err);
+			view.reportError(command, 'Error setting player property: ', err);
+		});
 };
 
  /**
@@ -155,6 +192,7 @@ exports.dayHandler = function (command) {
 		names: []
 	};
 
+	logDebug('Received new day request from ' + mod + ' in thread ' + game);
 	return dao.getGameStatus(game)
 		.then((status) => {
 			if (status === dao.gameStatus.running) {
@@ -191,11 +229,15 @@ exports.dayHandler = function (command) {
 						return row.player.properName;
 					});
 
+					logDebug('Moving to new day in  ' + game);
 					view.respondWithTemplate('/templates/newDayTemplate.handlebars', data, command);
 				}
 			);
 		})
-		.catch((err) => view.reportError(command, 'Error incrementing day: ', err));
+		.catch((err) => {
+			logRecoveredError('Error incrementing day: ' + err);
+			view.reportError(command, 'Error incrementing day: ', err);
+		});
 };
 
  /**
@@ -219,6 +261,7 @@ exports.killHandler = function (command) {
 	// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
 	const target = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
 	
+	logDebug('Received kill request from ' + mod + 'for ' + target + ' in thread ' + game);
 	return dao.getGameStatus(game)
 		.then((status) => {
 			if (status === dao.gameStatus.running) {
@@ -232,13 +275,17 @@ exports.killHandler = function (command) {
 		.then(() => dao.killPlayer(game, target))
 		.then(() => dao.getGameById(game))
 		.then(() => {
+			logDebug('Killing ' + target);
 			return view.respondWithTemplate('templates/modSuccess.handlebars', {
 				command: 'Kill',
 				results: 'Killed @' + target,
 				game: game
 			}, command);
 		})
-		.catch((err) => view.reportError(command, 'Error killing player: ', err));
+		.catch((err) => {
+			logRecoveredError('Error killing player: ' + err);
+			view.reportError(command, 'Error killing player: ', err);
+		});
 };
 
  /**
@@ -259,6 +306,7 @@ exports.finishHandler = function (command) {
 	const game = command.post.topic_id;
 	const mod = command.post.username;
 
+	logDebug('Received end game request from ' + mod + ' in thread ' + game);
 	return dao.getGameStatus(game)
 		.then((status) => {
 			if (status === dao.gameStatus.running) {
@@ -271,11 +319,15 @@ exports.finishHandler = function (command) {
 		.then(() => dao.setGameStatus(game, dao.gameStatus.finished))
 		.then(() => exports.listAllPlayersHandler(command))
 		.then(() => {
+			logDebug('Ending game ' + game);
 			return view.respondWithTemplate('templates/modSuccess.handlebars', {
 				command: 'End game',
 				results: 'Game now finished.',
 				game: game
 			}, command);
 		})
-		.catch((err) => view.reportError(command, 'Error finalizing game: ', err));
+		.catch((err) => {
+			logRecoveredError('Error finalizing game: ' + err);
+			view.reportError(command, 'Error finalizing game: ', err);
+		});
 };
