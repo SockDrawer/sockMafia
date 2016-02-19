@@ -10,14 +10,12 @@ const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 
 chai.should();
-const expect = chai.expect;
 
-const mafia = require('../src/mafiabot');
 const mafiaDAO = require('../src/dao.js');
 
 describe('DAO', () => {
 
-	let sandbox, notificationSpy, commandSpy;
+	let sandbox;
 	beforeEach(() => {
 		sandbox = sinon.sandbox.create();
 	});
@@ -25,7 +23,7 @@ describe('DAO', () => {
 		sandbox.restore();
 	});
 
-	describe('isPlayerAlive()', () => {	
+	describe('isPlayerAlive()', () => {
 		it('Should return true for living players', () => {
 			sandbox.stub(mafiaDAO, 'getPlayerStatus').resolves(mafiaDAO.playerStatus.alive);
 			mafiaDAO.isPlayerAlive('123', 'yamikuronue').should.eventually.be.true;
@@ -42,7 +40,7 @@ describe('DAO', () => {
 		});
 	});
 
-	describe('isPlayerInGame()', () => {	
+	describe('isPlayerInGame()', () => {
 		it('Should return true for players', () => {
 			sandbox.stub(mafiaDAO, 'getPlayerInGame').resolves(true);
 			mafiaDAO.isPlayerInGame('123', 'yamikuronue').should.eventually.be.true;
@@ -54,7 +52,7 @@ describe('DAO', () => {
 		});
 	});
 
-	describe('isPlayerMod()', () => {	
+	describe('isPlayerMod()', () => {
 		it('Should return true for mods', () => {
 			sandbox.stub(mafiaDAO, 'getPlayerStatus').resolves(mafiaDAO.playerStatus.mod);
 			mafiaDAO.isPlayerMod('123', 'yamikuronue').should.eventually.be.true;
