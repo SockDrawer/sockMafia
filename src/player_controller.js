@@ -5,12 +5,13 @@ const validator = require('./validator');
 const view = require('./view');
 const Promise = require('bluebird');
 
-let myName, myOwner;
+let myName, myOwner, eventLogger;
 
-exports.init = function(config, browser) {
+exports.init = function(config, browser, events) {
 	view.setBrowser(browser);
 	myName = config.username;
 	myOwner = config.owner;
+	eventLogger = events;
 };
 
 
@@ -40,15 +41,25 @@ function shuffle(array) {
 }
 
 
-/*eslint-disable no-console*/
-function logErrorToConsole(error) {
-	//Only log when we're not in a test
-	if (typeof global.it !== 'function') {
-		console.log('ERROR: ' + error.toString());
-		console.log(error.stack);
+function logUnhandledError(error) {
+	if (eventLogger && eventLogger.emit) {
+		eventLogger.emit('logError', 'Unrecoverable error! ' + error.toString());
+		eventLogger.emit('logError', error.stack);
 	}
 }
-/*eslint-enable no-console*/
+
+function logRecoveredError(error) {
+	if (eventLogger && eventLogger.emit) {
+		eventLogger.emit('logExtended', 3, error);
+	}
+}
+
+
+function logDebug(statement) {
+	if (eventLogger && eventLogger.emit) {
+		eventLogger.emit('logExtended', 5, statement);
+	}
+}
 
 /**
  * Helper method to lynch a player
@@ -57,6 +68,8 @@ function logErrorToConsole(error) {
  * @returns {Promise}        A promise to complete the lynch
  */
 function lynchPlayer(game, target) {
+	logDebug('Lynching target ' + target);
+
 	return dao.setCurrentTime(game, dao.gameTime.night)
 		.then(() => dao.killPlayer(game, target))
 		.then((rosterEntry) => {
@@ -73,12 +86,14 @@ function lynchPlayer(game, target) {
 /*Voting helpers*/
 
 function verifyPlayerCanVote(game, voter) {
+	logDebug('Checking if ' + voter + ' can vote.');
 	return validator.mustBeTrue(dao.isPlayerInGame, [game, voter], 'Voter not in game')
 		.then(() => validator.mustBeTrue(dao.isPlayerAlive, [game, voter], 'Voter not alive'))
 		.then(() => validator.mustBeTrue(validator.isDaytime, [game], 'It is not day'));
 }
 
 function revokeCurrentVote(game, voter, post, type) {
+	logDebug('Attempting to revoke current vote by ' + voter + (type ? 'of type ' + type : ''));
 	const promiseArray = [];
 
 	return new Promise((resolve) => {
@@ -101,6 +116,7 @@ function revokeCurrentVote(game, voter, post, type) {
 }
 
 function revokeCurrentVoteFor(game, voter, target, post) {
+	logDebug('Attempting to revoke current vote by ' + voter + ' for ' + target);
 	return dao.getCurrentVoteByPlayer(game, voter).then((votes) => {
 		for (let i = 0; i < votes.length; i++) {
 			if (votes[i].target.name.toLowerCase() === target.toLowerCase()) {
@@ -155,6 +171,8 @@ exports.nolynchHandler = function (command) {
 	const post = command.post.post_number;
 	const voter = command.post.username;
 
+	logDebug('Received nolynch request from ' + voter + ' in game ' + game);
+
 	function getVoteAttemptText(success) {
 		let text = '@' + command.post.username +  (success ? ' voted for ' : ' tried to vote for ') + 'no-lynch ';
 
@@ -172,7 +190,7 @@ exports.nolynchHandler = function (command) {
 			if (status === dao.gameStatus.running) {
 				return Promise.resolve();
 			}
-			return Promise.reject('Game already ' + status);
+			return Promise.reject('Incorrect game state: ' + status);
 		})
 		.then(() => verifyPlayerCanVote(game, voter))
 		.then(() => revokeCurrentVote(game, voter, post))/* Revoke current vote, now a Controller responsibility */
@@ -180,6 +198,7 @@ exports.nolynchHandler = function (command) {
 		.then(() => {
 			const text = getVoteAttemptText(true);
 			view.respond(command, text);
+			logDebug('Nolynch was successful');
 			return true;
 		})
 		.catch((reason) => {
@@ -189,6 +208,7 @@ exports.nolynchHandler = function (command) {
 				text += '\n<hr />\n';
 				text += getVoteAttemptText(false);
 				view.respond(command, text);
+				logRecoveredError('Nolynch failed: ' + reason);
 			});
 		});
 };
@@ -210,6 +230,9 @@ exports.unvoteHandler = function (command) {
 	const post = command.post.post_number;
 	const voter = command.post.username;
 	let target = undefined;
+
+	logDebug('Received unvote request from ' + voter + ' in game ' + game);
+
 	
 	if (command.args.length > 0) {
 		target = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
@@ -232,7 +255,7 @@ exports.unvoteHandler = function (command) {
 			if (status === dao.gameStatus.running) {
 				return Promise.resolve();
 			}
-			return Promise.reject('Game already ' + status);
+			return Promise.reject('Incorrect game state: ' + status);
 		})
 		.then(() => verifyPlayerCanVote(game, voter))
 		.then(() => {
@@ -245,6 +268,7 @@ exports.unvoteHandler = function (command) {
 		.then(() => {
 			const text = getVoteAttemptText(true);
 			view.respond(command, text);
+			logDebug('Unvote succeeded');
 			return true;
 		})
 		.catch((reason) => {
@@ -254,6 +278,7 @@ exports.unvoteHandler = function (command) {
 				text += '\n<hr />\n';
 				text += getVoteAttemptText(false);
 				view.respond(command, text);
+				logDebug('Unvote failed: ' + reason);
 			});
 		});
 };
@@ -284,6 +309,9 @@ exports.voteHandler = function (command) {
 	// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
 	// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
 	const target = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
+
+	logDebug('Received vote request from ' + voter + ' for ' + target + ' in game ' + game);
+
 	
 	return dao.getPlayerProperty(game, voter).then((property) => {
 		if (property === dao.playerProperty.doubleVoter) {
@@ -301,6 +329,8 @@ exports.forHandler = function (command) {
 	// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
 	// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
 	const target = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
+
+	logDebug('Received vote request from ' + voter + ' for ' + target + ' in game ' + game);
 	
 	return doVote(game, post, voter, target, command.input, 1);
 };
@@ -329,7 +359,7 @@ function doVote(game, post, voter, target, input, voteNum) {
 			if (status === dao.gameStatus.running) {
 				return Promise.resolve();
 			}
-			return Promise.reject('Game already ' + status);
+			return Promise.reject('Incorrect game state: ' + status);
 		})
 		.then(() => verifyPlayerCanVote(game, voter))
 		.then(() => {
@@ -347,6 +377,7 @@ function doVote(game, post, voter, target, input, voteNum) {
 			
 			const text = getVoteAttemptText(true);
 			view.respondInThread(game, text);
+			logDebug('Vote succeeded');
 			return true;
 		})
 		.then(() => dao.getCurrentDay(game))   /*Check for auto-lynch*/
@@ -379,7 +410,7 @@ function doVote(game, post, voter, target, input, voteNum) {
 				text += getVoteAttemptText(false);
 
 				//Log error
-				logErrorToConsole(reason);
+				logRecoveredError('Vote failed: ' + reason);
 				view.respondInThread(game, text);
 			});
 		});
@@ -401,6 +432,8 @@ function doVote(game, post, voter, target, input, voteNum) {
 exports.joinHandler = function (command) {
 	const id = command.post.topic_id;
 	const player = command.post.username;
+
+	logDebug('Received join request from ' + player + ' in game ' + id);
 	
 	return dao.ensureGameExists(id)
 		.then(() => dao.getGameStatus(id))
@@ -413,7 +446,10 @@ exports.joinHandler = function (command) {
 		.then(() => validator.mustBeFalse(dao.isPlayerInGame, [id, player], 'You are already in this game, @' + player + '!'))
 		.then(() => dao.addPlayerToGame(id, player))
 		.then(() => view.respond(command, 'Welcome to the game, @' + player))
-		.catch((err) => view.reportError(command, 'Error when adding to game: ', err));
+		.catch((err) => {
+			view.reportError(command, 'Error when adding to game: ', err);
+			logRecoveredError('Join failed ' + err);
+		});
 };
 
 /**
@@ -430,6 +466,8 @@ exports.joinHandler = function (command) {
   */
 exports.listPlayersHandler = function (command) {
 	const id = command.post.topic_id;
+
+	logDebug('Received list request from ' + command.post.username + ' in game ' + id);
 
 	return dao.ensureGameExists(id)
 		.then(() => dao.getAllPlayers(id))
@@ -490,6 +528,8 @@ exports.listPlayersHandler = function (command) {
   */
 exports.listAllPlayersHandler = function (command) {
 	const id = command.post.topic_id;
+
+	logDebug('Received list all request from ' + command.post.username + ' in game ' + id);
 
 	return dao.ensureGameExists(id)
 	.then(() => dao.getAllPlayers(id))
@@ -573,10 +613,12 @@ exports.listVotesHandler = function (command) {
 		notVoting: [],
 		toExecute: 0
 	};
+	const id = command.post.topic_id;
+	logDebug('Received list votes request from ' + command.post.username + ' in game ' + id);
 
 	const currentlyVoting = [];
 
-	const id = command.post.topic_id;
+	
 	return dao.ensureGameExists(id)
 		.then(() => dao.getCurrentDay(id))
 		.then((day) => {
@@ -671,5 +713,7 @@ exports.listVotesHandler = function (command) {
   * @returns {Promise}        A promise that will resolve when the game is ready
   */
 exports.listAllVotesHandler = function (command) {
+	logDebug('Received list all votes request from ' + command.post.username + ' in game ' + command.post.topic_id);
+	logDebug('List all votes is not yet implemented.');
 	return Promise.resolve();
 };

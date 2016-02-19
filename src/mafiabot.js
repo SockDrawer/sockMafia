@@ -250,8 +250,8 @@ exports.prepare = function prepare(plugConfig, config, events, browser) {
 		})
 		.then(() => {
 			view.setBrowser(browser);
-			modController.init(config, browser);
-			playerController.init(config, browser);
+			modController.init(config, browser, events);
+			playerController.init(config, browser, events);
 			registerCommands(events);
 		})
 		.catch((err) => {
