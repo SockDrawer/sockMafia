@@ -39,8 +39,11 @@ module.exports = function(votes, modifier, toExecute) {
 		bgColor = colors.WHITE;
 	}
 	let xml = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="12">';
-	xml += '<rect width="100%" height="100%" fill="' + bgColor + '"/>';
-	xml += '<rect x="' + (100.0 - percent) + '%" width="' + percent + '" height="100%" fill="' + fillColor + '"/>';
+	xml += `<rect width="100%" height="100%" fill="${bgColor}"/>`;
+	xml += `<rect x="${(100.0 - percent)}%" width="${percent}" height="100%" fill="${fillColor}"/>`;
+	if (mafia.internals.configuration.voteBars.toLowerCase() === 'open') {
+		xml += `<text x="${(100.0 - percent)}%" font-size="10" fill="${bgColor}">${votes}/${toExecute + modifier}</text>`;
+	}
 	xml += '</svg>';
 	
 	const b64 = new Buffer(xml).toString('base64');

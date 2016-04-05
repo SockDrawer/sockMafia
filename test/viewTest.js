@@ -211,11 +211,45 @@ describe('View helpers', () => {
 			it('Should not reveal loved', () => {
 				const output = decode(voteChartHelper(1, +1, 4).toString());
 				output.should.contain('<rect x="75%" width="25" height="100%"');
+				output.should.not.contain('1/4');
 			});
 			
 			it('Should not reveal hated', () => {
 				const output = decode(voteChartHelper(1, -1, 5).toString());
 				output.should.contain('<rect x="80%" width="20" height="100%"');
+				output.should.not.contain('1/4');
+			});
+		});
+
+		describe('open bars', () => {
+			before(() => {
+				mafia.internals.configuration.voteBars = 'open';
+			});
+
+			it('Should show dead when hated is in hammer', () => {
+				const output = decode(voteChartHelper(11, -1, 12).toString());
+				output.should.contain('fill="' + colors.DARK_RED);
+				output.should.contain('fill="' + colors.RED);
+				output.should.contain('11/11');
+			});
+			
+			it('Should fill hammer when loved is dead', () => {
+				const output = decode(voteChartHelper(12, +1, 12).toString());
+				output.should.contain('fill="' + colors.GREEN);
+				output.should.contain('fill="' + colors.LIGHT_GREEN);
+				output.should.contain('12/13');
+			});
+			
+			it('Should reveal loved', () => {
+				const output = decode(voteChartHelper(1, +1, 3).toString());
+				output.should.contain('<rect x="75%" width="25" height="100%"');
+				output.should.contain('1/4');
+			});
+			
+			it('Should reveal hated', () => {
+				const output = decode(voteChartHelper(1, -1, 5).toString());
+				output.should.contain('<rect x="75%" width="25" height="100%"');
+				output.should.contain('1/4');
 			});
 		});
 	});
