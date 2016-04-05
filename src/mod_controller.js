@@ -171,8 +171,11 @@ exports.setHandler = function (command) {
   * Must be used in the game thread.
   *
   * Game rules:
-  *  - A game can only advance to day when it is in the night phase
+  *  - A game can advance to day when it is in the night phase
+  *  - A game can advance to night when it is in the day phase
   *  - A game can only be advanced by the mod
+  *  - When the game is advanced to day, a new day starts
+  *  - When the game is advanced to night, a new day does not start
   *  - When a new day starts, the vote counts from the previous day are reset
   *  - When a new day starts, the list of players is output for convenience
   *  - When a new day starts, the "to-lynch" count is output for convenience
@@ -200,39 +203,41 @@ exports.dayHandler = function (command) {
 			}
 			return Promise.reject('Game not started. Try `!start`.');
 		})
-		.then(() => dao.getCurrentTime(game))
-		.then((time) => {
-			if (time === dao.gameTime.night) {
-				return Promise.resolve();
-			}
-			return Promise.reject('Cannot move to a new day until it is night.');
-		})
 		.then(() => {
 			return validator.mustBeTrue(dao.isPlayerMod, [game, mod], 'Poster is not mod');
 		})
-		.then(() => dao.incrementDay(game))
 		.then(() => dao.getGameById(game))
 		.then((gameInstance) => {
-			data.day = gameInstance.day;
-			const text = 'Incremented day for ' + gameInstance.name;
-			view.respond(command, text);
-			return dao.setCurrentTime(game, dao.gameTime.day);
-		}).then(() => {
-			return Promise.join(
-				dao.getNumToLynch(game),
-				dao.getLivingPlayers(game),
-				(toLynch, livingPlayers) => {
-					data.toExecute = toLynch;
-					data.numPlayers = livingPlayers.length;
+			if (gameinstance.time === dao.gameTime.day) {
+				return dao.setCurrentTime(game, dao.gameTime.night).then(() => {
+					const text = 'Incremented stage for ' + gameInstance.name;
+					view.respond(command, text);
+				});
+			}
+			//Otherwise, do the whole hog
+			return dao.incrementDay(game).then(() => {
+				data.day = gameInstance.day;
+				return dao.setCurrentTime(game, dao.gameTime.day).then(() => {
+					const text = 'Incremented day for ' + gameInstance.name;
+					view.respond(command, text);
+				});
+			}).then(() => {
+				return Promise.join(
+					dao.getNumToLynch(game),
+					dao.getLivingPlayers(game),
+					(toLynch, livingPlayers) => {
+						data.toExecute = toLynch;
+						data.numPlayers = livingPlayers.length;
 
-					data.names = livingPlayers.map((row) => {
-						return row.player.properName;
-					});
+						data.names = livingPlayers.map((row) => {
+							return row.player.properName;
+						});
 
-					logDebug('Moving to new day in  ' + game);
-					view.respondWithTemplate('/templates/newDayTemplate.handlebars', data, command);
-				}
-			);
+						logDebug('Moving to new day in  ' + game);
+						view.respondWithTemplate('/templates/newDayTemplate.handlebars', data, command);
+					}
+				);	
+			})		
 		})
 		.catch((err) => {
 			logRecoveredError('Error incrementing day: ' + err);

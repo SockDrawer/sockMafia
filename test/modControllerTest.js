@@ -304,7 +304,7 @@ describe('mod controller', () => {
 			});
 		});
 
-		it('Should reject non-nighttime', () => {
+		it('Should move to night', () => {
 			const command = {
 				post: {
 					username: 'tehNinja',
@@ -316,11 +316,15 @@ describe('mod controller', () => {
 				{player: {'name': 'yamikuronue'}, 'playerStatus': 'alive'},
 				{player: {'name': 'accalia'}, 'playerStatus': 'alive'}
 			];
+			const game = {
+				day: 2,
+				name: 'testMafia',
+				time: mafiaDAO.gameTime.day
+			};
 
-
-			sandbox.stub(mafiaDAO, 'getGameStatus').rejects('Game does not exist');
+			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
 			sandbox.stub(mafiaDAO, 'getCurrentTime').resolves(mafiaDAO.gameTime.day);
-			sandbox.stub(mafiaDAO, 'getGameId').rejects('No such game');
+			sandbox.stub(mafiaDAO, 'getGameById').resolves(game);
 			sandbox.stub(mafiaDAO, 'isPlayerMod').resolves(true);
 			sandbox.stub(mafiaDAO, 'incrementDay').resolves(2);
 			sandbox.stub(mafiaDAO, 'setCurrentTime').resolves();
@@ -336,12 +340,12 @@ describe('mod controller', () => {
 			return mafia.dayHandler(command).then( () => {
 				//Game actions
 				mafiaDAO.incrementDay.called.should.not.be.true;
-				mafiaDAO.setCurrentTime.called.should.not.be.true;
+				mafiaDAO.setCurrentTime.called.should.be.true;
 				
 				//Output back to mod
 				browser.createPost.calledWith(command.post.topic_id, command.post.post_number).should.be.true;
 				const modOutput = browser.createPost.getCall(0).args[2];
-				modOutput.should.include('Error incrementing day: Error: Game does not exist');
+				modOutput.should.include('Incremented stage for testMafia');
 				
 				//Output to game
 				browser.createPost.calledWith(1, command.post.post_number).should.not.be.true;
@@ -349,7 +353,7 @@ describe('mod controller', () => {
 			});
 		});
 		
-		it('Should move the day along', () => {
+		it('Should move to a new day', () => {
 			const command = {
 				post: {
 					username: 'tehNinja',
@@ -364,7 +368,8 @@ describe('mod controller', () => {
 
 			const game = {
 				day: 2,
-				name: 'testMafia'
+				name: 'testMafia',
+				time: mafiaDAO.gameTime.night
 			};
 
 
