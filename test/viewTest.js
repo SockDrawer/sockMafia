@@ -13,13 +13,14 @@ chai.should();
 
 const listNamesHelper = require('../src/templates/helpers/listNames');
 const voteChartHelper = require('../src/templates/helpers/voteChart');
-
+const mafia = require('../src/mafiabot');
 
 describe('View helpers', () => {
 
 	let sandbox;
 	beforeEach(() => {
 		sandbox = sinon.sandbox.create();
+		mafia.internals.configuration = mafia.defaultConfig;
 	});
 	
 	afterEach(() => {
@@ -103,7 +104,7 @@ describe('View helpers', () => {
 		});
 	});
 	
-	describe('listNames()', () => {
+	describe('voteChart()', () => {
 
 		const colors = {
 			DARK_RED: '#560000',
@@ -153,27 +154,69 @@ describe('View helpers', () => {
 			output.should.contain('fill="' + colors.DARK_RED);
 			output.should.contain('fill="' + colors.RED);
 		});
-		
-		it('Should show dead when hated is in hammer', () => {
-			const output = decode(voteChartHelper(11, -1, 12).toString());
-			output.should.contain('fill="' + colors.DARK_RED);
-			output.should.contain('fill="' + colors.RED);
+
+		describe('bastard bars', () => {
+			before(() => {
+				mafia.internals.configuration.voteBars = 'bastard';
+			});
+
+			it('Should show dead when hated is in hammer', () => {
+				const output = decode(voteChartHelper(11, -1, 12).toString());
+				output.should.contain('fill="' + colors.DARK_RED);
+				output.should.contain('fill="' + colors.RED);
+			});
+			
+			it('Should fill hammer when loved is dead', () => {
+				const output = decode(voteChartHelper(12, +1, 12).toString());
+				output.should.contain('fill="' + colors.GREEN);
+				output.should.contain('fill="' + colors.LIGHT_GREEN);
+			});
+			
+			it('Should reveal loved', () => {
+				const output = decode(voteChartHelper(1, +1, 3).toString());
+				output.should.contain('<rect x="75%" width="25" height="100%"');
+			});
+			
+			it('Should reveal hated', () => {
+				const output = decode(voteChartHelper(1, -1, 5).toString());
+				output.should.contain('<rect x="75%" width="25" height="100%"');
+			});
 		});
-		
-		it('Should fill hammer when loved is dead', () => {
-			const output = decode(voteChartHelper(12, +1, 12).toString());
-			output.should.contain('fill="' + colors.GREEN);
-			output.should.contain('fill="' + colors.LIGHT_GREEN);
-		});
-		
-		it('Should reveal loved', () => {
-			const output = decode(voteChartHelper(1, +1, 3).toString());
-			output.should.contain('<rect x="75%" width="25" height="100%"');
-		});
-		
-		it('Should reveal hated', () => {
-			const output = decode(voteChartHelper(1, -1, 5).toString());
-			output.should.contain('<rect x="75%" width="25" height="100%"');
+
+
+		describe('hidden bars', () => {
+			before(() => {
+				mafia.internals.configuration.voteBars = 'hidden';
+			});
+
+
+			it('Should show dead when hated is in hammer', () => {
+				const output = decode(voteChartHelper(11, -1, 12).toString());
+				output.should.contain('fill="' + colors.DARK_RED);
+				output.should.contain('fill="' + colors.RED);
+			});
+
+			it('Should fill hammer when loved is in normal hammer', () => {
+				const output = decode(voteChartHelper(11, +1, 12).toString());
+				output.should.contain('fill="' + colors.GREEN);
+				output.should.contain('fill="' + colors.LIGHT_GREEN);
+			});
+			
+			it('Should fill hammer when loved would be dead', () => {
+				const output = decode(voteChartHelper(12, +1, 12).toString());
+				output.should.contain('fill="' + colors.GREEN);
+				output.should.contain('fill="' + colors.LIGHT_GREEN);
+			});
+			
+			it('Should not reveal loved', () => {
+				const output = decode(voteChartHelper(1, +1, 4).toString());
+				output.should.contain('<rect x="75%" width="25" height="100%"');
+			});
+			
+			it('Should not reveal hated', () => {
+				const output = decode(voteChartHelper(1, -1, 5).toString());
+				output.should.contain('<rect x="80%" width="20" height="100%"');
+			});
 		});
 	});
 });

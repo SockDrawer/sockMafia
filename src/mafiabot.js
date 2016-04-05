@@ -20,22 +20,6 @@ const Promise = require('bluebird');
 
 const unvoteNicks = ['unvote', 'no-lynch', 'nolynch'];
 
-const internals = {
-	browser: null,
-	configuration: exports.defaultConfig,
-	timeouts: {},
-	interval: null,
-	events: null
-};
-exports.internals = internals;
-
-// Local extensions
-/*eslint-disable no-extend-native*/
-Array.prototype.contains = function(element){
-	return this.indexOf(element) > -1;
-};
-/*eslint-enable no-extend-native*/
-
 // Defaults
 
 /**
@@ -64,8 +48,26 @@ exports.defaultConfig = {
 	 * @default
 	 * @type {string}
 	 */
-	db: './mafiadb'
+	db: './mafiadb',
+
+	voteBars: 'bastard'
 };
+
+const internals = {
+	browser: null,
+	configuration: exports.defaultConfig,
+	timeouts: {},
+	interval: null,
+	events: null
+};
+exports.internals = internals;
+
+// Local extensions
+/*eslint-disable no-extend-native*/
+Array.prototype.contains = function(element){
+	return this.indexOf(element) > -1;
+};
+/*eslint-enable no-extend-native*/
 
 // Helper functions
 

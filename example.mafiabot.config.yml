@@ -20,3 +20,4 @@ plugins:
      - player2
     db: './mafiadb'
     name: testMafia
+    voteBars: bastard

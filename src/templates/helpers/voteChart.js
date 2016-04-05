@@ -1,5 +1,6 @@
 'use strict';
 const Handlebars = require('handlebars');
+const mafia = require('../../mafiabot');
 
 /*colors*/
 const colors = {
@@ -12,11 +13,21 @@ const colors = {
 };
 
 module.exports = function(votes, modifier, toExecute) {
-	let fillColor, bgColor;
-	const percent = votes / (toExecute + modifier) * 100;
-	const hammer = toExecute + modifier - votes  === 1;
+	let fillColor, bgColor, percent;
+	if (mafia.internals.configuration.voteBars.toLowerCase() === 'hidden') {
+		percent = votes / toExecute * 100;
+	} else {
+		percent = votes / (toExecute + modifier) * 100;		
+	}
+
+	//Hammer color either when it would be hammer, or it's really hammer
+	const hammer = (toExecute + modifier - votes  === 1) || (toExecute - votes  === 1);
+
+	//Dead when they are dead, full stop
+	const dead = toExecute + modifier - votes  <= 0;
 	
-	if (percent >= 100) {
+	
+	if (dead) {
 		fillColor = colors.DARK_RED;
 		bgColor = colors.RED;
 	} else if (hammer) {
