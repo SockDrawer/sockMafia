@@ -278,7 +278,7 @@ exports.activate = function activate() {
 			}
 			internals.forum.emit.apply(internals.forum, args);
 		},
-		onCommand: (command, help, handler) => {
+		onCommand: (commandName, help, handler) => {
 			function translateHandler(command) {
 				return Promise.all([
 					command.getPost(),
@@ -300,7 +300,7 @@ exports.activate = function activate() {
 					return handler(translated);
 				});
 			}
-			return internals.forum.Commands.add(command, help, translateHandler);
+			return internals.forum.Commands.add(commandName, help, translateHandler);
 		}
 	};
 	return dao.createDB(internals.configuration)
