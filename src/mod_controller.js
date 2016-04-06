@@ -8,10 +8,8 @@ const Promise = require('bluebird');
 exports.internals = {};
 let eventLogger;
 
-exports.init = function(config, browser, events) {
-	view.setBrowser(browser);
-	exports.internals.configuration = config;
-	eventLogger = events;
+exports.init = function(forum) {
+	eventLogger = forum;
 };
 
 /*eslint-disable no-extend-native*/
@@ -22,8 +20,8 @@ Array.prototype.contains = function(element){
 
 function logUnhandledError(error) {
 	if (eventLogger && eventLogger.emit) {
-		eventLogger.emit('logError', 'Unrecoverable error! ' + error.toString());
-		eventLogger.emit('logError', error.stack);
+		eventLogger.emit('error', 'Unrecoverable error! ' + error.toString());
+		eventLogger.emit('error', error.stack);
 	}
 }
 

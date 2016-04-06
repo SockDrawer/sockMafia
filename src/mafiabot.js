@@ -261,23 +261,7 @@ exports.activate = function activate() {
 			return internals.forum.Post.reply(topic_id, post_id, content);
 		}
 	};
-	const fakeConfig = {
-		username: internals.forum.username,
-		owner: internals.owner.username
-	};
 	const fakeEvents = {
-		emit: function () {
-			const args = Array.prototype.slice.apply(arguments);
-			switch (args[0]) { // shim event name changes
-			case 'logError':
-				args[0] = 'error';
-				break;
-			case 'logWarning':
-				args[0] = 'log';
-				break;
-			}
-			internals.forum.emit.apply(internals.forum, args);
-		},
 		onCommand: (commandName, help, handler) => {
 			function translateHandler(command) {
 				return Promise.all([
@@ -329,8 +313,8 @@ exports.activate = function activate() {
 		})
 		.then(() => {
 			view.setBrowser(fakeBrowser);
-			modController.init(fakeConfig, fakeBrowser, fakeEvents);
-			playerController.init(fakeConfig, fakeBrowser, fakeEvents);
+			modController.init(internals.forum);
+			playerController.init(internals.forum);
 			registerCommands(fakeEvents);
 		})
 		.catch((err) => {
