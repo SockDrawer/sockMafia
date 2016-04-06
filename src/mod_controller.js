@@ -9,7 +9,7 @@ exports.internals = {};
 let eventLogger;
 
 exports.init = function(config, browser, events) {
-	view.setBrowser(browser);
+	view.init(browser);
 	exports.internals.configuration = config;
 	eventLogger = events;
 };
