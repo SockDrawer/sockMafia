@@ -208,12 +208,13 @@ exports.dayHandler = function (command) {
 		})
 		.then(() => dao.getGameById(game))
 		.then((gameInstance) => {
-
+			if (gameInstance.time === dao.gameTime.day) {
 				return dao.setCurrentTime(game, dao.gameTime.night).then(() => {
 					const text = 'Incremented stage for ' + gameInstance.name;
 					view.respond(command, text);
 				});
 			}
+
 			//Otherwise, do the whole hog
 			return dao.incrementDay(game).then(() => {
 				data.day = gameInstance.day;
