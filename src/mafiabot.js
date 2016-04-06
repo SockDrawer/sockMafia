@@ -181,78 +181,7 @@ exports.echoHandler = function (command) {
 };
 
 
-/**
- * Start the plugin after login
- */
-exports.start = function start() {};
-
-
-/**
- * Stop the plugin prior to exit or reload
- */
-exports.stop = function stop() {};
-
-/**
- * Prepare Plugin prior to login
- *
- * @param {*} plugConfig Plugin specific configuration
- * @param {Config} config Overall Bot Configuration
- * @param {externals.events.SockEvents} events EventEmitter used for the bot
- * @param {Browser} browser Web browser for communicating with discourse
- */
 /*eslint-disable no-console*/
-exports.prepare = function prepare(plugConfig, config, events, browser) {
-	if (Array.isArray(plugConfig)) {
-		plugConfig = {
-			messages: plugConfig
-		};
-	}
-	if (plugConfig === null || typeof plugConfig !== 'object') {
-		plugConfig = {};
-	}
-	if (plugConfig.players) {
-		plugConfig.players.concat(unvoteNicks);
-	}
-	internals.events = events;
-	internals.browser = browser;
-	internals.owner = config.core.owner;
-	internals.username = config.core.username;
-	internals.configuration = config.mergeObjects(true, exports.defaultConfig, plugConfig);
-	return dao.createDB(internals.configuration)
-		.then(() => dao.ensureGameExists(plugConfig.thread))
-		.catch((reason) => {
-			if (reason === 'Game does not exist') {
-				return dao.addGame(plugConfig.thread, plugConfig.name);
-			} else {
-				console.log('Mafia: Error: Game not added to database.\n' + '\tReason: ' + reason);
-				return Promise.reject('Game not created');
-			}
-		})
-		.then(() => {
-			if (plugConfig.players) {
-				return registerPlayers(plugConfig.thread, plugConfig.players);
-			} else {
-				return Promise.resolve();
-			}
-		})
-		.then(() => {
-			if (plugConfig.mods) {
-				return registerMods(plugConfig.thread, plugConfig.mods);
-			} else {
-				return Promise.resolve();
-			}
-		})
-		.then(() => {
-			view.setBrowser(browser);
-			modController.init(config, browser, events);
-			playerController.init(config, browser, events);
-			registerCommands(events);
-		})
-		.catch((err) => {
-			console.log('ERROR! ' + err);
-		});
-};
-
 // Sockbot 3.0 activation function
 exports.activate = function activate() {
 	const plugConfig = internals.configuration;
