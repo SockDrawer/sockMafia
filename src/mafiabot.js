@@ -106,6 +106,7 @@ function registerModCommands(events) {
 	events.onCommand('prepare', 'Start a new game', exports.prepHandler, handleCallback);
 	events.onCommand('start', 'move a game into active play (mod only)', exports.startHandler, handleCallback);
 	events.onCommand('new-day', 'move on to a new day (mod only)', exports.dayHandler, handleCallback);
+	events.onCommand('next-phase', 'move on to the next phase (mod only)', exports.dayHandler, handleCallback);
 	events.onCommand('kill', 'kill a player (mod only)', exports.killHandler, handleCallback);
 	events.onCommand('set', 'Assign a player a role (mod only)', exports.setHandler, handleCallback);
 	events.onCommand('end', 'end the game (mod only)', exports.finishHandler, handleCallback);
