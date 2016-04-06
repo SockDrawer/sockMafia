@@ -208,7 +208,7 @@ exports.dayHandler = function (command) {
 		})
 		.then(() => dao.getGameById(game))
 		.then((gameInstance) => {
-			if (gameinstance.time === dao.gameTime.day) {
+
 				return dao.setCurrentTime(game, dao.gameTime.night).then(() => {
 					const text = 'Incremented stage for ' + gameInstance.name;
 					view.respond(command, text);
@@ -237,7 +237,7 @@ exports.dayHandler = function (command) {
 						view.respondWithTemplate('/templates/newDayTemplate.handlebars', data, command);
 					}
 				);	
-			})		
+			});	
 		})
 		.catch((err) => {
 			logRecoveredError('Error incrementing day: ' + err);
