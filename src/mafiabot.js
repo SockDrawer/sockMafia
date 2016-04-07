@@ -192,11 +192,6 @@ exports.echoHandler = function (command) {
 exports.activate = function activate() {
 	debug('activating mafiabot');
 	const plugConfig = internals.configuration;
-	const fakeBrowser = {
-		createPost: (topicId, postId, content) => {
-			return internals.forum.Post.reply(topicId, postId, content);
-		}
-	};
 	const fakeEvents = {
 		onCommand: (commandName, help, handler) => {
 			debug(`Registering command: ${commandName}`);
