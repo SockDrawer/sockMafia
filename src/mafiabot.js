@@ -16,6 +16,8 @@ const modController = require('./mod_controller');
 const playerController = require('./player_controller');
 const view = require('./view');
 const Promise = require('bluebird');
+const debug = require('debug')('sockbot:mafia');
+
 // Constants
 
 const unvoteNicks = ['unvote', 'no-lynch', 'nolynch'];
@@ -254,6 +256,7 @@ exports.activate = function activate() {
 
 // Sockbot 3.0 Plugin function
 exports.plugin = function plugin(forum, config) {
+	debug('creating plugin object');
 	if (Array.isArray(config)) {
 		config = {
 			messages: config

@@ -15,17 +15,17 @@ const mafiaDAO = require('../src/dao.js');
 const Handlebars = require('handlebars');
 const view = require('../src/view.js');
 
-const browser = {
-	createPost: sinon.stub().yields()
-};
-
 describe('mod controller', () => {
 
 	let sandbox;
 	beforeEach(() => {
 		sandbox = sinon.sandbox.create();
 		mafia.createDB = sandbox.stub();
-		browser.createPost.reset();
+
+		sandbox.stub(view, 'respond').resolves();
+		sandbox.stub(view, 'respondInThread').resolves();
+		sandbox.stub(view, 'respondWithTemplate').resolves();
+		sandbox.stub(view, 'reportError').resolves();
 	});
 	afterEach(() => {
 		sandbox.restore();
@@ -52,18 +52,15 @@ describe('mod controller', () => {
 			sandbox.stub(mafiaDAO, 'getGameById').resolves({
 				name: 'testMafia'
 			});
-			
-			view.setBrowser(browser);
+
 			mafia.internals.configuration = {
 				mods: ['dreikin'],
 				name: 'testMafia'
 			};
 			
 			return mafia.killHandler(command).then( () => {
-				browser.createPost.calledWith(command.post.topic_id, command.post.post_number).should.be.true;
-
-				const output = browser.createPost.getCall(0).args[2];
-				output.should.include('Error killing player: Poster is not mod');
+				const output = view.reportError.getCall(0).args[2];
+				output.should.include('Poster is not mod');
 			});
 		});
 		
@@ -88,18 +85,15 @@ describe('mod controller', () => {
 				name: 'testMafia'
 			});
 			
-			view.setBrowser(browser);
 			mafia.internals.configuration = {
 				mods: ['dreikin'],
 				name: 'testMafia'
 			};
 			
 			return mafia.killHandler(command).then( () => {
-				browser.createPost.calledWith(command.post.topic_id, command.post.post_number).should.be.true;
-
 				mafiaDAO.killPlayer.called.should.be.false;
-				const output = browser.createPost.getCall(0).args[2];
-				output.should.include('Error killing player: Target not alive');
+				const output = view.reportError.getCall(0).args[2];
+				output.should.include('Target not alive');
 			});
 		});
 		
@@ -123,19 +117,16 @@ describe('mod controller', () => {
 			sandbox.stub(mafiaDAO, 'getGameById').resolves({
 				name: 'testMafia'
 			});
-			
-			view.setBrowser(browser);
+
 			mafia.internals.configuration = {
 				mods: ['dreikin'],
 				name: 'testMafia'
 			};
 			
 			return mafia.killHandler(command).then( () => {
-				browser.createPost.calledWith(command.post.topic_id, command.post.post_number).should.be.true;
-
 				mafiaDAO.killPlayer.called.should.be.false;
-				const output = browser.createPost.getCall(0).args[2];
-				output.should.include('Error killing player: Target not in game');
+				const output = view.reportError.getCall(0).args[2];
+				output.should.include('Target not in game');
 			});
 		});
 		
@@ -160,19 +151,17 @@ describe('mod controller', () => {
 				name: 'testMafia'
 			});
 			
-			
-			view.setBrowser(browser);
+
 			mafia.internals.configuration = {
 				mods: ['dreikin'],
 				name: 'testMafia'
 			};
 			
 			return mafia.killHandler(command).then( () => {
-				browser.createPost.calledWith(command.post.topic_id, command.post.post_number).should.be.true;
-
 				mafiaDAO.killPlayer.called.should.be.true;
-				const output = browser.createPost.getCall(0).args[2];
-				output.should.include('Error killing player: Error: an error occurred');
+				const output = view.reportError.getCall(0).args[2];
+				output.should.be.an('Error');
+				output.toString().should.include('an error occurred');
 			});
 		});
 		
@@ -196,19 +185,22 @@ describe('mod controller', () => {
 			sandbox.stub(mafiaDAO, 'getGameById').resolves({
 				name: 'testMafia'
 			});
-			
-			view.setBrowser(browser);
+
 			mafia.internals.configuration = {
 				mods: ['dreikin'],
 				name: 'testMafia'
 			};
+
+			const expected = {
+				command: 'Kill',
+				results: 'Killed @yamikuronue',
+				game: 12345
+			};
 			
 			return mafia.killHandler(command).then( () => {
-				browser.createPost.calledWith(command.post.topic_id, command.post.post_number).should.be.true;
-
 				mafiaDAO.killPlayer.called.should.be.true;
-				const output = browser.createPost.getCall(0).args[2];
-				output.should.include('Command Kill executed successfully in game 12345: Killed @yamikuronue');
+				const output = view.respondWithTemplate.getCall(0).args[1];
+				output.should.deep.equal(expected);
 			});
 		});
 	});
@@ -237,7 +229,6 @@ describe('mod controller', () => {
 			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(54);
 			sandbox.stub(mafiaDAO, 'getLivingPlayers').resolves(players);
 			
-			view.setBrowser(browser);
 			mafia.internals.configuration = {
 				mods: ['dreikin'],
 				name: 'testMafia'
@@ -249,13 +240,9 @@ describe('mod controller', () => {
 				mafiaDAO.setCurrentTime.called.should.not.be.true;
 				
 				//Output back to mod
-				browser.createPost.calledWith(command.post.topic_id, command.post.post_number).should.be.true;
-				const modOutput = browser.createPost.getCall(0).args[2];
-				modOutput.should.include('Error incrementing day: Poster is not mod');
-				
-				//Output to game
-				browser.createPost.calledWith(1, command.post.post_number).should.not.be.true;
-
+				view.reportError.calledWith(command).should.be.true;
+				const modOutput = view.reportError.getCall(0).args[2];
+				modOutput.should.include('Poster is not mod');
 			});
 		});
 		
@@ -282,7 +269,6 @@ describe('mod controller', () => {
 			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(54);
 			sandbox.stub(mafiaDAO, 'getLivingPlayers').resolves(players);
 			
-			view.setBrowser(browser);
 			mafia.internals.configuration = {
 				mods: ['dreikin'],
 				name: 'testMafia'
@@ -294,12 +280,10 @@ describe('mod controller', () => {
 				mafiaDAO.setCurrentTime.called.should.not.be.true;
 				
 				//Output back to mod
-				browser.createPost.calledWith(command.post.topic_id, command.post.post_number).should.be.true;
-				const modOutput = browser.createPost.getCall(0).args[2];
-				modOutput.should.include('Error incrementing day: Error: Game does not exist');
-				
-				//Output to game
-				browser.createPost.calledWith(1, command.post.post_number).should.not.be.true;
+				view.reportError.calledWith(command).should.be.true;
+				const modOutput = view.reportError.getCall(0).args[2];
+				modOutput.should.be.an('Error');
+				modOutput.toString().should.include('Game does not exist');
 
 			});
 		});
@@ -331,7 +315,6 @@ describe('mod controller', () => {
 			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(54);
 			sandbox.stub(mafiaDAO, 'getLivingPlayers').resolves(players);
 			
-			view.setBrowser(browser);
 			mafia.internals.configuration = {
 				mods: ['dreikin'],
 				name: 'testMafia'
@@ -343,12 +326,12 @@ describe('mod controller', () => {
 				mafiaDAO.setCurrentTime.called.should.be.true;
 				
 				//Output back to mod
-				browser.createPost.calledWith(command.post.topic_id, command.post.post_number).should.be.true;
-				const modOutput = browser.createPost.getCall(0).args[2];
+				view.respond.calledWith(command).should.be.true;
+				const modOutput = view.respond.getCall(0).args[1];
 				modOutput.should.include('Incremented stage for testMafia');
 				
 				//Output to game
-				browser.createPost.calledWith(1, command.post.post_number).should.not.be.true;
+				view.respondWithTemplate.called.should.not.be.true;
 
 			});
 		});
@@ -381,11 +364,9 @@ describe('mod controller', () => {
 			sandbox.stub(mafiaDAO, 'setCurrentTime').resolves();
 			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(54);
 			sandbox.stub(mafiaDAO, 'getLivingPlayers').resolves(players);
-			sandbox.stub(view, 'respondWithTemplate');
 			const fakeTemplate = sandbox.stub().returns('Some string output');
 			sandbox.stub(Handlebars, 'compile').returns(fakeTemplate);
 			
-			view.setBrowser(browser);
 			mafia.internals.configuration = {
 				mods: ['dreikin'],
 				name: 'testMafia'
@@ -397,8 +378,8 @@ describe('mod controller', () => {
 				mafiaDAO.setCurrentTime.called.should.be.true;
 				
 				//Output back to mod
-				browser.createPost.calledWith(command.post.topic_id, command.post.post_number).should.be.true;
-				const modOutput = browser.createPost.getCall(0).args[2];
+				view.respond.calledWith(command).should.be.true;
+				const modOutput = view.respond.getCall(0).args[1];
 				modOutput.should.include('Incremented day for testMafia');
 				
 				//Output to game
@@ -432,17 +413,16 @@ describe('mod controller', () => {
 			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
 			sandbox.stub(mafiaDAO, 'addPropertyToPlayer').resolves();
 			
-			view.setBrowser(browser);
 			mafia.internals.configuration = {
 				mods: ['dreikin'],
 				name: 'testMafia'
 			};
 			
 			return mafia.setHandler(command).then( () => {
-				browser.createPost.calledWith(command.post.topic_id, command.post.post_number).should.be.true;
+				view.reportError.calledWith(command).should.be.true;
+				const output = view.reportError.getCall(0).args[2];
 
-				const output = browser.createPost.getCall(0).args[2];
-				output.should.include('Error setting player property: Poster is not mod');
+				output.should.include('Poster is not mod');
 			});
 		});
 
@@ -464,17 +444,16 @@ describe('mod controller', () => {
 			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(false);
 			sandbox.stub(mafiaDAO, 'addPropertyToPlayer').resolves();
 			
-			view.setBrowser(browser);
 			mafia.internals.configuration = {
 				mods: ['dreikin'],
 				name: 'testMafia'
 			};
 			
 			return mafia.setHandler(command).then( () => {
-				browser.createPost.calledWith(command.post.topic_id, command.post.post_number).should.be.true;
+				view.reportError.calledWith(command).should.be.true;
+				const output = view.reportError.getCall(0).args[2];
 
-				const output = browser.createPost.getCall(0).args[2];
-				output.should.include('Error setting player property: Target not valid');
+				output.should.include('Target not valid');
 			});
 		});
 		
@@ -496,17 +475,21 @@ describe('mod controller', () => {
 			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
 			sandbox.stub(mafiaDAO, 'addPropertyToPlayer').resolves();
 			
-			view.setBrowser(browser);
 			mafia.internals.configuration = {
 				mods: ['dreikin'],
 				name: 'testMafia'
 			};
+
+			const expected = {
+				command: 'Set property',
+				results: 'Player yamikuronue is now loved',
+				game: 12345
+			};
 			
 			return mafia.setHandler(command).then( () => {
-				browser.createPost.calledWith(command.post.topic_id, command.post.post_number).should.be.true;
-
-				const output = browser.createPost.getCall(0).args[2];
-				output.should.include('Player yamikuronue is now loved');
+				view.respondWithTemplate.called.should.be.true;
+				const output = view.respondWithTemplate.getCall(0).args[1];
+				output.should.deep.equal(expected);
 			});
 		});
 		
@@ -528,17 +511,21 @@ describe('mod controller', () => {
 			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
 			sandbox.stub(mafiaDAO, 'addPropertyToPlayer').resolves();
 			
-			view.setBrowser(browser);
 			mafia.internals.configuration = {
 				mods: ['dreikin'],
 				name: 'testMafia'
 			};
 			
+			const expected = {
+				command: 'Set property',
+				results: 'Player yamikuronue is now hated',
+				game: 12345
+			};
+			
 			return mafia.setHandler(command).then( () => {
-				browser.createPost.calledWith(command.post.topic_id, command.post.post_number).should.be.true;
-
-				const output = browser.createPost.getCall(0).args[2];
-				output.should.include('Player yamikuronue is now hated');
+				view.respondWithTemplate.called.should.be.true;
+				const output = view.respondWithTemplate.getCall(0).args[1];
+				output.should.deep.equal(expected);
 			});
 		});
 		
@@ -560,17 +547,21 @@ describe('mod controller', () => {
 			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
 			sandbox.stub(mafiaDAO, 'addPropertyToPlayer').resolves();
 			
-			view.setBrowser(browser);
 			mafia.internals.configuration = {
 				mods: ['dreikin'],
 				name: 'testMafia'
 			};
 			
+			const expected = {
+				command: 'Set property',
+				results: 'Player yamikuronue is now doublevoter',
+				game: 12345
+			};
+			
 			return mafia.setHandler(command).then( () => {
-				browser.createPost.calledWith(command.post.topic_id, command.post.post_number).should.be.true;
-
-				const output = browser.createPost.getCall(0).args[2];
-				output.should.include('Player yamikuronue is now doublevoter');
+				view.respondWithTemplate.called.should.be.true;
+				const output = view.respondWithTemplate.getCall(0).args[1];
+				output.should.deep.equal(expected);
 			});
 		});
 		
@@ -592,17 +583,16 @@ describe('mod controller', () => {
 			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
 			sandbox.stub(mafiaDAO, 'addPropertyToPlayer').resolves();
 			
-			view.setBrowser(browser);
 			mafia.internals.configuration = {
 				mods: ['dreikin'],
 				name: 'testMafia'
 			};
 			
 			return mafia.setHandler(command).then( () => {
-				browser.createPost.calledWith(command.post.topic_id, command.post.post_number).should.be.true;
+				view.reportError.calledWith(command).should.be.true;
+				const output = view.reportError.getCall(0).args[2];
 
-				const output = browser.createPost.getCall(0).args[2];
-				output.should.include('Error setting player property: Property not valid');
+				output.should.include('Property not valid');
 				output.should.include('Valid properties: loved, hated, doublevote');
 			});
 		});
@@ -625,18 +615,17 @@ describe('mod controller', () => {
 			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
 			sandbox.stub(mafiaDAO, 'addPropertyToPlayer').rejects('Error in DAO');
 			
-			view.setBrowser(browser);
 			mafia.internals.configuration = {
 				mods: ['dreikin'],
 				name: 'testMafia'
 			};
 			
 			return mafia.setHandler(command).then( () => {
-				browser.createPost.calledWith(command.post.topic_id, command.post.post_number).should.be.true;
+				view.reportError.calledWith(command).should.be.true;
+				const output = view.reportError.getCall(0).args[2];
+				output.should.be.an('Error');
 
-				const output = browser.createPost.getCall(0).args[2];
-				output.should.include('Error setting player property');
-				output.should.include('Error in DAO');
+				output.toString().should.include('Error in DAO');
 			});
 		});
 	});

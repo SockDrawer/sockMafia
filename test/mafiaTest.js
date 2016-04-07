@@ -45,22 +45,6 @@ describe('mafia', () => {
 		sandbox.restore();
 	});
 
-	it('should export prepare()', () => {
-		expect(mafia.prepare).to.be.a('function');
-	});
-	it('should export start()', () => {
-		expect(mafia.start).to.be.a('function');
-	});
-	it('should export stop()', () => {
-		expect(mafia.stop).to.be.a('function');
-	});
-	it('should have start() as a stub function', () => {
-		expect(mafia.start).to.not.throw();
-	});
-	it('should have stop() as a stub function', () => {
-		expect(mafia.stop).to.not.throw();
-	});
-
 	describe('prepare()', () => {
 		it('Should register commands', () => {
 			const events = {
