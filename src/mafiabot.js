@@ -177,7 +177,11 @@ function registerPlayers(game, players) {
  * @returns {Promise}        A promise that will resolve when the game is ready
  */
 exports.echoHandler = function (command) {
-	const text = 'topic: ' + command.post.topic_id + '\n' + 'post: ' + command.post.post_number + '\n' + 'input: `' + command.input + '`\n' + 'command: `' + command.command + '`\n' + 'args: `' + command.args + '`\n' + 'mention: `' + command.mention + '`\n' + 'post:\n[quote]\n' + command.post.cleaned + '\n[/quote]';
+	const text = 'topic: ' + command.post.topic_id + '\n' + 'post: ' +
+		command.post.post_number + '\n' + 'input: `' + command.input + '`\n' +
+		'command: `' + command.command + '`\n' + 'args: `' + command.args + '`\n' +
+		'mention: `' + command.mention + '`\n' + 'post:\n[quote]\n' + command.post.cleaned +
+		'\n[/quote]';
 	view.respond(command, text);
 	return Promise.resolve();
 };
@@ -189,13 +193,14 @@ exports.activate = function activate() {
 	debug('activating mafiabot');
 	const plugConfig = internals.configuration;
 	const fakeBrowser = {
-		createPost: (topic_id, post_id, content) => {
-			return internals.forum.Post.reply(topic_id, post_id, content);
+		createPost: (topicId, postId, content) => {
+			return internals.forum.Post.reply(topicId, postId, content);
 		}
 	};
 	const fakeEvents = {
 		onCommand: (commandName, help, handler) => {
 			debug(`Registering command: ${commandName}`);
+
 			function translateHandler(command) {
 				return Promise.all([
 					command.getPost(),
@@ -209,8 +214,8 @@ exports.activate = function activate() {
 						mention: command.mention,
 						post: {
 							username: data[2].username,
-							topic_id: data[1].id,
-							post_number: data[0].id,
+							'topic_id': data[1].id,
+							'post_number': data[0].id,
 							cleaned: data[0].content
 						}
 					};
@@ -245,13 +250,12 @@ exports.activate = function activate() {
 			}
 		})
 		.then(() => {
-			view.setBrowser(fakeBrowser);
 			modController.init(internals.forum);
 			playerController.init(internals.forum);
 			registerCommands(fakeEvents);
 		})
 		.catch((err) => {
-			console.log('ERROR! ' + err);
+			console.log('ERROR! ' + err, err.stack);
 			throw err; // rethrow error to fail bot startup
 		});
 };
@@ -267,15 +271,15 @@ exports.plugin = function plugin(forum, config) {
 	if (config === null || typeof config !== 'object') {
 		config = {};
 	}
-	Object.keys(exports.defaultConfig).forEach((key)=>{
-		if (!config[key]){
+	Object.keys(exports.defaultConfig).forEach((key) => {
+		if (!config[key]) {
 			config[key] = exports.defaultConfig[key];
 		}
 	});
 	if (config.players) {
-		config.players.concat(unvoteNicks);
+		config.players.concat(unvoteNicks); // This is a noop as concat returns new array, not modifies self array
 	}
-	
+	internals.configuration = config;
 	internals.forum = forum;
 	return {
 		activate: exports.activate,
