@@ -186,6 +186,7 @@ exports.echoHandler = function (command) {
 /*eslint-disable no-console*/
 // Sockbot 3.0 activation function
 exports.activate = function activate() {
+	debug('activating mafiabot');
 	const plugConfig = internals.configuration;
 	const fakeBrowser = {
 		createPost: (topic_id, post_id, content) => {
@@ -194,6 +195,7 @@ exports.activate = function activate() {
 	};
 	const fakeEvents = {
 		onCommand: (commandName, help, handler) => {
+			debug(`Registering command: ${commandName}`);
 			function translateHandler(command) {
 				return Promise.all([
 					command.getPost(),
@@ -265,10 +267,15 @@ exports.plugin = function plugin(forum, config) {
 	if (config === null || typeof config !== 'object') {
 		config = {};
 	}
+	Object.keys(exports.defaultConfig).forEach((key)=>{
+		if (!config[key]){
+			config[key] = exports.defaultConfig[key];
+		}
+	});
 	if (config.players) {
 		config.players.concat(unvoteNicks);
 	}
-	internals.configuration = config.mergeObjects(true, exports.defaultConfig, config);
+	
 	internals.forum = forum;
 	return {
 		activate: exports.activate,
