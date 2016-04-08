@@ -1,5 +1,6 @@
 'use strict';
 const debug = require('debug')('sockbot:mafia:view');
+
 const Handlebars = require('handlebars');
 Handlebars.registerHelper('voteChart', require('./templates/helpers/voteChart'));
 Handlebars.registerHelper('listNames', require('./templates/helpers/listNames'));
@@ -21,7 +22,7 @@ exports.init = function(postObject, rf) {
 	
 	// Actually, just use the `reply()` function on the new command object. pass it your content and 
 	// sockbot takes care of the rest. 
-	
+	debug('init of mafiaview');
 	post = postObject;
 	readFile = rf || require('fs-readfile-promise');
 };

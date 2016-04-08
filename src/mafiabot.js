@@ -249,6 +249,7 @@ exports.activate = function activate() {
 		.then(() => {
 			modController.init(internals.forum);
 			playerController.init(internals.forum);
+			view.init(internals.forum.Post);
 			registerCommands(fakeEvents);
 		})
 		.catch((err) => {
