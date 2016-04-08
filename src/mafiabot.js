@@ -197,11 +197,13 @@ exports.activate = function activate() {
 			debug(`Registering command: ${commandName}`);
 
 			function translateHandler(command) {
+				debug(`Mafia received command ${command.command}`);
 				return Promise.all([
 					command.getPost(),
 					command.getTopic(),
 					command.getUser()
 				]).then((data) => {
+					debug(`Mafia processing command ${command.command} in topic ${data[1].id} on post ${data[0].id}`);
 					const translated = {
 						input: command.line,
 						command: command.command,

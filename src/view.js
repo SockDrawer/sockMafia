@@ -1,4 +1,5 @@
 'use strict';
+const debug = require('debug')('sockbot:mafia:view');
 const Handlebars = require('handlebars');
 Handlebars.registerHelper('voteChart', require('./templates/helpers/voteChart'));
 Handlebars.registerHelper('listNames', require('./templates/helpers/listNames'));
@@ -26,14 +27,17 @@ exports.init = function(postObject, rf) {
 };
 
 exports.respond = function(command, output) {
+	debug(`responding to t${command.post.topic_id}p${command.post.post_number}`);
 	return post.reply(command.post.topic_id, command.post.post_number, output);
 };
 
 exports.respondInThread = function(thread, output) {
+	debug(`responding to t${thread}`);
 	return post.reply(thread, undefined, output);
 };
 
 exports.respondWithTemplate  = function(templateFile, data, command) {
+	debug(`responding to t${command.post.topic_id}p${command.post.post_number}`);
 	return readFile(__dirname + '/' + templateFile)
 	.then((buffer) => {
 		const source = buffer.toString();
