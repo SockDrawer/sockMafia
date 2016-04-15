@@ -11,10 +11,10 @@ chai.use(chaiAsPromised);
 
 chai.should();
 
-const view = require('../src/view');
-const listNamesHelper = require('../src/templates/helpers/listNames');
-const voteChartHelper = require('../src/templates/helpers/voteChart');
-const mafia = require('../src/mafiabot');
+const view = require('../../src/view');
+const listNamesHelper = require('../../src/templates/helpers/listNames');
+const voteChartHelper = require('../../src/templates/helpers/voteChart');
+const mafia = require('../../src/mafiabot');
 
 const Handlebars = require('handlebars');
 

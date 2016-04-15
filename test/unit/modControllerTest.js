@@ -10,10 +10,10 @@ require('chai-as-promised');
 
 chai.should();
 
-const mafia = require('../src/mod_controller');
-const mafiaDAO = require('../src/dao.js');
+const mafia = require('../../src/mod_controller');
+const mafiaDAO = require('../../src/dao.js');
 const Handlebars = require('handlebars');
-const view = require('../src/view.js');
+const view = require('../../src/view.js');
 
 describe('mod controller', () => {
 

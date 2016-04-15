@@ -11,11 +11,11 @@ require('chai-as-promised');
 chai.should();
 const expect = chai.expect;
 
-const mafia = require('../src/mafiabot');
-const mafiaDAO = require('../src/dao.js');
-const view = require('../src/view.js');
-const modController = require('../src/mod_controller');
-const playerController = require('../src/player_controller');
+const mafia = require('../../src/mafiabot');
+const mafiaDAO = require('../../src/dao.js');
+const view = require('../../src/view.js');
+const modController = require('../../src/mod_controller');
+const playerController = require('../../src/player_controller');
 
 const fakeConfig = {
 	mergeObjects: sinon.stub().returns({

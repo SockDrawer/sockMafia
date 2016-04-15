@@ -6,9 +6,11 @@
   "scripts": {
     "start": "node --harmony --harmony_arrow_functions node_modules/SockBot/lib/cli.js",
     "lint": "eslint .",
-    "test": "eslint . && istanbul cover node_modules/mocha/bin/_mocha -- ./test/*est.js --recursive -R dot ",
+    "test": "eslint . && npm run unit_tests && npm run integration_tests",
     "istanbul": "eslint .; istanbul cover node_modules/mocha/bin/_mocha -- --recursive -R nyan",
-    "mocha": "eslint .;mocha --recursive -R nyan"
+    "mocha": "eslint .;mocha --recursive -R nyan",
+    "unit_tests": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/unit/*est.js --recursive -R dot ",
+    "integration_tests": "mocha ./test/integrationTests.js"
   },
   "repository": {
     "type": "git",
