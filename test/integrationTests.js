@@ -21,7 +21,7 @@ const view = require('../src/view.js');
 const testConfig = {
 	db: 'intTesting.db',
 
-}
+};
 
 describe('Voting', () => {
 
@@ -36,7 +36,7 @@ describe('Voting', () => {
 			.then(() => DAO.addPlayerToGame(1, 'accalia', DAO.playerStatus.alive))
 			.then(() => DAO.addPlayerToGame(1, 'dreikin', DAO.playerStatus.alive))
 			.then(() => DAO.addMod(1, 'ModdyMcModerson'))
-			.then(() => DAO.setGameStatus(1, DAO.gameStatus.running))
+			.then(() => DAO.setGameStatus(1, DAO.gameStatus.running));
 	});
 
 	beforeEach(() => {
@@ -69,8 +69,7 @@ describe('Voting', () => {
 		return playerController.voteHandler(command).then(() => {
 			view.reportError.called.should.equal(false);
 			DAO.addActionWithTarget.called.should.equal(true);
-			view.respondInThread.firstCall.args[1].should.include('@yamikuronue voted for @accalia')
-		})
+			view.respondInThread.firstCall.args[1].should.include('@yamikuronue voted for @accalia');
+		});
 	});
-
 });
