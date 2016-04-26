@@ -28,24 +28,24 @@ describe('Validation helpers', () => {
 
 	describe('mustBeTrue', () => {
 		it('Should resolve when the answer is true', () => {
-			let check = sandbox.stub().resolves(true);
+			const check = sandbox.stub().resolves(true);
 			return validator.mustBeTrue(check, [], 'Error').should.not.be.rejected;
 		});
 
 		it('Should reject when the answer is false', () => {
-			let check = sandbox.stub().resolves(false);
+			const check = sandbox.stub().resolves(false);
 			return validator.mustBeTrue(check, [], 'Error').should.be.rejectedWith('Error');
 		});
 	});
 
 	describe('mustBeFalse', () => {
 		it('Should resolve when the answer is false', () => {
-			let check = sandbox.stub().resolves(false);
+			const check = sandbox.stub().resolves(false);
 			return validator.mustBeFalse(check, [], 'Error').should.not.be.rejected;
 		});
 
 		it('Should reject when the answer is true', () => {
-			let check = sandbox.stub().resolves(true);
+			const check = sandbox.stub().resolves(true);
 			return validator.mustBeFalse(check, [], 'Error').should.be.rejectedWith('Error');
 		});
 	});
