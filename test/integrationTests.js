@@ -23,8 +23,9 @@ const testConfig = {
 
 };
 
-describe('Voting', () => {
+describe('Voting', function () {
 
+	this.timeout(50000);
 	let sandbox;
 
 	before(() => {
