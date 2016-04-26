@@ -72,4 +72,83 @@ describe('Voting', () => {
 			view.respondInThread.firstCall.args[1].should.include('@yamikuronue voted for @accalia');
 		});
 	});
+
+	it('Should prevent invalid voters', () => {
+		const command = {
+			post: {
+				username: 'banana',
+				'topic_id': 1,
+				'post_number': 5
+			},
+			args: ['@accalia'],
+			input: '!vote @accalia'
+		};
+
+		//Spies
+		sandbox.spy(DAO, 'addActionWithTarget');
+		return playerController.voteHandler(command).then(() => {
+			view.reportError.called.should.equal(true);
+			DAO.addActionWithTarget.called.should.equal(false);
+		});
+	});
+
+	it('Should prevent invalid targets', () => {
+		const command = {
+			post: {
+				username: 'yamikuronue',
+				'topic_id': 1,
+				'post_number': 5
+			},
+			args: ['@banana'],
+			input: '!vote @banana'
+		};
+
+		//Spies
+		sandbox.spy(DAO, 'addActionWithTarget');
+		return playerController.voteHandler(command).then(() => {
+			view.reportError.called.should.equal(true);
+			DAO.addActionWithTarget.called.should.equal(false);
+		});
+	});
+
+	it('Should allow changing targets', () => {
+		const command = {
+			post: {
+				username: 'yamikuronue',
+				'topic_id': 1,
+				'post_number': 5
+			},
+			args: ['@dreikin'],
+			input: '!vote @dreikin'
+		};
+
+		//Spies
+		sandbox.spy(DAO, 'addActionWithTarget');
+		return playerController.voteHandler(command).then(() => {
+			view.reportError.called.should.equal(false);
+			DAO.addActionWithTarget.called.should.equal(true);
+			view.respondInThread.firstCall.args[1].should.include('@yamikuronue voted for @dreikin');
+		});
+	});
+
+	it('Should auto-lynch', () => {
+		const command = {
+			post: {
+				username: 'accalia',
+				'topic_id': 1,
+				'post_number': 5
+			},
+			args: ['@dreikin'],
+			input: '!vote @dreikin'
+		};
+
+		//Spies
+		sandbox.spy(DAO, 'addActionWithTarget');
+		return playerController.voteHandler(command).then(() => {
+			view.reportError.called.should.equal(false);
+			DAO.addActionWithTarget.called.should.equal(true);
+			view.respondInThread.firstCall.args[1].should.include('@accalia voted for @dreikin');
+			DAO.isPlayerAlive(1, 'dreikin').should.eventually.equal(false);
+		});
+	});
 });
