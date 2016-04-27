@@ -162,7 +162,7 @@ describe('MafiaBot', function() {
 	});
 
 
-	describe('Game setup', () => {
+	describe('Game moderation', () => {
 
 		it('Should allow game creation', () => {
 			const command = {
@@ -285,7 +285,7 @@ describe('MafiaBot', function() {
 				post: {
 					username: 'ModdyMcModerson',
 					'topic_id': 2,
-					'post_number': 5
+					'post_number': 6
 				},
 				args: [],
 				input: '!start'
@@ -302,6 +302,90 @@ describe('MafiaBot', function() {
 				DAO.setGameStatus.calledWith(2, 'running').should.equal(true);
 				DAO.setCurrentTime.calledWith(2, DAO.gameTime.day).should.equal(true);
 				DAO.incrementDay.called.should.equal(true);	
+			});
+		});
+
+		it('Should change to night', () => {
+			const command = {
+				post: {
+					username: 'ModdyMcModerson',
+					'topic_id': 2,
+					'post_number': 7
+				},
+				args: [],
+				input: '!next-phase'
+			};
+			sandbox.spy(DAO, 'incrementDay');
+			sandbox.spy(DAO, 'setCurrentTime');
+
+			
+			return modController.dayHandler(command).then(() => {
+				view.reportError.called.should.equal(false);
+				DAO.setCurrentTime.calledWith(2, DAO.gameTime.night).should.equal(true);
+				DAO.incrementDay.called.should.equal(false);	
+			});
+		});
+
+		it('Should change to day', () => {
+			const command = {
+				post: {
+					username: 'ModdyMcModerson',
+					'topic_id': 2,
+					'post_number': 8
+				},
+				args: [],
+				input: '!new-day'
+			};
+			sandbox.spy(DAO, 'incrementDay');
+			sandbox.spy(DAO, 'setCurrentTime');
+
+			
+			return modController.dayHandler(command).then(() => {
+				view.reportError.called.should.equal(false);
+				DAO.setCurrentTime.calledWith(2, DAO.gameTime.day).should.equal(true);
+				DAO.incrementDay.called.should.equal(true);	
+			});
+		});
+
+		it('Should kill people', () => {
+			const command = {
+				post: {
+					username: 'ModdyMcModerson',
+					'topic_id': 2,
+					'post_number': 9
+				},
+				args: ['@yamikuronue'],
+				input: '!kill @yamikuronue'
+			};
+			sandbox.spy(DAO, 'killPlayer');
+			sandbox.spy(DAO, 'incrementDay');
+			sandbox.spy(DAO, 'setCurrentTime');
+
+			
+			return modController.killHandler(command).then(() => {
+				view.reportError.called.should.equal(false);
+				DAO.killPlayer.calledWith(2, 'yamikuronue').should.equal(true);
+				DAO.incrementDay.called.should.equal(false);	
+				DAO.setCurrentTime.called.should.equal(false);	
+			});
+		});
+
+		it('Should end the game', () => {
+			const command = {
+				post: {
+					username: 'ModdyMcModerson',
+					'topic_id': 2,
+					'post_number': 10
+				},
+				args: ['@yamikuronue'],
+				input: '!kill @yamikuronue'
+			};
+			sandbox.spy(DAO, 'setGameStatus');
+
+			
+			return modController.finishHandler(command).then(() => {
+				view.reportError.called.should.equal(false);
+				DAO.setGameStatus.calledWith(2, 'finished').should.equal(true);
 			});
 		});
 	});

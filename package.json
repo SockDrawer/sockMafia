@@ -10,7 +10,8 @@
     "istanbul": "eslint .; istanbul cover node_modules/mocha/bin/_mocha -- --recursive -R nyan",
     "mocha": "eslint .;mocha --recursive -R nyan",
     "unit_tests": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/unit/*est.js --recursive -R dot ",
-    "integration_tests": "mocha ./test/integrationTests.js"
+    "integration_tests": "mocha ./test/integrationTests.js",
+    "integration_coverage": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/integrationTests.js"
   },
   "repository": {
     "type": "git",
