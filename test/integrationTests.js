@@ -85,7 +85,7 @@ describe('MafiaBot', function() {
 				post: {
 					username: 'banana',
 					'topic_id': 1,
-					'post_number': 5
+					'post_number': 6
 				},
 				args: ['@accalia'],
 				input: '!vote @accalia'
@@ -104,7 +104,7 @@ describe('MafiaBot', function() {
 				post: {
 					username: 'yamikuronue',
 					'topic_id': 1,
-					'post_number': 5
+					'post_number': 7
 				},
 				args: ['@banana'],
 				input: '!vote @banana'
@@ -124,6 +124,46 @@ describe('MafiaBot', function() {
 				post: {
 					username: 'yamikuronue',
 					'topic_id': 1,
+					'post_number': 8
+				},
+				args: ['@dreikin'],
+				input: '!vote @dreikin'
+			};
+
+			//Spies
+			sandbox.spy(DAO, 'addActionWithTarget');
+			return playerController.voteHandler(command).then(() => {
+				view.reportError.called.should.equal(false);
+				DAO.addActionWithTarget.called.should.equal(true);
+				view.respondInThread.firstCall.args[1].should.include('@yamikuronue voted for @dreikin');
+			});
+		});
+
+		it('Should allow unvoting', () => {
+			const command = {
+				post: {
+					username: 'yamikuronue',
+					'topic_id': 1,
+					'post_number': 9
+				},
+				args: [],
+				input: '!unvote'
+			};
+
+			//Spies
+			sandbox.spy(DAO, 'revokeAction');
+			return playerController.unvoteHandler(command).then(() => {
+				view.reportError.called.should.equal(false);
+				DAO.revokeAction.called.should.equal(true);
+				view.respond.firstCall.args[1].should.include('@yamikuronue unvoted');
+			});
+		});
+
+		it('Should allow revoting', () => {
+			const command = {
+				post: {
+					username: 'yamikuronue',
+					'topic_id': 1,
 					'post_number': 5
 				},
 				args: ['@dreikin'],
@@ -138,8 +178,6 @@ describe('MafiaBot', function() {
 				view.respondInThread.firstCall.args[1].should.include('@yamikuronue voted for @dreikin');
 			});
 		});
-		
-		/*TODO: Unvote*/
 
 		/*TODO: No-lynch*/
 
@@ -167,30 +205,12 @@ describe('MafiaBot', function() {
 
 
 	describe('Vote history', () => {
-		/*TODO: Set up multi-day history*/
-
 		/*TODO: List-votes*/
 
 		/*TODO: List-all-votes*/
 	});
 
-	
-	describe('Special voting', () => {
-		/*TODO: doublevoter*/
-
-		/*TODO: bastard bars: loved*/
-
-		/*TODO: bastard bars: hated*/
-
-		/*TODO: open bars: loved*/
-
-		/*TODO: open bars: hated*/
-	});
-
 	describe('Game moderation', () => {
-
-
-		/*TODO: Non-mod prevention tests*/
 
 		it('Should allow game creation', () => {
 			const command = {
@@ -307,6 +327,48 @@ describe('MafiaBot', function() {
 			});
 
 		});
+
+		it('Should not allow player properties to be set by non-mods', () => {
+			const command = {
+				post: {
+					username: 'yamikuronue',
+					'topic_id': 2,
+					'post_number': 5
+				},
+				args: ['@yamikuronue', 'loved'],
+				input: '!set @yamikuronue loved'
+			};
+			sandbox.spy(DAO, 'addPropertyToPlayer');
+
+			return modController.setHandler(command).then(() => {
+				view.reportError.called.should.equal(true);
+				DAO.addPropertyToPlayer.called.should.equal(false);
+				view.respondWithTemplate.called.should.equal(false);
+			});
+
+		});
+
+		it('Should not allow the game to be started by non-mods', () => {
+			const command = {
+				post: {
+					username: 'yamikuronue',
+					'topic_id': 2,
+					'post_number': 6
+				},
+				args: [],
+				input: '!start'
+			};
+			sandbox.spy(DAO, 'setGameStatus');
+			sandbox.spy(DAO, 'incrementDay');
+			sandbox.spy(DAO, 'setCurrentTime');
+
+			
+			return modController.startHandler(command).then(() => {
+				view.reportError.called.should.equal(true);
+				DAO.setGameStatus.called.should.equal(false);
+				DAO.incrementDay.called.should.equal(false);	
+			});
+		});
 		
 		it('Should allow the game to be started', () => {
 			const command = {
@@ -420,5 +482,17 @@ describe('MafiaBot', function() {
 				playerController.listAllPlayersHandler.called.should.equal(true);
 			});
 		});
+	});
+
+	describe('Special voting', () => {
+		/*TODO: doublevoter*/
+
+		/*TODO: bastard bars: loved*/
+
+		/*TODO: bastard bars: hated*/
+
+		/*TODO: open bars: loved*/
+
+		/*TODO: open bars: hated*/
 	});
 });
