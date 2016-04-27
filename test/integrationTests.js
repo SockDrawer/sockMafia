@@ -31,7 +31,7 @@ describe('MafiaBot', function() {
 	before(() => {
 		//Set up the database
 		return rimraf('intTesting.db')
-			.then(() => DAO.createDB(testConfig))
+			.then(() => DAO.createDB(testConfig));
 	});
 
 	beforeEach(() => {
