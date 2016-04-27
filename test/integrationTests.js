@@ -381,11 +381,13 @@ describe('MafiaBot', function() {
 				input: '!kill @yamikuronue'
 			};
 			sandbox.spy(DAO, 'setGameStatus');
+			sandbox.spy(playerController, 'listAllPlayersHandler');
 
 			
 			return modController.finishHandler(command).then(() => {
 				view.reportError.called.should.equal(false);
 				DAO.setGameStatus.calledWith(2, 'finished').should.equal(true);
+				playerController.listAllPlayersHandler.called.should.equal(true);
 			});
 		});
 	});

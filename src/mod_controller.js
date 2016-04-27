@@ -321,7 +321,7 @@ exports.finishHandler = function (command) {
 		.then(() => validator.mustBeTrue(dao.isPlayerMod, [game, mod], 'Poster is not mod'))
 		.then(() => dao.incrementDay(game))
 		.then(() => dao.setGameStatus(game, dao.gameStatus.finished))
-		.then(() => exports.listAllPlayersHandler(command))
+		.then(() => require('./player_controller').listAllPlayersHandler(command))
 		.then(() => {
 			logDebug('Ending game ' + game);
 			return view.respondWithTemplate('templates/modSuccess.handlebars', {
