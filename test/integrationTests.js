@@ -138,6 +138,10 @@ describe('MafiaBot', function() {
 				view.respondInThread.firstCall.args[1].should.include('@yamikuronue voted for @dreikin');
 			});
 		});
+		
+		/*TODO: Unvote*/
+
+		/*TODO: No-lynch*/
 
 		it('Should auto-lynch', () => {
 			const command = {
@@ -162,7 +166,31 @@ describe('MafiaBot', function() {
 	});
 
 
+	describe('Vote history', () => {
+		/*TODO: Set up multi-day history*/
+
+		/*TODO: List-votes*/
+
+		/*TODO: List-all-votes*/
+	});
+
+	
+	describe('Special voting', () => {
+		/*TODO: doublevoter*/
+
+		/*TODO: bastard bars: loved*/
+
+		/*TODO: bastard bars: hated*/
+
+		/*TODO: open bars: loved*/
+
+		/*TODO: open bars: hated*/
+	});
+
 	describe('Game moderation', () => {
+
+
+		/*TODO: Non-mod prevention tests*/
 
 		it('Should allow game creation', () => {
 			const command = {
@@ -304,6 +332,8 @@ describe('MafiaBot', function() {
 				DAO.incrementDay.called.should.equal(true);	
 			});
 		});
+
+		/*TODO: List players*/
 
 		it('Should change to night', () => {
 			const command = {
