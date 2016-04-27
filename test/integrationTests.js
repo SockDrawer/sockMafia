@@ -107,7 +107,8 @@ describe('Voting', function () {
 		//Spies
 		sandbox.spy(DAO, 'addActionWithTarget');
 		return playerController.voteHandler(command).then(() => {
-			view.reportError.called.should.equal(true);
+			//view.reportError.called.should.equal(true);  //TODO: semantically, reportError makes more sense here
+			view.respondInThread.called.should.equal(true);
 			DAO.addActionWithTarget.called.should.equal(false);
 		});
 	});
