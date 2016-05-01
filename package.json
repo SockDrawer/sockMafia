@@ -4,13 +4,14 @@
   "description": "Mafia plugin for sockbot",
   "main": "./src/mafiabot.js",
   "scripts": {
-    "start": "node --harmony --harmony_arrow_functions node_modules/SockBot/lib/cli.js",
+    "start": "node_modules/.bin/sockbot",
     "lint": "eslint .",
     "test": "eslint . && npm run unit_tests && npm run integration_tests",
     "istanbul": "eslint .; istanbul cover node_modules/mocha/bin/_mocha -- --recursive -R nyan",
     "mocha": "eslint .;mocha --recursive -R nyan",
     "unit_tests": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/unit/*est.js --recursive -R dot ",
-    "integration_tests": "mocha ./test/integrationTests.js"
+    "integration_tests": "mocha ./test/integrationTests.js",
+    "integration_coverage": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/integrationTests.js"
   },
   "repository": {
     "type": "git",
@@ -24,10 +25,11 @@
   "homepage": "https://github.com/yamikuronue/sockMafia#readme",
   "dependencies": {
     "bluebird": "^3.1.1",
+    "debug": "^2.2.0",
     "fs-readfile-promise": "^2.0.1",
     "handlebars": "^4.0.5",
     "sequelize": "^3.15.1",
-    "sockbot": "^2.10.0",
+    "sockbot": "^3.0.0",
     "sqlite3": "^3.1.1"
   },
   "devDependencies": {
