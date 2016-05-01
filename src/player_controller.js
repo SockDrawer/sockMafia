@@ -8,11 +8,10 @@ const Promise = require('bluebird');
 const E_NOGAME = 'Error: No game';
 let myName, myOwner, eventLogger;
 
-exports.init = function(config, browser, events) {
-	view.setBrowser(browser);
-	myName = config.username;
-	myOwner = config.owner;
-	eventLogger = events;
+exports.init = function(forum) {
+	myName = forum.username;
+	myOwner = forum.owner.username;
+	eventLogger = forum;
 };
 
 

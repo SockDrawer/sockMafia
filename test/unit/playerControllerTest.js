@@ -10,11 +10,11 @@ require('chai-as-promised');
 
 chai.should();
 
-const mafia = require('../src/player_controller');
-const mafiaDAO = require('../src/dao.js');
+const mafia = require('../../src/player_controller');
+const mafiaDAO = require('../../src/dao.js');
 const Handlebars = require('handlebars');
-const view = require('../src/view.js');
-const validator = require('../src/validator.js');
+const view = require('../../src/view.js');
+const validator = require('../../src/validator.js');
 
 const browser = {
 	createPost: sinon.stub().yields()

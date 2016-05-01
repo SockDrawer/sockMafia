@@ -11,7 +11,7 @@ chai.use(chaiAsPromised);
 
 chai.should();
 
-const mafiaDAO = require('../src/dao.js');
+const mafiaDAO = require('../../src/dao.js');
 
 describe('DAO', () => {
 
