@@ -1,17 +1,10 @@
 ---
 core:
-  username: username
-  password: password
-  owner: accalia
-  ignoreUsers:
-    - blakeyrat
-    - PaulaBean
-  ignoreCategories:
-    - 8
-    - 23
-  cooldownPeriod: 0
+  username: mafiabot
+  password: mafiapassword
+  owner: ownerAccount
 plugins:
-  './plugins/mafiabot'
+  './src/mafiabot':
     thread: 52778
     mods:
      - mod
@@ -20,3 +13,4 @@ plugins:
      - player2
     db: './mafiadb'
     name: testMafia
+    voteBars: bastard

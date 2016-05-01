@@ -19,6 +19,8 @@ Mafia plugin for [SockBot](https://sockbot.rtfd.org/en/latest/) version 2.10.0 o
 
 ##Installation
 
+*Note: This does not work on Node 6* for the time being, as our dependencies have not updated yet. Sorry for the inconvenience. 
+
 The preferred method of installation is via NPM; simply run this command within the SockBot installation folder:
 ```
 npm install sockbot-mafia

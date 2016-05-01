@@ -23,3 +23,5 @@ mafiadbTesting-journal
 intTesting.db
 *.db
 *.db-journal
+mafiadb-journal
+intTesting.db
