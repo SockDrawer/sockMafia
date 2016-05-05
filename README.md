@@ -11,11 +11,28 @@ Mafia plugin for [SockBot](https://sockbot.rtfd.org/en/latest/) version 2.10.0 o
 
 ##Usage
 
-###TODO: Add Usage Information
+###Player Commands
+*All player commands must be run in the thread the game is being played in, as they are a matter of public record.*
 
-##Developers
+* **join**: Join a game. The game in question must be in the "Preparing" stage, not yet running or completed. 
+* **list-players**: List the current living players in the game. 
+* **list-all-players**: List all players in the current game, whether alive, dead, or moderator.
+* **list-votes**: List the current day's votes. 
+* **vote**: Vote for a player to be executed. Takes one parameter: the name of the player to be executed.
+* **for**: Alternate form of **vote**. The two forms are identical unless the player in question is a doublevoter. 
+* **nolynch**: Vote for the group to not lynch anyone this current day. If No-lynch wins a vote, no execution occurs and the day ends.
+* **no-lynch**: Identical to **nolynch**. 
+* **unvote**: Rescind your current vote.
 
-###TODO: Add Developer Dedications
+###Moderator commands
+
+* **prepare**: Start a new game in the current thread. The person who executes this command becomes the moderator for the new game. Takes one argument: a descriptor for the game.
+* **start**: Move the game from a preparation state to the running state, closing signups and allowing voting. Must be run in the game thread. 
+* **set**: Set a voting property for a player. Takes two arguments: the target to set, and the property to assign. Must be run in the game thread. Takes two arguments: the target username, such as '@yamikuronue', and the propery, one of loved, hated, or doublevoter.
+* **next-phase**: Move to the next game phase. Transitions night to day, and day to night. Must be used in the game thread. Takes no argumetns. 
+* **new-day**: Alias for **next-phase**
+* **kill**: Kill a player. Does not transition the day. Takes one argument: the target username.
+* **end**: Finish the game. This prevents further voting in the thread of a game that has concluded. Must be run in the game thread. 
 
 ##Installation
 
