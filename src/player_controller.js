@@ -182,10 +182,10 @@ exports.nolynchHandler = function (command) {
 	function getVoteAttemptText(success) {
 		let text = '@' + command.post.username +  (success ? ' voted for ' : ' tried to vote for ') + 'no-lynch ';
 
-		text = text	+ 'in post #<a href="https://what.thedailywtf.com/t/'
-				+ command.post.topic_id + '/' + command.post.post_number + '">'
+		text = text	+ 'in post #<a href="https://what.thedailywtf.com/topic/'
+				+ command.post.topic_id + '/slug/' + command.post.post_number + '">'
 				+ command.post.post_number + '</a>.\n\n'
-				+ 'Vote text:\n[quote]\n' + command.input + '\n[/quote]';
+				+ 'Vote text:\n> ' + command.input;
 		return text;
 	}
 	
@@ -255,10 +255,10 @@ exports.unvoteHandler = function (command) {
 	function getVoteAttemptText(success) {
 		let text = '@' + command.post.username + (success ? ' unvoted ' : ' tried to unvote ');
 
-		text = text	+ 'in post #<a href="https://what.thedailywtf.com/t/'
-				+ game + '/' + post + '">'
+		text = text	+ 'in post #<a href="https://what.thedailywtf.com/topic/'
+				+ game + '/slug/' + post + '">'
 				+ post + '</a>.\n\n'
-				+ 'Vote text:\n[quote]\n' + command.input + '\n[/quote]';
+				+ 'Vote text:\n> ' + command.input;
 		return text;
 	}
 	
@@ -384,10 +384,10 @@ function doVote(game, post, voter, target, input, voteNum) {
 	function getVoteAttemptText(success) {
 		let text = '@' + voter + (success ? ' voted for ' : ' tried to vote for ') + '@' + target;
 
-		text = text	+ ' in post #<a href="https://what.thedailywtf.com/t/'
-				+ game + '/' + post + '">'
+		text = text	+ ' in post #<a href="https://what.thedailywtf.com/topic/'
+				+ game + '/slug/' + post + '">'
 				+ post + '</a>.\n\n'
-				+ 'Vote text:\n[quote]\n' + input + '\n[/quote]';
+				+ 'Vote text:\n> ' + input;
 		return text;
 	}
 						

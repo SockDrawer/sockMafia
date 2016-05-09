@@ -254,7 +254,7 @@ describe('player controller', () => {
 				
 				const output = view.respondInThread.getCall(0).args[1];
 				output.should.include('@tehNinja voted for @noLunch in post ' +
-					'#<a href="https://what.thedailywtf.com/t/12345/98765">98765</a>.');
+					'#<a href="https://what.thedailywtf.com/topic/12345/slug/98765">98765</a>.');
 			});
 		});
 	});
