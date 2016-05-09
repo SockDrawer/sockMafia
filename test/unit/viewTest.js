@@ -52,7 +52,7 @@ describe('View helpers', () => {
 				post: 43,
 				voter: 'yamikuronue'
 			}];
-			listNamesHelper(input).toString().should.contain('/t/slug/123/43');
+			listNamesHelper(input).toString().should.contain('/topic/123/slug/43');
 		});
 		
 		it('Should bold current posts', () => {
@@ -85,7 +85,7 @@ describe('View helpers', () => {
 				retracted: true,
 				retractedAt: 44
 			}];
-			listNamesHelper(input).toString().should.contain('/t/slug/123/44');
+			listNamesHelper(input).toString().should.contain('/topic/123/slug/44');
 		});
 
 		it('Should list two votes with a comma', () => {
@@ -99,8 +99,8 @@ describe('View helpers', () => {
 				post: 47,
 				voter: 'accalia'
 			}];
-			listNamesHelper(input).toString().should.contain('/t/slug/123/43');
-			listNamesHelper(input).toString().should.contain('/t/slug/123/47');
+			listNamesHelper(input).toString().should.contain('/topic/123/slug/43');
+			listNamesHelper(input).toString().should.contain('/topic/123/slug/47');
 			listNamesHelper(input).toString().should.contain(',');
 			listNamesHelper(input).toString().should.contain('yamikuronue');
 			listNamesHelper(input).toString().should.contain('accalia');
