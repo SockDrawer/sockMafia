@@ -70,8 +70,8 @@ describe('SockMafia', function() {
 			'list-all-players': playerController.listAllPlayersHandler,
 			'list-players': playerController.listPlayersHandler,
 			'list-votes': playerController.listVotesHandler,
-			'no-lynch': playerController.noLynchHandler,
-			'nolynch': playerController.noLynchHandler,
+			'no-lynch': playerController.nolynchHandler,
+			'nolynch': playerController.nolynchHandler,
 			'unvote': playerController.unvoteHandler,
 			'vote': playerController.voteHandler
 		};
@@ -79,7 +79,7 @@ describe('SockMafia', function() {
 		it('Should register the correct commands', () => {
 			return mafiabot.activate().then(() => {
 				for (const command in knownCommands) {
-					Commands.commandList.keys.should.include(command);
+					Object.keys(Commands.commandList).should.include(command);
 				}
 			}).catch((err) => {
 				console.log('ERROR:' + err);

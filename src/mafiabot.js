@@ -84,7 +84,7 @@ function patchIn(module) {
 /*eslint-disable no-console*/
 function handleCallback(err) {
 	if (err) {
-		console.log('ERROR: ' + err.toString());
+		console.log('ERROR: ' + err.toString() + '\n' + err.stack);
 	}
 }
 /*eslint-enable no-console*/
