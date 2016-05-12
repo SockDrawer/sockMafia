@@ -91,10 +91,10 @@ function handleCallback(err) {
 
 function registerPlayerCommands(events) {
 	patchIn(playerController);
-	events.onCommand('for', 'vote for a player to be executed', exports.voteHandler, handleCallback);
+	events.onCommand('for', 'vote for a player to be executed', exports.forHandler, handleCallback);
 	events.onCommand('join', 'join current mafia game', exports.joinHandler, handleCallback);
 	events.onCommand('list-all-players', 'list all players, dead and alive', exports.listAllPlayersHandler, handleCallback);
-	events.onCommand('list-all-votes', 'list all votes from the game\'s start', exports.listAllVotesHandler, handleCallback);
+	//events.onCommand('list-all-votes', 'list all votes from the game\'s start', exports.listAllVotesHandler, handleCallback); //TODO: not yet implemented
 	events.onCommand('list-players', 'list all players still alive', exports.listPlayersHandler, handleCallback);
 	events.onCommand('list-votes', 'list all votes from the day\'s start', exports.listVotesHandler, handleCallback);
 	events.onCommand('no-lynch', 'vote for noone to be lynched', exports.nolynchHandler, handleCallback);

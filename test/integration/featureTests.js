@@ -13,11 +13,11 @@ const rimraf = require('rimraf-promise');
 
 chai.should();
 
-const playerController = require('../src/player_controller');
-const modController = require('../src/mod_controller');
-const DAO = require('../src/dao.js');
+const playerController = require('../../src/player_controller');
+const modController = require('../../src/mod_controller');
+const DAO = require('../../src/dao.js');
 const Handlebars = require('handlebars');
-const view = require('../src/view.js');
+const view = require('../../src/view.js');
 
 const testConfig = {
 	db: 'intTesting.db',
