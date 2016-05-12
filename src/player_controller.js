@@ -767,13 +767,13 @@ exports.listVotesHandler = function (command) {
 			
 			return Promise.all(pendingLookups);
 		}).then(() => {
-			view.respondWithTemplate('/templates/voteTemplate.handlebars', data, command);
+			return view.respondWithTemplate('/templates/voteTemplate.handlebars', data, command);
 		})
 		.catch((reason) => {
 			if (reason === E_NOGAME) {
 				return Promise.resolve();
 			}
-			view.reportError(command, 'Error reporting votes: ', reason);
+			return view.reportError(command, 'Error reporting votes: ', reason);
 		});
 };
 
