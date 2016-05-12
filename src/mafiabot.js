@@ -223,14 +223,10 @@ exports.activate = function activate() {
 		}
 	};
 	return dao.createDB(internals.configuration)
-		.then(() => dao.ensureGameExists(plugConfig.thread))
+		.then(() => dao.ensureGameExists(plugConfig.thread, plugConfig.name, true))
 		.catch((reason) => {
-			if (reason === 'Game does not exist') {
-				return dao.addGame(plugConfig.thread, plugConfig.name);
-			} else {
 				console.log('Mafia: Error: Game not added to database.\n' + '\tReason: ' + reason);
 				return Promise.reject('Game not created');
-			}
 		})
 		.then(() => {
 			if (plugConfig.players) {
@@ -279,6 +275,7 @@ exports.plugin = function plugin(forum, config) {
 	}
 	internals.configuration = config;
 	internals.forum = forum;
+
 	return {
 		activate: exports.activate,
 		deactivate: () => Promise.resolve()

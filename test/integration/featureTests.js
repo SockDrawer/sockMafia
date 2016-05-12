@@ -20,7 +20,7 @@ const Handlebars = require('handlebars');
 const view = require('../../src/view.js');
 
 const testConfig = {
-	db: 'intTesting.db',
+	db: ':memory:',
 
 };
 
