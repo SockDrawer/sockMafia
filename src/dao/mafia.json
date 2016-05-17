@@ -1,0 +1,32 @@
+[
+	{
+		"topicId": 45,
+		"name": "mafia_45",
+		"day": 1,
+		"isDay": true,
+		"isActive": false,
+		"livePlayers": {},
+		"deadPlayers": {},
+		"moderators": []
+	},
+	{
+		"topicId": 45,
+		"name": "mafia_45",
+		"day": 1,
+		"isDay": true,
+		"isActive": false,
+		"livePlayers": {},
+		"deadPlayers": {},
+		"moderators": []
+	},
+	{
+		"topicId": 45,
+		"name": "mafia_45",
+		"day": 1,
+		"isDay": true,
+		"isActive": false,
+		"livePlayers": {},
+		"deadPlayers": {},
+		"moderators": []
+	}
+]
