@@ -39,17 +39,24 @@ function shuffle(arr) {
     return arr;
 }
 
+function setDefault(value, fallback) {
+    return value || fallback;
+}
+
 class MafiaGame {
     constructor(data, dao) {
-        data.name = data.name || `mafia_${data.topicId}`;
-        data.day = data.day || 1;
-        data.phases = data.phases || ['day', 'night'];
-        data.phase = data.phase || data.phases[0];
+        data.name = setDefault(data.name, `mafia_${data.topicId}`);
+        data.day = setDefault(data.day, 1);
+        data.phases = setDefault(data.phases, ['day', 'night']);
+        data.phase = setDefault(data.phase, data.phases[0]);
+        if (data.phases.indexOf(data.phase) < 0) {
+            data.phase = data.phases[0];
+        }
         data.isActive = data.isActive !== undefined ? data.isActive : true;
-        data.livePlayers = data.livePlayers || {};
-        data.deadPlayers = data.deadPlayers || {};
-        data.moderators = data.moderators || {};
-        data.actions = data.actions || [];
+        data.livePlayers = setDefault(data.livePlayers, {});
+        data.deadPlayers = setDefault(data.deadPlayers, {});
+        data.moderators = setDefault(data.moderators, {});
+        data.actions = setDefault(data.actions, []);
         this._data = data;
         this._dao = dao;
     }
@@ -66,10 +73,10 @@ class MafiaGame {
         return this._data.phase;
     }
     get isDay() {
-        return this._data.phase === 'day';
+        return `${this._data.phase}`.toLowerCase().indexOf('day') >= 0;
     }
     get isNight() {
-        return this._data.phase === 'night';
+        return `${this._data.phase}`.toLowerCase().indexOf('night') >= 0;
     }
     get isActive() {
         return this._data.isActive;
@@ -85,7 +92,8 @@ class MafiaGame {
         return players.map((player) => new MafiaUser(this._data.deadPlayers[player], this));
     }
     get moderators() {
-        return this._data.moderators.map((player) => new MafiaUser(this._data.moderators[player], this));
+        const mods = Object.keys(this._data.moderators);
+        return mods.map((mod) => new MafiaUser(this._data.moderators[mod], this));
     }
     save() {
         return this._dao.save().then(() => this);
@@ -99,7 +107,7 @@ class MafiaGame {
         if (livingConflict || deadConflict) {
             return Promise.reject('E_USER_EXIST');
         }
-        this._data.livePlayers[user.userslug] = user;
+        this._data.livePlayers[user.userslug] = user.toJSON();
         return this.save().then(() => user);
     }
     addModerator(username) {
