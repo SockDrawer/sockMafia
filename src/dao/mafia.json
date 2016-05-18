@@ -2,31 +2,32 @@
 	{
 		"topicId": 45,
 		"name": "mafia_45",
-		"day": 1,
+		"day": 3,
 		"isDay": true,
 		"isActive": false,
 		"livePlayers": {},
-		"deadPlayers": {},
-		"moderators": []
-	},
-	{
-		"topicId": 45,
-		"name": "mafia_45",
-		"day": 1,
-		"isDay": true,
-		"isActive": false,
-		"livePlayers": {},
-		"deadPlayers": {},
-		"moderators": []
-	},
-	{
-		"topicId": 45,
-		"name": "mafia_45",
-		"day": 1,
-		"isDay": true,
-		"isActive": false,
-		"livePlayers": {},
-		"deadPlayers": {},
-		"moderators": []
+		"deadPlayers": {
+			"foobar": {
+				"username": "foobar",
+				"userslug": "foobar",
+				"isAlive": false,
+				"isModerator": false,
+				"properties": []
+			}
+		},
+		"moderators": {
+			"foobaz": {
+				"username": "foobaz",
+				"isModerator": true,
+				"userslug": "foobaz",
+				"isAlive": true,
+				"properties": []
+			}
+		},
+		"phases": [
+			"day",
+			"night"
+		],
+		"phase": "day"
 	}
 ]

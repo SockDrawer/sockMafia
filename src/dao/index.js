@@ -33,8 +33,6 @@ function saveData(filename, data) {
     });
 }
 
-
-
 class MafiaDao {
     constructor(connection) {
         this.connection = connection;
@@ -42,7 +40,12 @@ class MafiaDao {
     }
     createGame(topicId, name) {
         return this.load().then((data) => {
-            this._data = data;
+            const conflicts = data.filter((candidate) => {
+                return candidate.topicId === topicId || candidate.name === name;
+            });
+            if (conflicts.length !== 0) {
+                return Promise.reject('E_GAME_EXISTS');
+            }
             const game = new MafiaGame({
                 topicId: topicId,
                 name: name
@@ -51,11 +54,33 @@ class MafiaDao {
             return this.save().then(() => game);
         });
     }
+    getGameByTopicId(topicId) {
+        return this.load().then((data) => {
+            const game = data.filter((candidate) => candidate.topicId === topicId)[0];
+            if (!game) {
+                return Promise.reject('E_NO_GAME');
+            }
+            return new MafiaGame(game, this);
+        });
+    }
+    getGameByName(name) {
+        return this.load().then((data) => {
+            const game = data.filter((candidate) => candidate.name === name)[0];
+            if (!game) {
+                return Promise.reject('E_NO_GAME');
+            }
+            return new MafiaGame(game, this);
+        });
+    }
     load() {
         if (this._data) {
             return Promise.resolve(this._data);
         }
-        return readData(this.connection);
+        return readData(this.connection)
+            .then((data) => {
+                this._data = data;
+                return data;
+            });
     }
     save() {
         return saveData(this.connection, this);
@@ -65,8 +90,7 @@ class MafiaDao {
     }
 }
 
-
-
-console.log(JSON.stringify(new MafiaDao()));
 const dao = new MafiaDao('./dao/mafia.json');
-dao.createGame(45).then((data) => console.log(data)).catch((err) => console.error(err));
+dao.getGameByTopicId(45)
+    .then((game) => game.nextPhase())
+    .then((data) => console.log(data)).catch((err) => console.error(err));
