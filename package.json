@@ -9,6 +9,7 @@
     "test": "eslint . && npm run unit_tests && npm run integration_tests",
     "istanbul": "eslint .; istanbul cover node_modules/mocha/bin/_mocha -- --recursive -R nyan",
     "mocha": "eslint .;mocha --recursive -R nyan",
+    "dao_tests": "eslint src/dao && istanbul cover node_modules/mocha/bin/_mocha --print both -- ./test/dao --recursive -R dot ",
     "unit_tests": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/unit/*est.js --recursive -R dot ",
     "integration_tests": "mocha ./test/integration/*.js",
     "integration_coverage": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/integration/*.js"
@@ -28,9 +29,7 @@
     "debug": "^2.2.0",
     "fs-readfile-promise": "^2.0.1",
     "handlebars": "^4.0.5",
-    "sequelize": "^3.15.1",
     "sockbot": "^3.0.0",
-    "sqlite3": "^3.1.1",
     "string": "^3.3.1"
   },
   "devDependencies": {

@@ -54,7 +54,7 @@ class MafiaGame {
         this._dao = dao;
     }
     get topicId() {
-        return this.data.topicId;
+        return this._data.topicId;
     }
     get name() {
         return this._data.name;

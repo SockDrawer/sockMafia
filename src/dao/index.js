@@ -50,7 +50,7 @@ class MafiaDao {
                 topicId: topicId,
                 name: name
             }, this);
-            this._data.push(game);
+            this._data.push(game._data);
             return this.save().then(() => game);
         });
     }
@@ -89,12 +89,4 @@ class MafiaDao {
         return this._data;
     }
 }
-
 module.exports = MafiaDao;
-
-/* "debugging"
-const dao = new MafiaDao('./dao/mafia.json');
-dao.getGameByTopicId(45)
-    .then((game) => game.nextPhase())
-    .then((data) => console.log(data)).catch((err) => console.error(err));
-    */
