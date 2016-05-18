@@ -1,6 +1,7 @@
 'use strict';
 
-const MafiaUser = require('./mafiaUser')
+const MafiaUser = require('./mafiaUser'),
+    MafiaAction = require('./mafiaAction');
 
 function shuffle(arr) {
     for (let i = arr.length - 1; i > 0; i -= 1) {
@@ -22,6 +23,7 @@ class MafiaGame {
         data.livePlayers = data.livePlayers || {};
         data.deadPlayers = data.deadPlayers || {};
         data.moderators = data.moderators || {};
+        data.actions = data.actions || [];
         this._data = data;
         this._dao = dao;
     }
@@ -94,13 +96,13 @@ class MafiaGame {
         }
         if (this._data.livePlayers[user.userslug]) {
             const player = new MafiaUser(this._data.livePlayers[user.userslug], this);
-            return Promise.resolve(player);
+            return player;
         }
         if (this._data.deadPlayers[user.userslug]) {
             const player = new MafiaUser(this._data.deadPlayers[user.userslug], this);
-            return Promise.resolve(player);
+            return player;
         }
-        return Promise.reject('E_USER_NO_EXIST');
+        return null;
     }
     killPlayer(user) {
         if (!(user instanceof MafiaUser)) {
@@ -147,6 +149,19 @@ class MafiaGame {
         this._data.day += 1;
         this._data.phase = this._data.phases[0];
         return this.save();
+    }
+    registerAction(postId, actor, target, action, actionToken) {
+        //TODO: auto rescind prior actions
+        const action = new MafiaAction({
+            postId: postId,
+            actor: actor,
+            target: target,
+            action: action,
+            actionToken: actionToken,
+            day: this.day
+        });
+        this._data.actions.push(action);
+        return this.save().then(() => action);
     }
     toJSON() {
         return this._data;

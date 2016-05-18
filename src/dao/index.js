@@ -89,8 +89,13 @@ class MafiaDao {
         return this._data;
     }
 }
+ 
+module.exports = MafiaDao;
 
+/* "debugging"
 const dao = new MafiaDao('./dao/mafia.json');
 dao.getGameByTopicId(45)
     .then((game) => game.nextPhase())
     .then((data) => console.log(data)).catch((err) => console.error(err));
+    */
+    
