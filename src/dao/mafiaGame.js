@@ -179,7 +179,7 @@ class MafiaGame {
         includeDeadPlayers = includeDeadPlayers !== undefined ? includeDeadPlayers : false;
         type = type || 'vote';
         day = day || this.day;
-        let actions = this._data.actions.filter((action) => {
+        const actions = this._data.actions.filter((action) => {
             return action.day === day &&
                 action.type === type &&
                 (

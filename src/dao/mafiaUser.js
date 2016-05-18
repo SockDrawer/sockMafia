@@ -1,5 +1,5 @@
 'use strict';
-const string = require('string')
+const string = require('string');
 
 class MafiaUser {
     constructor(data, game) {
@@ -20,7 +20,7 @@ class MafiaUser {
         return this._data.isAlive;
     }
     set isAlive(value) {
-        this._data.isAlive=!!value;
+        this._data.isAlive = !!value;
     }
     get isModerator() {
         return this._data.isModerator;

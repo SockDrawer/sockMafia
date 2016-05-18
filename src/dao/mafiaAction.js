@@ -33,3 +33,4 @@ class MafiaAction {
         return this._game.save().then(() => this);
     }
 }
+module.exports = MafiaAction;
