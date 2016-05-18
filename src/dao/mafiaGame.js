@@ -1,7 +1,33 @@
 'use strict';
 
+const string = require('string');
 const MafiaUser = require('./mafiaUser'),
     MafiaAction = require('./mafiaAction');
+
+function getUserSlug(user) {
+    if (!user) {
+        return null;
+    }
+    if (user instanceof MafiaUser) {
+        return user.userslug;
+    }
+    return string(user).slugify().s;
+}
+
+function getUser(game, source, user) {
+    if (!(user instanceof MafiaUser)) {
+        const slug = string(user).slugify().s;
+        if (source[slug]) {
+            user = new MafiaUser(source[slug], game);
+        } else {
+            user = null;
+        }
+    }
+    if (!source[user.userslug]) {
+        user = null;
+    }
+    return user;
+}
 
 function shuffle(arr) {
     for (let i = arr.length - 1; i > 0; i -= 1) {
@@ -89,29 +115,15 @@ class MafiaGame {
         return this.save().then(() => moderator);
     }
     getPlayer(user) {
-        if (!(user instanceof MafiaUser)) {
-            user = new MafiaUser({
-                username: user
-            }, this);
+        const liveUser = getUser(this, this._data.livePlayers, user);
+        if (liveUser) {
+            return liveUser;
         }
-        if (this._data.livePlayers[user.userslug]) {
-            const player = new MafiaUser(this._data.livePlayers[user.userslug], this);
-            return player;
-        }
-        if (this._data.deadPlayers[user.userslug]) {
-            const player = new MafiaUser(this._data.deadPlayers[user.userslug], this);
-            return player;
-        }
-        return null;
+        return getUser(this, this._data.deadPlayers, user);
     }
     killPlayer(user) {
-        if (!(user instanceof MafiaUser)) {
-            user = new MafiaUser({
-                username: user
-            }, this);
-        }
-        if (this._data.livePlayers[user.userslug]) {
-            const player = new MafiaUser(this._data.livePlayers[user.userslug], this);
+        const player = getUser(this, this._data.livePlayers, user);
+        if (player) {
             player.isAlive = false;
             delete this._data.livePlayers[player.userslug];
             this._data.deadPlayers[player.userslug] = player;
@@ -120,13 +132,8 @@ class MafiaGame {
         return Promise.reject('E_USER_NOT_LIVE');
     }
     resurectPlayer(user) {
-        if (!(user instanceof MafiaUser)) {
-            user = new MafiaUser({
-                username: user
-            }, this);
-        }
-        if (this._data.deadPlayers[user.userslug]) {
-            const player = new MafiaUser(this._data.deadPlayers[user.userslug], this);
+        const player = getUser(this, this._data.deadPlayers, user);
+        if (player) {
             player.isAlive = true;
             delete this._data.deadPlayers[player.userslug];
             this._data.livePlayers[player.userslug] = player;
@@ -150,18 +157,81 @@ class MafiaGame {
         this._data.phase = this._data.phases[0];
         return this.save();
     }
-    registerAction(postId, actor, target, action, actionToken) {
-        //TODO: auto rescind prior actions
+    getAction(actor, target, type, actionToken, day) {
+        actor = getUserSlug(actor);
+        target = getUserSlug(target);
+        type = type || 'vote';
+        day = day || this.day;
+        let actions = this._data.actions.filter((action) => {
+            return action.actor === actor &&
+                action.day === day &&
+                action.type === type;
+        });
+        if (target) {
+            actions = actions.filter((action) => action.target === target);
+        }
+        if (actionToken) {
+            actions = actions.filter((action) => action.actionToken === actionToken);
+        }
+        return new MafiaAction(actions[0], this);
+    }
+    getActions(type, day, includeDeadPlayers) {
+        includeDeadPlayers = includeDeadPlayers !== undefined ? includeDeadPlayers : false;
+        type = type || 'vote';
+        day = day || this.day;
+        let actions = this._data.actions.filter((action) => {
+            return action.day === day &&
+                action.type === type &&
+                (
+                    includeDeadPlayers ||
+                    !!this._data.livePlayers[action.actor]
+                );
+        });
+        return new MafiaAction(actions[0], this);
+    }
+    registerAction(postId, actor, target, type, actionToken) {
+        actor = getUser(this, this._data.livePlayers, actor);
+        target = getUser(this, this._data.livePlayers, target);
+        if (!actor) {
+            return Promise.reject('E_ACTOR_NOT_ALIVE');
+        }
+        if (!target) {
+            return Promise.reject('E_TARGET_NOT_ALIVE');
+        }
+        const prior = this.getAction(actor, target, type, actionToken, this.day);
+        let rescind = null;
+        if (prior) {
+            rescind = prior.revoke(postId);
+        } else {
+            rescind = Promise.resolve();
+        }
         const action = new MafiaAction({
             postId: postId,
-            actor: actor,
-            target: target,
-            action: action,
+            actor: actor.userslug,
+            target: target.userslug,
+            action: type,
             actionToken: actionToken,
             day: this.day
-        });
+        }, this);
         this._data.actions.push(action);
-        return this.save().then(() => action);
+        return rescind
+            .then(() => this.save())
+            .then(() => action);
+    }
+    revokeAction(postId, actor, target, type, actionToken) {
+        actor = getUser(this, this._data.livePlayers, actor);
+        if (!actor) {
+            return Promise.reject('E_ACTOR_NOT_ALIVE');
+        }
+        const action = this.getAction(actor, target, type, actionToken, this.day);
+        let rescind = null;
+        if (action) {
+            rescind = action.revoke(postId);
+        } else {
+            rescind = Promise.resolve();
+        }
+        return rescind
+            .then(() => action);
     }
     toJSON() {
         return this._data;

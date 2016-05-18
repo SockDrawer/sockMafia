@@ -25,11 +25,11 @@ class MafiaAction {
     get isCurrent() {
         return !this._data.rescindedId;
     }
-    get rescindedId() {
-        return this._data.rescindedId;
+    get revokededId() {
+        return this._data.revokedId;
     }
-    rescind(postId) {
-        this._data.rescindedId = postId;
+    revoke(postId) {
+        this._data.revokedId = postId;
         return this._game.save().then(() => this);
     }
 }
