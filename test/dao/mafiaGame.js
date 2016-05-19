@@ -669,7 +669,7 @@ describe('nouveau dao/MafiaGame', () => {
         const phases = ['1', '2', '3', '4', '5', '6'];
         beforeEach(() => {
             game = new MafiaGame({});
-            game.save = sinon.stub().resolves();
+            game.save = sinon.stub().resolves(game);
             game._data.phases = phases;
             game._data.phase = phases[0];
         });
@@ -706,12 +706,38 @@ describe('nouveau dao/MafiaGame', () => {
                 game.save.called.should.be.true;
             });
         });
-        /*
         it('should resolve to self on success',()=>{
-            return game.nextPhase().then((result) => {
-                result.should.equal(game);
+            return game.nextPhase().should.become(game);
+        });
+    });
+    describe('newDay()',()=>{
+                let game = null;
+        const phases = ['1', '2', '3', '4', '5', '6'];
+        beforeEach(() => {
+            game = new MafiaGame({});
+            game.save = sinon.stub().resolves(game);
+            game._data.phases = phases;
+            game._data.phase = phases[0];
+        });
+        it('should increment day value',()=>{
+            game.day.should.equal(1);
+            return game.newDay().then(()=>{
+                game.day.should.equal(2);
             });
         });
-        */
+        it('should reset phase to beginning of day',()=>{
+            game._data.phase = '3';
+            return game.newDay().then(()=>{
+                game.phase.should.equal('1');
+            });
+        });
+        it('should save results',()=>{
+            return game.newDay().then(() => {
+                game.save.called.should.be.true;
+            });
+        });
+        it('should resolve to self on success',()=>{
+            return game.newDay().should.become(game);
+        });
     });
 });
