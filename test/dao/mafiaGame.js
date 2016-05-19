@@ -9,8 +9,6 @@ chai.use(require('chai-as-promised'));
 
 chai.should();
 
-const fs = require('fs');
-
 const MafiaGame = require('../../src/dao/mafiaGame'),
     MafiaAction = require('../../src/dao/mafiaAction'),
     MafiaUser = require('../../src/dao/mafiaUser');
@@ -346,7 +344,7 @@ describe('nouveau dao/MafiaGame', () => {
             return game.save().should.be.rejectedWith('E_BAD_THINGS');
         });
     });
-    describe('addPlayer', () => {
+    describe('addPlayer()', () => {
         let game = null;
         beforeEach(() => {
             game = new MafiaGame({});
@@ -362,16 +360,358 @@ describe('nouveau dao/MafiaGame', () => {
                 user.should.be.an.instanceOf(MafiaUser);
             });
         });
+        it('should create user as alive', () => {
+            return game.addPlayer('foobar').then((user) => {
+                user.isAlive.should.be.true;
+            });
+        });
+        it('should create user as non-moderator', () => {
+            return game.addPlayer('foobar').then((user) => {
+                user.isModerator.should.be.false;
+            });
+        });
         it('should store user data in live players', () => {
             return game.addPlayer('foobar').then((user) => {
-                console.log(game._data.livePlayers);
                 game._data.livePlayers.foobar.should.be.ok;
                 game._data.livePlayers.foobar.should.be.an('object');
                 game._data.livePlayers.foobar.should.not.equal(user);
             });
         });
+        it('should store user data via userslug', () => {
+            return game.addPlayer('FOObar').then(() => {
+                game._data.livePlayers.foobar.should.be.ok;
+            });
+        });
         it('should reject when living player already exists', () => {
-
-        })
+            game._data.livePlayers.foobar = {};
+            return game.addPlayer('foobar').should.be.rejectedWith('E_USER_EXIST');
+        });
+        it('should reject when living player already exists via userslug', () => {
+            game._data.livePlayers.foobar = {};
+            return game.addPlayer('fooBAR').should.be.rejectedWith('E_USER_EXIST');
+        });
+        it('should reject when dead player already exists', () => {
+            game._data.deadPlayers.foobar = {};
+            return game.addPlayer('foobar').should.be.rejectedWith('E_USER_EXIST');
+        });
+        it('should reject when dead player already exists via user slug', () => {
+            game._data.deadPlayers.foobar = {};
+            return game.addPlayer('fOoBaR').should.be.rejectedWith('E_USER_EXIST');
+        });
+        it('should reject when moderator already exists', () => {
+            game._data.moderators.foobar = {};
+            return game.addPlayer('foobar').should.be.rejectedWith('E_USER_EXIST');
+        });
+        it('should reject when moderator already exists via user slug', () => {
+            game._data.moderators.foobar = {};
+            return game.addPlayer('fOoBaR').should.be.rejectedWith('E_USER_EXIST');
+        });
+    });
+    describe('addModerator()', () => {
+        let game = null;
+        beforeEach(() => {
+            game = new MafiaGame({});
+            game.save = sinon.stub().resolves();
+        });
+        it('should save new mod', () => {
+            return game.addModerator('foobar').then(() => {
+                game.save.called.should.be.true;
+            });
+        });
+        it('should resolve to new user', () => {
+            return game.addModerator('foobar').then((user) => {
+                user.should.be.an.instanceOf(MafiaUser);
+            });
+        });
+        it('should create user as alive', () => {
+            return game.addModerator('foobar').then((user) => {
+                user.isAlive.should.be.true;
+            });
+        });
+        it('should create user as moderator', () => {
+            return game.addModerator('foobar').then((user) => {
+                user.isModerator.should.be.true;
+            });
+        });
+        it('should store user data in live players', () => {
+            return game.addModerator('foobar').then((user) => {
+                game._data.moderators.foobar.should.be.ok;
+                game._data.moderators.foobar.should.be.an('object');
+                game._data.moderators.foobar.should.not.equal(user);
+            });
+        });
+        it('should store user data via userslug', () => {
+            return game.addModerator('FOObar').then(() => {
+                game._data.moderators.foobar.should.be.ok;
+            });
+        });
+        it('should reject when living player already exists', () => {
+            game._data.livePlayers.foobar = {};
+            return game.addModerator('foobar').should.be.rejectedWith('E_USER_EXIST');
+        });
+        it('should reject when living player already exists via userslug', () => {
+            game._data.livePlayers.foobar = {};
+            return game.addModerator('fooBAR').should.be.rejectedWith('E_USER_EXIST');
+        });
+        it('should reject when dead player already exists', () => {
+            game._data.deadPlayers.foobar = {};
+            return game.addModerator('foobar').should.be.rejectedWith('E_USER_EXIST');
+        });
+        it('should reject when dead player already exists via user slug', () => {
+            game._data.deadPlayers.foobar = {};
+            return game.addModerator('fOoBaR').should.be.rejectedWith('E_USER_EXIST');
+        });
+        it('should reject when moderator already exists', () => {
+            game._data.moderators.foobar = {};
+            return game.addModerator('foobar').should.be.rejectedWith('E_USER_EXIST');
+        });
+        it('should reject when moderator already exists via user slug', () => {
+            game._data.moderators.foobar = {};
+            return game.addModerator('fOoBaR').should.be.rejectedWith('E_USER_EXIST');
+        });
+    });
+    describe('getPlayer()', () => {
+        let game = null;
+        beforeEach(() => game = new MafiaGame({}));
+        it('should return null for no players', () => {
+            chai.expect(game.getPlayer('foobar')).to.be.null;
+        });
+        it('should return null for null parameter', () => {
+            game._data.livePlayers.null = {};
+            chai.expect(game.getPlayer(null)).to.be.null;
+        });
+        it('should return living player', () => {
+            const name = `nale${Math.random()}`;
+            game._data.livePlayers[name.replace('.', '')] = {
+                username: name
+            };
+            const player = game.getPlayer(name);
+            player.should.be.an.instanceOf(MafiaUser);
+            player.username.should.equal(name);
+        });
+        it('should return living player for MafiaUser', () => {
+            const name = `nale${Math.random()}`;
+            game._data.livePlayers[name.replace('.', '')] = {
+                username: name
+            };
+            const user = new MafiaUser({
+                username: name
+            });
+            const player = game.getPlayer(user);
+            player.should.be.an.instanceOf(MafiaUser);
+            player.username.should.equal(name);
+        });
+        it('should return dead player', () => {
+            const name = `nale${Math.random()}`;
+            game._data.deadPlayers[name.replace('.', '')] = {
+                username: name
+            };
+            const player = game.getPlayer(name);
+            player.should.be.an.instanceOf(MafiaUser);
+            player.username.should.equal(name);
+        });
+        it('should return dead player for MafiaUser', () => {
+            const name = `nale${Math.random()}`;
+            game._data.deadPlayers[name.replace('.', '')] = {
+                username: name
+            };
+            const user = new MafiaUser({
+                username: name
+            });
+            const player = game.getPlayer(user);
+            player.should.be.an.instanceOf(MafiaUser);
+            player.username.should.equal(name);
+        });
+        it('should not return moderator', () => {
+            const name = `nale${Math.random()}`;
+            game._data.moderators[name.replace('.', '')] = {
+                username: name
+            };
+            chai.expect(game.getPlayer(name)).to.be.null;
+        });
+        it('should mot return moderator for MafiaUser', () => {
+            const name = `nale${Math.random()}`;
+            game._data.moderators[name.replace('.', '')] = {
+                username: name
+            };
+            const user = new MafiaUser({
+                username: name
+            });
+            chai.expect(game.getPlayer(user)).to.be.null;
+        });
+    });
+    describe('killPlayer()', () => {
+        let game = null;
+        beforeEach(() => {
+            game = new MafiaGame({});
+            game.save = sinon.stub().resolves();
+        });
+        it('should reject for no players', () => {
+            return game.killPlayer('foobar').should.be.rejectedWith('E_USER_NOT_LIVE');
+        });
+        it('should reject for null player', () => {
+            return game.killPlayer(null).should.be.rejectedWith('E_USER_NOT_LIVE');
+        });
+        it('should reject for dead player', () => {
+            game._data.deadPlayers.foobar = {};
+            return game.killPlayer('foobar').should.be.rejectedWith('E_USER_NOT_LIVE');
+        });
+        it('should reject for moderator', () => {
+            game._data.moderators.foobar = {};
+            return game.killPlayer('foobar').should.be.rejectedWith('E_USER_NOT_LIVE');
+        });
+        it('should resolve to killed player on success', () => {
+            const name = `name${Math.floor(Math.random()*1e7)}`;
+            game._data.livePlayers[name] = {
+                username: name
+            };
+            return game.killPlayer(name).then((player) => {
+                player.should.be.an.instanceOf(MafiaUser);
+                player.username.should.equal(name);
+                player.isAlive.should.be.false;
+            });
+        });
+        it('should remove player from live players on success', () => {
+            const name = `name${Math.floor(Math.random()*1e7)}`;
+            const data = {
+                username: name
+            };
+            game._data.livePlayers[name] = data;
+            return game.killPlayer(name).then(() => {
+                game._data.livePlayers.should.not.have.any.key(name);
+            });
+        });
+        it('should add player to dead players on success', () => {
+            const name = `name${Math.floor(Math.random()*1e7)}`;
+            const data = {
+                username: name
+            };
+            game._data.livePlayers[name] = data;
+            return game.killPlayer(name).then(() => {
+                game._data.deadPlayers.should.have.any.key(name);
+                game._data.deadPlayers[name].should.equal(data);
+            });
+        });
+        it('should save new data on success', () => {
+            const name = `name${Math.floor(Math.random()*1e7)}`;
+            game._data.livePlayers[name] = {
+                username: name
+            };
+            return game.killPlayer(name).then(() => {
+                game.save.called.should.be.true;
+            });
+        });
+    });
+    describe('resurectPlayer()', () => {
+        let game = null;
+        beforeEach(() => {
+            game = new MafiaGame({});
+            game.save = sinon.stub().resolves();
+        });
+        it('should reject for no players', () => {
+            return game.resurectPlayer('foobar').should.be.rejectedWith('E_USER_NOT_DEAD');
+        });
+        it('should reject for null player', () => {
+            return game.resurectPlayer(null).should.be.rejectedWith('E_USER_NOT_DEAD');
+        });
+        it('should reject for live player', () => {
+            game._data.livePlayers.foobar = {};
+            return game.resurectPlayer('foobar').should.be.rejectedWith('E_USER_NOT_DEAD');
+        });
+        it('should reject for moderator', () => {
+            game._data.moderators.foobar = {};
+            return game.resurectPlayer('foobar').should.be.rejectedWith('E_USER_NOT_DEAD');
+        });
+        it('should resolve to killed player on success', () => {
+            const name = `name${Math.floor(Math.random()*1e7)}`;
+            game._data.deadPlayers[name] = {
+                username: name
+            };
+            return game.resurectPlayer(name).then((player) => {
+                player.should.be.an.instanceOf(MafiaUser);
+                player.username.should.equal(name);
+                player.isAlive.should.be.true;
+            });
+        });
+        it('should remove player from dead players on success', () => {
+            const name = `name${Math.floor(Math.random()*1e7)}`;
+            const data = {
+                username: name
+            };
+            game._data.deadPlayers[name] = data;
+            return game.resurectPlayer(name).then(() => {
+                game._data.deadPlayers.should.not.have.any.key(name);
+            });
+        });
+        it('should add player to live players on success', () => {
+            const name = `name${Math.floor(Math.random()*1e7)}`;
+            const data = {
+                username: name
+            };
+            game._data.deadPlayers[name] = data;
+            return game.resurectPlayer(name).then(() => {
+                game._data.livePlayers.should.have.any.key(name);
+                game._data.livePlayers[name].should.equal(data);
+            });
+        });
+        it('should save new data on success', () => {
+            const name = `name${Math.floor(Math.random()*1e7)}`;
+            game._data.deadPlayers[name] = {
+                username: name
+            };
+            return game.resurectPlayer(name).then(() => {
+                game.save.called.should.be.true;
+            });
+        });
+    });
+    describe('nextPhase()', () => {
+        let game = null;
+        const phases = ['1', '2', '3', '4', '5', '6'];
+        beforeEach(() => {
+            game = new MafiaGame({});
+            game.save = sinon.stub().resolves();
+            game._data.phases = phases;
+            game._data.phase = phases[0];
+        });
+        [1, 2, 3, 4, 5].forEach((phase) => {
+            it(`should increment from phase ${phase} to ${phase + 1}`, () => {
+                game._data.phase = `${phase}`;
+                return game.nextPhase().then(() => {
+                    game.phase.should.equal(`${phase + 1}`);
+                });
+            });
+        });
+        it('should increment phase without incrementing day', () => {
+            return game.nextPhase().then(() => {
+                game.day.should.equal(1);
+                game.phase.should.equal('2');
+            });
+        });
+        it('should increment day after last phase of the day', () => {
+            game._data.phase = '6';
+            return game.nextPhase().then(() => {
+                game.day.should.equal(2);
+                game.phase.should.equal('1');
+            });
+        });
+        it('should snap phase to beginning of next day on invalid phase',()=>{
+            game._data.phase='i like bananas';
+            return game.nextPhase().then(() => {
+                game.day.should.equal(2);
+                game.phase.should.equal('1');
+            });
+        });
+        it('should save results',()=>{
+            return game.nextPhase().then(() => {
+                game.save.called.should.be.true;
+            });
+        });
+        /*
+        it('should resolve to self on success',()=>{
+            return game.nextPhase().then((result) => {
+                result.should.equal(game);
+            });
+        });
+        */
     });
 });

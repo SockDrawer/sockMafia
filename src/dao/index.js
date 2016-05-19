@@ -86,7 +86,7 @@ class MafiaDao {
         return saveData(this.connection, this);
     }
     toJSON() {
-        return this._data;
+        return JSON.parse(JSON.stringify(this._data));
     }
 }
 module.exports = MafiaDao;

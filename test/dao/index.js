@@ -332,7 +332,18 @@ describe('nouveau dao', () => {
             });
         });
     });
-    describe('toJSON()',()=>{
-        it('should')
-    })
+    describe('toJSON()', () => {
+        it('should produce clone of data', () => {
+            const obj = {
+                a: Math.random(),
+                b: Math.random(),
+                c: Math.random(),
+            };
+            const dao = new MafiaDao();
+            dao._data = obj;
+            const json = dao.toJSON();
+            json.should.eql(obj);
+            json.should.not.equal(obj);
+        });
+    });
 });

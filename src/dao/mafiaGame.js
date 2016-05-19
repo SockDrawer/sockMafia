@@ -15,18 +15,12 @@ function getUserSlug(user) {
 }
 
 function getUser(game, source, user) {
-    if (!(user instanceof MafiaUser)) {
-        const slug = string(user).slugify().s;
-        if (source[slug]) {
-            user = new MafiaUser(source[slug], game);
-        } else {
-            user = null;
-        }
+    const slug = getUserSlug(user);
+    if (slug && source[slug]) {
+        return new MafiaUser(source[slug], game);
     }
-    if (!source[user.userslug]) {
-        user = null;
-    }
-    return user;
+    return null;
+
 }
 
 function shuffle(arr) {
@@ -104,7 +98,8 @@ class MafiaGame {
         }, this);
         const livingConflict = this._data.livePlayers[user.userslug];
         const deadConflict = this._data.deadPlayers[user.userslug];
-        if (livingConflict || deadConflict) {
+        const modConflict = this._data.moderators[user.userslug];
+        if (livingConflict || deadConflict || modConflict) {
             return Promise.reject('E_USER_EXIST');
         }
         this._data.livePlayers[user.userslug] = user.toJSON();
@@ -115,11 +110,13 @@ class MafiaGame {
             username: username,
             isModerator: true
         }, this);
-        const livingConflict = this._data.moderators[moderator.userslug];
-        if (livingConflict) {
+        const livingConflict = this._data.livePlayers[moderator.userslug];
+        const deadConflict = this._data.deadPlayers[moderator.userslug];
+        const modConflict = this._data.moderators[moderator.userslug];
+        if (livingConflict || deadConflict || modConflict) {
             return Promise.reject('E_USER_EXIST');
         }
-        this._data.moderators[moderator.userslug] = moderator;
+        this._data.moderators[moderator.userslug] = moderator.toJSON();
         return this.save().then(() => moderator);
     }
     getPlayer(user) {
@@ -134,7 +131,7 @@ class MafiaGame {
         if (player) {
             player.isAlive = false;
             delete this._data.livePlayers[player.userslug];
-            this._data.deadPlayers[player.userslug] = player;
+            this._data.deadPlayers[player.userslug] = player.toJSON();
             return this.save().then(() => player);
         }
         return Promise.reject('E_USER_NOT_LIVE');
@@ -144,14 +141,14 @@ class MafiaGame {
         if (player) {
             player.isAlive = true;
             delete this._data.deadPlayers[player.userslug];
-            this._data.livePlayers[player.userslug] = player;
+            this._data.livePlayers[player.userslug] = player.toJSON();
             return this.save().then(() => player);
         }
         return Promise.reject('E_USER_NOT_DEAD');
     }
     nextPhase() {
         const idx = this._data.phases.indexOf(this._data.phase);
-        const newPhase = this._data.phases[idx + 1];
+        const newPhase = idx >= 0 && this._data.phases[idx + 1];
         if (!newPhase) {
             this._data.day += 1;
             this._data.phase = this._data.phases[0];
