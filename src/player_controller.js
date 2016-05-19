@@ -134,6 +134,25 @@ class MafiaPlayerController {
 		return Promise.resolve(text);
 	}
 
+
+	checkForAutoLynch(game, target) {
+		let todaysVotes = game.getActions();
+		let numVotesForTarget = 0;
+		for (let i = 0; i < todaysVotes.length; i++) {
+			if (todaysVotes[i].target == target) {
+				numVotesForTarget++;
+			}
+		}
+
+		let numVotesRequired = this.getNumVotesRequired(game, target);
+
+		if (numVotesForTarget >= numVotesRequired) {
+			return this.lynchPlayer(game, target);
+		} else {
+			return Promise.resolve();
+		}
+	}
+
 	/**
 	  * nolynch: Vote to not lynch this day
 	  * Must be used in the game thread.
@@ -336,7 +355,6 @@ class MafiaPlayerController {
 	};
 
 
-
 	doVote (gameId, post, actor, target, input, voteNum) {
 		let action, voter, votee, game;
 		/*if (voteNum === 2) {
@@ -356,7 +374,6 @@ class MafiaPlayerController {
 		}
 
 		function verifyPreconditions(game, voter, target) {
-			console.log(voter)
 			if (!game.isActive) {
 				return Promise.reject('Incorrect game state');
 			}
@@ -376,24 +393,6 @@ class MafiaPlayerController {
 			return Promise.resolve();
 		}
 
-		function checkForAutoLynch(game, target) {
-			let todaysVotes = game.getActions();
-			let numVotesForTarget = 0;
-			for (let i = 0; i < todaysVotes.length; i++) {
-				if (todaysVotes[i].target == target) {
-					numVotesForTarget++;
-				}
-			}
-
-			let numVotesRequired = getNumVotesRequired(game, target);
-
-			if (numVotesRequired <= nunumVotesForTargetmReceived) {
-				return lynchPlayer(game, target);
-			} else {
-				return Promise.resolve();
-			}
-		}
-
 		return this.dao.getGameByTopicId(gameId)
 		.catch(() => {
 			logWarning('Ignoring message in nonexistant game thread ' + game);
@@ -401,14 +400,17 @@ class MafiaPlayerController {
 		})
 		.then((g) => {
 			game = g;
-			return Promise.all([
-					game.getPlayer(voter),
-					game.getPlayer(target)
-				])
-		})
-		.then((v, t) => {
-			voter = v;
-			votee = t;
+			try {
+				voter = game.getPlayer(actor);
+			} catch (_) {
+				throw new Error('Voter not in game');
+			}
+
+			try {
+				votee = game.getPlayer(target);
+			} catch (_) {
+				throw new Error('Target not in game');
+			}
 			return verifyPreconditions(game, voter, votee)
 		})
 		.then(() => game.registerAction(post, voter, action, votee))

@@ -33,19 +33,28 @@ describe('player controller', () => {
 	});
 
 
-	describe('Vote helpers', () => {
-		let mockGame, mockUser, mockdao, playerController;
+	describe.only('Vote helpers', () => {
+		let mockGame, mockUser, mockTarget, mockdao, playerController;
 
 		beforeEach(() => {
 			mockGame = {
 				getAllPlayers: () => 1,
 				killPlayer: () => 1,
 				nextPhase: () => 1,
+				getActions: () => 1,
 				topicId: 12
 			}
 
 			mockUser = {
-				getPlayerProperty: () => 1
+				username: 'Lars',
+				getPlayerProperty: () => [],
+				isAlive: true
+			}
+
+			mockTarget = {
+				username: 'Sadie',
+				getPlayerProperty: () => [],
+				isAlive: true
 			}
 
 			playerController = new PlayerController(null);
@@ -110,19 +119,62 @@ describe('player controller', () => {
 					output.should.include('Error when lynching player:');
 				});
 			});
-		})
-	})
+		});
 
-	describe.only('doVote()', () => {
+		describe('Autolynch', () => {
+			let voteForSadie = {};
+			let voteForLars = {};
+
+			beforeEach(() => {
+				sandbox.stub(playerController, 'lynchPlayer').resolves();
+
+				voteForSadie.target = mockTarget;
+
+				voteForLars.target = mockUser;
+
+			});
+
+			it('should auto-lynch at the threshold', () => {
+				sandbox.stub(playerController, 'getNumVotesRequired').returns(2);
+				sandbox.stub(mockGame, 'getActions').returns([voteForSadie, voteForSadie]);
+
+				return playerController.checkForAutoLynch(mockGame, mockTarget).then(() => {
+					playerController.lynchPlayer.called.should.equal(true);
+				});
+			});			
+
+			it('should not lynch under threshold-1', () => {
+				sandbox.stub(playerController, 'getNumVotesRequired').returns(2);
+				sandbox.stub(mockGame, 'getActions').returns([voteForSadie]);
+
+				return playerController.checkForAutoLynch(mockGame, mockTarget).then(() => {
+					playerController.lynchPlayer.called.should.equal(false);
+				});
+			});
+
+			it('should only count votes for the target', () => {
+				sandbox.stub(playerController, 'getNumVotesRequired').returns(2);
+				sandbox.stub(mockGame, 'getActions').returns([voteForLars, voteForLars]);
+
+				return playerController.checkForAutoLynch(mockGame, mockTarget).then(() => {
+					playerController.lynchPlayer.called.should.equal(false);
+				});
+			});
+		});
+	});
+
+	describe('doVote()', () => {
 		let mockGame, mockVoter, mockTarget, mockdao, playerController;
 			beforeEach(() => {
 
 				mockVoter = {
+					username: 'Lars',
 					getPlayerProperty: () => 1,
 					isAlive: true
 				}
 
 				mockTarget = {
+					username: 'Sadie',
 					getPlayerProperty: () => 1,
 					isAlive: true
 				}
@@ -132,7 +184,11 @@ describe('player controller', () => {
 					killPlayer: () => 1,
 					nextPhase: () => 1,
 					registerAction: () => Promise.resolve('Ok'),
-					getPlayer: sandbox.stub().withArgs('Lars').resolves(mockVoter).withArgs('Sadie').resolves(mockTarget),
+					getPlayer: (player) => {
+						if (player == 'Lars') return mockVoter;
+						if (player == 'Sadie') return mockTarget;
+						throw new Error('No such player: ' + player);
+					},
 					topicId: 12,
 					isActive: true,
 					isDaytime: true
@@ -145,6 +201,7 @@ describe('player controller', () => {
 				playerController = new PlayerController(mockdao, null);
 				sandbox.stub(view, 'respondInThread');
 			});
+
 
 		it('should remain silent when no game is in session', () => {
 			sandbox.stub(mockdao, 'getGameByTopicId').rejects('No such game');
@@ -159,21 +216,21 @@ describe('player controller', () => {
 			sandbox.stub(mockGame, 'getPlayer').throws('No such player');
 
 			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
-				view.respondInThread.calledWith(1234).should.be.true;
+				view.respondInThread.called.should.be.true;
 				
 				const output = view.respondInThread.getCall(0).args[1];
-				output.should.include('You are not yet a player.');
+				output.should.include('Voter not in game');
 			});
 		});
 		
 		it('should reject votes for non-players', () => {
-			mockGame.getPlayer.withArgs('Sadie').throws('No such player');
+			sandbox.stub(mockGame,'getPlayer').withArgs('Sadie').throws('No such player');
 
 			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
-				view.respondInThread.calledWith(1234).should.be.true;
+				view.respondInThread.called.should.be.true;
 				
 				const output = view.respondInThread.getCall(0).args[1];
-				output.should.include('your princess is in another castle.');
+				output.should.include('Target not in game');
 			});
 		});
 		
@@ -218,7 +275,7 @@ describe('player controller', () => {
 				view.respondInThread.called.should.be.true;
 				
 				const output = view.respondInThread.getCall(0).args[1];
-				output.should.include(':wtf:\nSorry, @tehNinja: your vote failed.  No, I don\'t know why.');
+				output.should.include(':wtf:');
 			});
 		});
 	
@@ -232,162 +289,7 @@ describe('player controller', () => {
 		});
 	});
 	
-	describe('Auto-lynch functionality', () => {
-		beforeEach(() => {
-			sandbox.stub(view, 'respond');
-			sandbox.stub(view, 'respondInThread');
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(true);
-			sandbox.stub(validator, 'isDaytime').resolves(true);
-			sandbox.stub(mafiaDAO, 'getCurrentVoteByPlayer').resolves(undefined);
-			sandbox.stub(mafiaDAO, 'getCurrentActionByPlayer').resolves(undefined);
-			sandbox.stub(mafiaDAO, 'addActionWithTarget').resolves(true);
-			sandbox.stub(mafiaDAO, 'setCurrentTime').resolves();
-		});
-		
-		it('should auto-lynch at the threshold', () => {
-			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
-				args: ['@noLunch'],
-				input: '!for @noLunch'
-			};
-
-
-			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(3);
-			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(1);
-			sandbox.stub(mafiaDAO, 'getNumVotesForPlayer').resolves(3);
-			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
-			sandbox.stub(mafiaDAO, 'killPlayer').resolves({player: {properName: 'noLunch'}});
-
-			return mafia.voteHandler(command).then(() => {
-		
-				mafiaDAO.killPlayer.called.should.be.true;
-				mafiaDAO.setCurrentTime.calledWith(12345, mafiaDAO.gameTime.night).should.be.true;
-				view.respondInThread.called.should.be.true;
-				const output = view.respondInThread.getCall(1).args[1];
-				output.should.include(
-					'@noLunch has been lynched! Stay tuned for the flip. <b>It is now Night.</b>'
-				);
-			});
-		});
 	
-		it('should not auto-lynch loved players at the lynch count', () => {
-			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
-				args: ['@noLunch'],
-				input: '!for @noLunch'
-			};
-
-
-			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(3);
-			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(1);
-			sandbox.stub(mafiaDAO, 'getNumVotesForPlayer').resolves(3);
-			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('loved');
-			sandbox.stub(mafiaDAO, 'killPlayer').resolves({player: {properName: 'noLunch'}});
-
-
-			return mafia.voteHandler(command).then(() => {
-				view.respondInThread.called.should.be.true;
-				mafiaDAO.killPlayer.called.should.be.false;
-			});
-		});
-		
-		it('should auto-lynch at num+1 for loved players', () => {
-			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
-				args: ['@noLunch'],
-				input: '!for @noLunch'
-			};
-
-
-			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(3);
-			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(1);
-			sandbox.stub(mafiaDAO, 'getNumVotesForPlayer').resolves(4);
-			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('loved');
-			
-			sandbox.stub(mafiaDAO, 'killPlayer').resolves({player: {properName: 'noLunch'}});
-
-
-			return mafia.voteHandler(command).then(() => {
-				mafiaDAO.killPlayer.called.should.be.true;
-				mafiaDAO.setCurrentTime.calledWith(12345, mafiaDAO.gameTime.night).should.be.true;
-				view.respondInThread.called.should.be.true;
-				
-				const output = view.respondInThread.getCall(1).args[1];
-				output.should.include('@noLunch has been lynched! Stay tuned for the flip. <b>It is now Night.</b>');
-			});
-		});
-		
-		it('should not auto-lynch vanilla players at the lynch-1', () => {
-			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
-				args: ['@noLunch'],
-				input: '!for @noLunch'
-			};
-
-			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(3);
-			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(1);
-			sandbox.stub(mafiaDAO, 'getNumVotesForPlayer').resolves(2);
-			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
-			
-			sandbox.stub(mafiaDAO, 'killPlayer').resolves({player: {properName: 'noLunch'}});
-
-
-			return mafia.voteHandler(command).then(() => {
-				view.respondInThread.called.should.be.true;
-				mafiaDAO.killPlayer.called.should.be.false;
-			});
-		});
-		
-		it('should auto-lynch at num+1 for loved players', () => {
-			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
-				args: ['@noLunch'],
-				input: '!for @noLunch'
-			};
-
-			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(3);
-			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(1);
-			sandbox.stub(mafiaDAO, 'getNumVotesForPlayer').resolves(2);
-			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('hated');
-			
-			sandbox.stub(mafiaDAO, 'killPlayer').resolves({player: {properName: 'noLunch'}});
-
-
-			return mafia.voteHandler(command).then(() => {
-				mafiaDAO.killPlayer.called.should.be.true;
-				mafiaDAO.setCurrentTime.calledWith(12345, mafiaDAO.gameTime.night).should.be.true;
-
-				view.respondInThread.called.should.be.true;
-				
-				const output = view.respondInThread.getCall(1).args[1];
-				output.should.include('@noLunch has been lynched! Stay tuned for the flip. <b>It is now Night.</b>');
-			});
-		});
-	});
-
 	describe('unvote()', () => {
 
 		it ('should remain silent when no game is in session', () => {
