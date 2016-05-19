@@ -1,6 +1,6 @@
 'use strict';
 
-const dao = require('./dao');
+const dao = require('./dao/index.js');
 const validator = require('./validator');
 const view = require('./view');
 const Promise = require('bluebird');

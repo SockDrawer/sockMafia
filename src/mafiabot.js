@@ -11,7 +11,7 @@
 
 // Requisites
 
-const dao = require('./dao.js');
+const dao = require('./dao/index.js');
 const modController = require('./mod_controller');
 const playerController = require('./player_controller');
 const view = require('./view');
