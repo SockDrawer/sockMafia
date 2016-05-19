@@ -5,16 +5,16 @@ class MafiaAction {
         data.action = data.action || 'vote';
         data.token = data.token || 'vote';
         this._data = data;
-        this.game = game;
+        this._game = game;
     }
     get postId() {
         return this._data.postId;
     }
     get actor() {
-        return this._game.getPlayer(this._data.actor);
+        return this._game._getPlayer(this._data.actor);
     }
     get target() {
-        return this._game.getPlayer(this._data.target);
+        return this._game._getPlayer(this._data.target);
     }
     get action() {
         return this._data.action;
@@ -23,9 +23,9 @@ class MafiaAction {
         return this._data.token;
     }
     get isCurrent() {
-        return !this._data.rescindedId;
+        return !this._data.revokedId;
     }
-    get revokededId() {
+    get revokedId() {
         return this._data.revokedId;
     }
     revoke(postId) {

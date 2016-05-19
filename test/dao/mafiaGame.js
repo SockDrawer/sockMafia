@@ -470,22 +470,31 @@ describe('nouveau dao/MafiaGame', () => {
             return game.addModerator('fOoBaR').should.be.rejectedWith('E_USER_EXIST');
         });
     });
-    describe('getPlayer()', () => {
+    describe('_getPlayer()', () => {
         let game = null;
         beforeEach(() => game = new MafiaGame({}));
         it('should return null for no players', () => {
-            chai.expect(game.getPlayer('foobar')).to.be.null;
+            chai.expect(game._getPlayer('foobar')).to.be.null;
         });
         it('should return null for null parameter', () => {
             game._data.livePlayers.null = {};
-            chai.expect(game.getPlayer(null)).to.be.null;
+            chai.expect(game._getPlayer(null)).to.be.null;
         });
         it('should return living player', () => {
             const name = `nale${Math.random()}`;
             game._data.livePlayers[name.replace('.', '')] = {
                 username: name
             };
-            const player = game.getPlayer(name);
+            const player = game._getPlayer(name);
+            player.should.be.an.instanceOf(MafiaUser);
+            player.username.should.equal(name);
+        });
+        it('should return living player via userslug', () => {
+            const name = `nale${Math.random()}`;
+            game._data.livePlayers[name.replace('.', '')] = {
+                username: name
+            };
+            const player = game._getPlayer(name.toUpperCase());
             player.should.be.an.instanceOf(MafiaUser);
             player.username.should.equal(name);
         });
@@ -497,7 +506,7 @@ describe('nouveau dao/MafiaGame', () => {
             const user = new MafiaUser({
                 username: name
             });
-            const player = game.getPlayer(user);
+            const player = game._getPlayer(user);
             player.should.be.an.instanceOf(MafiaUser);
             player.username.should.equal(name);
         });
@@ -506,7 +515,16 @@ describe('nouveau dao/MafiaGame', () => {
             game._data.deadPlayers[name.replace('.', '')] = {
                 username: name
             };
-            const player = game.getPlayer(name);
+            const player = game._getPlayer(name);
+            player.should.be.an.instanceOf(MafiaUser);
+            player.username.should.equal(name);
+        });
+        it('should return dead player vi userslug', () => {
+            const name = `nale${Math.random()}`;
+            game._data.deadPlayers[name.replace('.', '')] = {
+                username: name
+            };
+            const player = game._getPlayer(name.toUpperCase());
             player.should.be.an.instanceOf(MafiaUser);
             player.username.should.equal(name);
         });
@@ -518,7 +536,7 @@ describe('nouveau dao/MafiaGame', () => {
             const user = new MafiaUser({
                 username: name
             });
-            const player = game.getPlayer(user);
+            const player = game._getPlayer(user);
             player.should.be.an.instanceOf(MafiaUser);
             player.username.should.equal(name);
         });
@@ -527,7 +545,14 @@ describe('nouveau dao/MafiaGame', () => {
             game._data.moderators[name.replace('.', '')] = {
                 username: name
             };
-            chai.expect(game.getPlayer(name)).to.be.null;
+            chai.expect(game._getPlayer(name)).to.be.null;
+        });
+        it('should not return moderator via user slug', () => {
+            const name = `nale${Math.random()}`;
+            game._data.moderators[name.replace('.', '')] = {
+                username: name
+            };
+            chai.expect(game._getPlayer(name.toUpperCase())).to.be.null;
         });
         it('should mot return moderator for MafiaUser', () => {
             const name = `nale${Math.random()}`;
@@ -537,7 +562,28 @@ describe('nouveau dao/MafiaGame', () => {
             const user = new MafiaUser({
                 username: name
             });
-            chai.expect(game.getPlayer(user)).to.be.null;
+            chai.expect(game._getPlayer(user)).to.be.null;
+        });
+    });
+    describe('getPlayer()', () => {
+        let game = null;
+        beforeEach(() => {
+            game = new MafiaGame({});
+            game._getPlayer = sinon.stub().returns({});
+        });
+        it('should pass input value to _getPlayer', () => {
+            const name = `namename${Math.random()}`;
+            game.getPlayer(name);
+            game._getPlayer.calledWith(name).should.be.true;
+        });
+        it('should return value from _getPlayer', () => {
+            const expected = {};
+            game._getPlayer.returns(expected);
+            game._getPlayer().should.equal(expected);
+        });
+        it('should throw when _getPlayer returns null', () => {
+            game._getPlayer.returns(null);
+            chai.expect(() => game.getPlayer()).to.throw('E_USER_NOT_EXIST');
         });
     });
     describe('killPlayer()', () => {

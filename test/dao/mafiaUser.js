@@ -11,7 +11,7 @@ chai.should();
 
 const MafiaUser = require('../../src/dao/mafiaUser');
 
-describe('nouveau dao/MafiaGame', () => {
+describe('nouveau dao/MafiaUser', () => {
     it('should export a function', () => {
         MafiaUser.should.be.a('function');
     });

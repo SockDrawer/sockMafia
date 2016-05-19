@@ -119,12 +119,19 @@ class MafiaGame {
         this._data.moderators[moderator.userslug] = moderator.toJSON();
         return this.save().then(() => moderator);
     }
-    getPlayer(user) {
+    _getPlayer(user) {
         const liveUser = getUser(this, this._data.livePlayers, user);
         if (liveUser) {
             return liveUser;
         }
         return getUser(this, this._data.deadPlayers, user);
+    }
+    getPlayer(user) {
+        const player = this._getPlayer(user);
+        if (!player) {
+            throw new Error('E_USER_NOT_EXIST');
+        }
+        return player;
     }
     killPlayer(user) {
         const player = getUser(this, this._data.livePlayers, user);
@@ -192,7 +199,7 @@ class MafiaGame {
                     !!this._data.livePlayers[action.actor]
                 );
         });
-        return actions.map((action)=>new MafiaAction(action, this));
+        return actions.map((action) => new MafiaAction(action, this));
     }
     registerAction(postId, actor, target, type, actionToken) {
         actor = getUser(this, this._data.livePlayers, actor);
