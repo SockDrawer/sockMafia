@@ -81,61 +81,34 @@ class MafiaPlayerController {
 	lynchPlayer(game, target) {
 		logDebug('Lynching target ' + target);
 
-		return dao.setCurrentTime(game, dao.gameTime.night)
-			.then(() => dao.killPlayer(game, target))
-			.then((rosterEntry) => {
-				const text = '@' + rosterEntry.player.properName + ' has been lynched! Stay tuned for the flip.'
+		return game.killPlayer(target)
+			.then(() => game.nextPhase())
+			.then(() => {
+				const text = '@' + target.properName + ' has been lynched! Stay tuned for the flip.'
 					+ ' <b>It is now Night.</b>';
-				view.respondInThread(game, text);
+				view.respondInThread(game.topicId, text);
 			})
 			.catch((error) => {
 				const text = 'Error when lynching player: ' + error.toString();
-				view.respondInThread(game, text);
+				view.respondInThread(game.topicId, text);
 			});
 	}
 
 	/*Voting helpers*/
 
-	verifyPlayerCanVote(game, voter) {
-		logDebug('Checking if ' + voter + ' can vote.');
-		return validator.mustBeTrue(dao.isPlayerInGame, [game, voter], 'Voter not in game')
-			.then(() => validator.mustBeTrue(dao.isPlayerAlive, [game, voter], 'Voter not alive'))
-			.then(() => validator.mustBeTrue(validator.isDaytime, [game], 'It is not day'));
-	}
+	getNumVotesRequired(game, target) {
+		let properties = target.getPlayerProperty();
+		let numPlayers = game.getAllPlayers().length;
+		let numToLynch = Math.ceil(numPlayers / 2);
 
-	revokeCurrentVote(game, voter, post, type) {
-		logDebug('Attempting to revoke current vote by ' + voter + (type ? 'of type ' + type : ''));
-		const promiseArray = [];
+		if (properties.indexOf('loved') > -1) {
+			numToLynch += 1;
+		}
+		if (properties.indexOf('hated') > -1) {
+			numToLynch -= 1;
+		}
 
-		return new Promise((resolve) => {
-			if (type) {
-				resolve(dao.getCurrentActionByPlayer(game, voter, type));
-			} else {
-				resolve(dao.getCurrentVoteByPlayer(game, voter));
-			}
-		})
-		.then((votes) => {
-			if (!votes) {
-				return true;
-			}
-			for (let i = 0; i < votes.length; i++) {
-				promiseArray.push(dao.revokeAction(game, votes[i].post, post));
-			}
-			
-			return Promise.all(promiseArray);
-		});
-	}
-
-	revokeCurrentVoteFor(game, voter, target, post) {
-		logDebug('Attempting to revoke current vote by ' + voter + ' for ' + target);
-		return dao.getCurrentVoteByPlayer(game, voter).then((votes) => {
-			for (let i = 0; i < votes.length; i++) {
-				if (votes[i].target.name.toLowerCase() === target.toLowerCase()) {
-					return dao.revokeAction(game, votes[i].post, post);
-				}
-			}
-			throw new Error('No such vote was found to revoke');
-		});
+		return numToLynch;
 	}
 
 	getVotingErrorText(reason, voter, target) {
@@ -330,39 +303,23 @@ class MafiaPlayerController {
 	  * @returns {Promise}        A promise that will resolve when the game is ready
 	  */
 	voteHandler (command) {
-		const game = command.post.topic_id;
+		const game = this.dao.getGameByTopicId(command.post.topic_id);
 		const post = command.post.post_number;
 		const voter = command.post.username;
 		// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
 		// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
-		const target = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
+		const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
 
 		logDebug('Received vote request from ' + voter + ' for ' + target + ' in game ' + game);
 
-		
-		return dao.ensureGameExists(game)
-			.catch(() => {
-				logWarning('Ignoring message in nonexistant game thread ' + game);
-				throw(E_NOGAME);
-			})
-			.then(() =>	dao.getPlayerProperty(game, voter))
-			.then((property) => {
-				if (property === dao.playerProperty.doubleVoter) {
-					return doVote(game, post, voter, target, command.input, 2);
-				} else {
-					return doVote(game, post, voter, target, command.input, 1);
-				}
-			})
-			.catch((reason) => {
-				if (reason === E_NOGAME) {
-					return Promise.resolve();
-				}
+		let target = game.getPlayer(targetString);
+		let properties = target.getPlayerProperty();
 
-				/*Error handling*/
-				logUnhandledError(reason);
-				//Preserve some secrecy in case this voter had a property that I barfed on:
-				view.reportError(command, 'Error processing vote request: ', 'I seem to be malfunctioning. Please contact ' + myOwner + ' immediately.');
-			});
+		if (properties.indexOf('doublevoter') > -1) {
+			return doVote(game, post, voter, target, command.input, 2);
+		} else {
+			return doVote(game, post, voter, target, command.input, 1);
+		}
 	};
 
 	forHandler (command) {
@@ -378,18 +335,6 @@ class MafiaPlayerController {
 		return doVote(game, post, voter, target, command.input, 1);
 	};
 
-	getNumVotesRequired(game, target) {
-		let properties = target.getPlayerProperty();
-		let numPlayers = game.getAllPlayers().length;
-		let numToLynch = numPlayers / 2;
-
-		if (properties.indexOf('loved') > -1) {
-			numToLynch += 1;
-		}
-		if (properties.indexOf('hated') > -1) {
-			numToLynch -= 1;
-		}
-	}
 
 
 	doVote (gameId, post, actor, target, input, voteNum) {
@@ -826,3 +771,5 @@ class MafiaPlayerController {
 		return Promise.resolve();
 	};
 };
+
+module.exports = MafiaPlayerController;

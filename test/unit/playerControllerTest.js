@@ -26,7 +26,6 @@ describe('player controller', () => {
 	let sandbox;
 	beforeEach(() => {
 		sandbox = sinon.sandbox.create();
-		mafia.createDB = sandbox.stub();
 		browser.createPost.reset();
 	});
 	afterEach(() => {
@@ -34,11 +33,15 @@ describe('player controller', () => {
 	});
 
 
-	describe('Votes to lynch', () => {
-		let mockGame, mockUser, playerController;
+	describe.only('Vote helpers', () => {
+		let mockGame, mockUser, mockdao, playerController;
+
 		beforeEach(() => {
 			mockGame = {
-				getAllPlayers: () => 1
+				getAllPlayers: () => 1,
+				killPlayer: () => 1,
+				nextPhase: () => 1,
+				topicId: 12
 			}
 
 			mockUser = {
@@ -48,10 +51,65 @@ describe('player controller', () => {
 			playerController = new PlayerController(null);
 		});
 
-		it.only('should return 1 for 2 players', () => {
-			sandbox.stub(mockGame,'getAllPlayers').returns(['Lars', 'Sadie']);
-			sandbox.stub(mockUser, 'getPlayerProperty').returns([]);
-			playerController(mockGame, mockUser).should.equal(1);
+
+		describe('Votes to lynch', () => {
+			it('should return 1 for 2 players', () => {
+				sandbox.stub(mockGame,'getAllPlayers').returns(['Lars', 'Sadie']);
+				sandbox.stub(mockUser, 'getPlayerProperty').returns([]);
+				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(1);
+			});
+
+			it('should return 2 for 3 players', () => {
+				sandbox.stub(mockGame,'getAllPlayers').returns(['Lars', 'Sadie', 'Steven']);
+				sandbox.stub(mockUser, 'getPlayerProperty').returns([]);
+				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(2);
+			});
+
+			it('should return 2 for 4 players', () => {
+				sandbox.stub(mockGame,'getAllPlayers').returns(['Lars', 'Sadie', 'Steven', 'Pearl']);
+				sandbox.stub(mockUser, 'getPlayerProperty').returns([]);
+				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(2);
+			});
+
+			it('should return 3 for 4 players + loved', () => {
+				sandbox.stub(mockGame,'getAllPlayers').returns(['Lars', 'Sadie', 'Steven', 'Pearl']);
+				sandbox.stub(mockUser, 'getPlayerProperty').returns(['loved']);
+				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(3);
+			});
+
+			it('should return 1 for 4 players + hated', () => {
+				sandbox.stub(mockGame,'getAllPlayers').returns(['Lars', 'Sadie', 'Steven', 'Pearl']);
+				sandbox.stub(mockUser, 'getPlayerProperty').returns(['hated']);
+				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(1);
+			});
+		});
+
+		describe('Lynch player', () => {
+			beforeEach(() => {
+				sandbox.stub(view, 'respondInThread');
+			});
+
+			it('Should lynch successfully', () => {
+				sandbox.stub(mockGame,'killPlayer').resolves();
+				sandbox.stub(mockGame,'nextPhase').resolves();
+
+				return playerController.lynchPlayer(mockGame, mockUser).then(() => {
+					mockGame.killPlayer.calledWith(mockUser).should.equal(true);
+					mockGame.nextPhase.called.should.equal(true);
+					view.respondInThread.calledWith(12).should.equal(true);
+				});
+			});
+
+			it('Should report errors', () => {
+				sandbox.stub(mockGame,'killPlayer').rejects('Terminator found');
+				sandbox.stub(mockGame,'nextPhase').resolves();
+
+				return playerController.lynchPlayer(mockGame, mockUser).then(() => {
+					view.respondInThread.calledWith(12).should.equal(true);
+					const output = view.respondInThread.getCall(0).args[1];
+					output.should.include('Error when lynching player:');
+				});
+			});
 		})
 	})
 
@@ -59,7 +117,6 @@ describe('player controller', () => {
 
 			beforeEach(() => {
 				sandbox.stub(view, 'respondInThread');
-				sandbox.stub(view, 'respondWithError');
 				sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
 				sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
 				sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(false);
