@@ -33,7 +33,7 @@ describe('player controller', () => {
 	});
 
 
-	describe.only('Vote helpers', () => {
+	describe('Vote helpers', () => {
 		let mockGame, mockUser, mockdao, playerController;
 
 		beforeEach(() => {
@@ -113,51 +113,53 @@ describe('player controller', () => {
 		})
 	})
 
-	describe('for()', () => {
-
+	describe.only('doVote()', () => {
+		let mockGame, mockVoter, mockTarget, mockdao, playerController;
 			beforeEach(() => {
+
+				mockVoter = {
+					getPlayerProperty: () => 1,
+					isAlive: true
+				}
+
+				mockTarget = {
+					getPlayerProperty: () => 1,
+					isAlive: true
+				}
+
+				mockGame = {
+					getAllPlayers: () => 1,
+					killPlayer: () => 1,
+					nextPhase: () => 1,
+					registerAction: () => Promise.resolve('Ok'),
+					getPlayer: sandbox.stub().withArgs('Lars').resolves(mockVoter).withArgs('Sadie').resolves(mockTarget),
+					topicId: 12,
+					isActive: true,
+					isDaytime: true
+				}
+
+				mockdao = {
+					getGameByTopicId: () => Promise.resolve(mockGame)
+				}
+
+				playerController = new PlayerController(mockdao, null);
 				sandbox.stub(view, 'respondInThread');
-				sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-				sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-				sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(false);
-				sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(true);
-				sandbox.stub(mafiaDAO, 'getCurrentTime').resolves(mafiaDAO.gameTime.day);
-				sandbox.stub(mafiaDAO, 'addActionWithTarget').resolves(true);
-				sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
 			});
 
-		it ('should remain silent when no game is in session', () => {
-			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
-				args: ['@noLunch'],
-				input: '!for @noLunch'
-			};
+		it('should remain silent when no game is in session', () => {
+			sandbox.stub(mockdao, 'getGameByTopicId').rejects('No such game');
 
-			return mafia.voteHandler(command).then(() => {
+			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
 				view.respondInThread.called.should.be.false;
-				view.reportError.called.should.be.false;
-				
 			});
 		});
 
 		it('should reject votes from non-players', () => {
-			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
-				args: ['@noLunch'],
-				input: '!for @noLunch'
-			};
+			mockGame.getPlayer = () => 1;
+			sandbox.stub(mockGame, 'getPlayer').throws('No such player');
 
-
-			return mafia.voteHandler(command).then(() => {
-				view.respondInThread.called.should.be.true;
+			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
+				view.respondInThread.calledWith(1234).should.be.true;
 				
 				const output = view.respondInThread.getCall(0).args[1];
 				output.should.include('You are not yet a player.');
@@ -165,40 +167,20 @@ describe('player controller', () => {
 		});
 		
 		it('should reject votes for non-players', () => {
-			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
-				args: ['@noLunch'],
-				input: '!for @noLunch'
-			};
+			mockGame.getPlayer.withArgs('Sadie').throws('No such player');
 
-			
-
-			return mafia.voteHandler(command).then(() => {
-				view.respondInThread.called.should.be.true;
+			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
+				view.respondInThread.calledWith(1234).should.be.true;
 				
 				const output = view.respondInThread.getCall(0).args[1];
 				output.should.include('your princess is in another castle.');
 			});
 		});
 		
-		it('should reject votes from the dead', () => {
-			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
-				args: ['@noLunch'],
-				input: '!for @noLunch'
-			};
+		it('should reject votes for the dead', () => {
+			mockTarget.isAlive = false;
 
-			
-
-			return mafia.voteHandler(command).then(() => {
+			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
 				view.respondInThread.called.should.be.true;
 				
 				const output = view.respondInThread.getCall(0).args[1];
@@ -206,18 +188,10 @@ describe('player controller', () => {
 			});
 		});
 
-		it('should reject votes for the dead', () => {
-			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
-				args: ['@noLunch'],
-				input: '!for @noLunch'
-			};
+		it('should reject votes from the dead', () => {
+			mockVoter.isAlive = false;
 
-			return mafia.voteHandler(command).then(() => {
+			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
 				view.respondInThread.called.should.be.true;
 				
 				const output = view.respondInThread.getCall(0).args[1];
@@ -226,18 +200,9 @@ describe('player controller', () => {
 		});
 		
 		it('should reject votes at night', () => {
-			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
-				args: ['@noLunch'],
-				input: '!for @noLunch'
-			};
+			mockGame.isDaytime = false;
 
-			
-			return mafia.voteHandler(command).then(() => {
+			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
 				view.respondInThread.called.should.be.true;
 				
 				const output = view.respondInThread.getCall(0).args[1];
@@ -246,17 +211,10 @@ describe('player controller', () => {
 		});
 
 		it('should announce voting failures', () => {
-			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
-				args: ['@noLunch'],
-				input: '!for @noLunch'
-			};
+			//TODO
+			sandbox.stub(mockGame, 'registerAction').rejects('Unknown failure');
 
-			return mafia.voteHandler(command).then(() => {
+			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
 				view.respondInThread.called.should.be.true;
 				
 				const output = view.respondInThread.getCall(0).args[1];
@@ -265,23 +223,11 @@ describe('player controller', () => {
 		});
 	
 		it('should echo your vote when successful', () => {
-			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
-				args: ['@noLunch'],
-				input: '!for @noLunch'
-			};
-
-
-			return mafia.voteHandler(command).then(() => {
+			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
 				view.respondInThread.called.should.be.true;
 				
 				const output = view.respondInThread.getCall(0).args[1];
-				output.should.include('@tehNinja voted for @noLunch in post ' +
-					'#<a href="https://what.thedailywtf.com/t/12345/98765">98765</a>.');
+				output.should.include('@Lars voted for @Sadie');
 			});
 		});
 	});

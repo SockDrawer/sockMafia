@@ -338,7 +338,7 @@ class MafiaPlayerController {
 
 
 	doVote (gameId, post, actor, target, input, voteNum) {
-		let action, voter, votee;
+		let action, voter, votee, game;
 		/*if (voteNum === 2) {
 			action = dao.action.dblVote;
 		} else {
@@ -346,7 +346,7 @@ class MafiaPlayerController {
 		}*/
 
 		function getVoteAttemptText(success) {
-			let text = '@' + voter + (success ? ' voted for ' : ' tried to vote for ') + '@' + target;
+			let text = '@' + actor + (success ? ' voted for ' : ' tried to vote for ') + '@' + target;
 
 			text = text	+ ' in post #<a href="https://what.thedailywtf.com/t/'
 					+ game.name + '/' + post + '">'
@@ -356,6 +356,7 @@ class MafiaPlayerController {
 		}
 
 		function verifyPreconditions(game, voter, target) {
+			console.log(voter)
 			if (!game.isActive) {
 				return Promise.reject('Incorrect game state');
 			}
@@ -371,6 +372,8 @@ class MafiaPlayerController {
 			if (!target.isAlive) {
 				return Promise.reject('Target not alive');
 			}
+
+			return Promise.resolve();
 		}
 
 		function checkForAutoLynch(game, target) {
@@ -391,12 +394,13 @@ class MafiaPlayerController {
 			}
 		}
 
-		return dao.getGameByTopicId(gameId)
+		return this.dao.getGameByTopicId(gameId)
 		.catch(() => {
 			logWarning('Ignoring message in nonexistant game thread ' + game);
 			throw(E_NOGAME);
 		})
-		.then((game) => {
+		.then((g) => {
+			game = g;
 			return Promise.all([
 					game.getPlayer(voter),
 					game.getPlayer(target)
@@ -409,19 +413,19 @@ class MafiaPlayerController {
 		})
 		.then(() => game.registerAction(post, voter, action, votee))
 		.then(() => {
-			const text = getVoteAttemptText(true);
+			const text = getVoteAttemptText(game, true);
 			view.respondInThread(game, text);
 			logDebug('Vote succeeded');
 			return true;
 		})
-		.then(() => checkForAutoLynch(game, votee))
+		.then(() => checkForAutoLynch(votee))
 		.catch((reason) => {
 			if (reason === E_NOGAME) {
 				return Promise.resolve();
 			}
 
 			/*Error handling*/
-			return getVotingErrorText(reason, voter, votee)
+			return this.getVotingErrorText(reason, voter, votee)
 			.then((text) => {
 				text += '\n<hr />\n';
 				text += getVoteAttemptText(false);
