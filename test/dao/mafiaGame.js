@@ -561,7 +561,7 @@ describe('nouveau dao/MafiaGame', () => {
             return game.killPlayer('foobar').should.be.rejectedWith('E_USER_NOT_LIVE');
         });
         it('should resolve to killed player on success', () => {
-            const name = `name${Math.floor(Math.random()*1e7)}`;
+            const name = `name${Math.floor(Math.random() * 1e7)}`;
             game._data.livePlayers[name] = {
                 username: name
             };
@@ -572,7 +572,7 @@ describe('nouveau dao/MafiaGame', () => {
             });
         });
         it('should remove player from live players on success', () => {
-            const name = `name${Math.floor(Math.random()*1e7)}`;
+            const name = `name${Math.floor(Math.random() * 1e7)}`;
             const data = {
                 username: name
             };
@@ -582,7 +582,7 @@ describe('nouveau dao/MafiaGame', () => {
             });
         });
         it('should add player to dead players on success', () => {
-            const name = `name${Math.floor(Math.random()*1e7)}`;
+            const name = `name${Math.floor(Math.random() * 1e7)}`;
             const data = {
                 username: name
             };
@@ -593,7 +593,7 @@ describe('nouveau dao/MafiaGame', () => {
             });
         });
         it('should save new data on success', () => {
-            const name = `name${Math.floor(Math.random()*1e7)}`;
+            const name = `name${Math.floor(Math.random() * 1e7)}`;
             game._data.livePlayers[name] = {
                 username: name
             };
@@ -623,7 +623,7 @@ describe('nouveau dao/MafiaGame', () => {
             return game.resurectPlayer('foobar').should.be.rejectedWith('E_USER_NOT_DEAD');
         });
         it('should resolve to killed player on success', () => {
-            const name = `name${Math.floor(Math.random()*1e7)}`;
+            const name = `name${Math.floor(Math.random() * 1e7)}`;
             game._data.deadPlayers[name] = {
                 username: name
             };
@@ -634,7 +634,7 @@ describe('nouveau dao/MafiaGame', () => {
             });
         });
         it('should remove player from dead players on success', () => {
-            const name = `name${Math.floor(Math.random()*1e7)}`;
+            const name = `name${Math.floor(Math.random() * 1e7)}`;
             const data = {
                 username: name
             };
@@ -644,7 +644,7 @@ describe('nouveau dao/MafiaGame', () => {
             });
         });
         it('should add player to live players on success', () => {
-            const name = `name${Math.floor(Math.random()*1e7)}`;
+            const name = `name${Math.floor(Math.random() * 1e7)}`;
             const data = {
                 username: name
             };
@@ -655,7 +655,7 @@ describe('nouveau dao/MafiaGame', () => {
             });
         });
         it('should save new data on success', () => {
-            const name = `name${Math.floor(Math.random()*1e7)}`;
+            const name = `name${Math.floor(Math.random() * 1e7)}`;
             game._data.deadPlayers[name] = {
                 username: name
             };
@@ -694,24 +694,24 @@ describe('nouveau dao/MafiaGame', () => {
                 game.phase.should.equal('1');
             });
         });
-        it('should snap phase to beginning of next day on invalid phase',()=>{
-            game._data.phase='i like bananas';
+        it('should snap phase to beginning of next day on invalid phase', () => {
+            game._data.phase = 'i like bananas';
             return game.nextPhase().then(() => {
                 game.day.should.equal(2);
                 game.phase.should.equal('1');
             });
         });
-        it('should save results',()=>{
+        it('should save results', () => {
             return game.nextPhase().then(() => {
                 game.save.called.should.be.true;
             });
         });
-        it('should resolve to self on success',()=>{
+        it('should resolve to self on success', () => {
             return game.nextPhase().should.become(game);
         });
     });
-    describe('newDay()',()=>{
-                let game = null;
+    describe('newDay()', () => {
+        let game = null;
         const phases = ['1', '2', '3', '4', '5', '6'];
         beforeEach(() => {
             game = new MafiaGame({});
@@ -719,24 +719,24 @@ describe('nouveau dao/MafiaGame', () => {
             game._data.phases = phases;
             game._data.phase = phases[0];
         });
-        it('should increment day value',()=>{
+        it('should increment day value', () => {
             game.day.should.equal(1);
-            return game.newDay().then(()=>{
+            return game.newDay().then(() => {
                 game.day.should.equal(2);
             });
         });
-        it('should reset phase to beginning of day',()=>{
+        it('should reset phase to beginning of day', () => {
             game._data.phase = '3';
-            return game.newDay().then(()=>{
+            return game.newDay().then(() => {
                 game.phase.should.equal('1');
             });
         });
-        it('should save results',()=>{
+        it('should save results', () => {
             return game.newDay().then(() => {
                 game.save.called.should.be.true;
             });
         });
-        it('should resolve to self on success',()=>{
+        it('should resolve to self on success', () => {
             return game.newDay().should.become(game);
         });
     });

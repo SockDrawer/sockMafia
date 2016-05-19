@@ -28,7 +28,7 @@ class MafiaUser {
     getProperties(filterTo) {
         if (filterTo) {
             const map = {};
-            Object.keys(this._data.properties).forEach((key) => {
+            this._data.properties.forEach((key) => {
                 map[key] = 1;
             });
             return filterTo.filter((key) => map[key] === 1);
