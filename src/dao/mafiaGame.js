@@ -192,16 +192,13 @@ class MafiaGame {
                     !!this._data.livePlayers[action.actor]
                 );
         });
-        return new MafiaAction(actions[0], this);
+        return actions.map((action)=>new MafiaAction(action, this));
     }
     registerAction(postId, actor, target, type, actionToken) {
         actor = getUser(this, this._data.livePlayers, actor);
         target = getUser(this, this._data.livePlayers, target);
         if (!actor) {
             return Promise.reject('E_ACTOR_NOT_ALIVE');
-        }
-        if (!target) {
-            return Promise.reject('E_TARGET_NOT_ALIVE');
         }
         const prior = this.getAction(actor, target, type, actionToken, this.day);
         let rescind = null;
