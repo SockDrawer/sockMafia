@@ -176,7 +176,7 @@ describe('MafiaBot', function() {
 				post: {
 					username: 'yamikuronue',
 					'topic_id': 1,
-					'post_number': 5
+					'post_number': 10
 				},
 				args: ['@dreikin'],
 				input: '!vote @dreikin'
@@ -201,7 +201,7 @@ describe('MafiaBot', function() {
 				post: {
 					username: 'accalia',
 					'topic_id': 1,
-					'post_number': 5
+					'post_number': 11
 				},
 				args: ['@dreikin'],
 				input: '!vote @dreikin'
