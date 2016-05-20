@@ -183,7 +183,10 @@ class MafiaGame {
             actions = actions.filter((action) => action.target === target);
         }
         if (actionToken) {
-            actions = actions.filter((action) => action.actionToken === actionToken);
+            actions = actions.filter((action) => action.token === actionToken);
+        }
+        if (!actions[0]) {
+            return null;
         }
         return new MafiaAction(actions[0], this);
     }
