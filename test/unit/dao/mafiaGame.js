@@ -797,7 +797,7 @@ describe('nouveau dao/MafiaGame', () => {
             actions.push({
                 actor: 'foo',
                 day: 1,
-                type: 'vote'
+                action: 'vote'
             });
             chai.expect(game.getAction('foobar')).to.be.null;
         });
@@ -805,21 +805,32 @@ describe('nouveau dao/MafiaGame', () => {
             actions.push({
                 actor: 'foobar',
                 day: 1,
-                type: 'vote'
+                action: 'vote'
             });
             game.getAction('foobar').should.be.an.instanceOf(MafiaAction);
+        });
+        it('should return action when a action matches MafiaUser', () => {
+            const actor = new MafiaUser({
+                username: 'foobar'
+            });
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote'
+            });
+            game.getAction(actor).should.be.an.instanceOf(MafiaAction);
         });
         it('should return first matching action when actions matches', () => {
             actions.push({
                 actor: 'foobar',
                 day: 1,
-                type: 'vote',
+                action: 'vote',
                 token: 1
             });
             actions.push({
                 actor: 'foobar',
                 day: 1,
-                type: 'vote',
+                action: 'vote',
                 token: 2
             });
             game.getAction('foobar').token.should.equal(1);
@@ -828,7 +839,7 @@ describe('nouveau dao/MafiaGame', () => {
             actions.push({
                 actor: 'foobar',
                 day: 1,
-                type: 'vote'
+                action: 'vote'
             });
             chai.expect(game.getAction('foobar', undefined, undefined, undefined, 2)).to.be.null;
         });
@@ -836,7 +847,7 @@ describe('nouveau dao/MafiaGame', () => {
             actions.push({
                 actor: 'foo',
                 day: 1,
-                type: 'vote'
+                action: 'vote'
             });
             chai.expect(game.getAction('foobar')).to.be.null;
         });
@@ -844,7 +855,7 @@ describe('nouveau dao/MafiaGame', () => {
             actions.push({
                 actor: 'foobar',
                 day: 2,
-                type: 'vote'
+                action: 'vote'
             });
             chai.expect(game.getAction('foobar', undefined, 'fish')).to.be.null;
         });
@@ -853,7 +864,7 @@ describe('nouveau dao/MafiaGame', () => {
                 actor: 'foobar',
                 target: 'hexadecimal',
                 day: 1,
-                type: 'vote'
+                action: 'vote'
             });
             chai.expect(game.getAction('foobar', 'ocatal')).to.be.null;
         });
@@ -861,18 +872,78 @@ describe('nouveau dao/MafiaGame', () => {
             actions.push({
                 actor: 'foobar',
                 day: 1,
-                type: 'vote',
+                action: 'vote',
                 token: 'abc'
             });
             chai.expect(game.getAction('foobar', undefined, undefined, 'cde')).to.be.null;
         });
     });
-    describe('getAction()', () => {
+    describe('getActions()', () => {
         let game = null,
             actions = null;
-        const baseActions = [{actor:'foobar'}];
+        const actors = ['foobar', 'accalia', 'sockbot'];
         beforeEach(() => {
             game = new MafiaGame({});
             actions = game._data.actions;
-        });});
+            actors.forEach((actor) => {
+                actions.push({
+                    actor: actor,
+                    day: 1,
+                    action: 'vote'
+                });
+            });
+        });
+        it('should return actions for living players', () => {
+            game._data.livePlayers.accalia = 1;
+            game._data.livePlayers.sockbot = 1;
+            game.getActions().should.have.length(2);
+        });
+        it('should return all actions for current day', () => {
+            game.getActions(undefined, undefined, true).should.have.length(3);
+        });
+        it('should return actions of requested type', () => {
+            actions[2].action = 'oops';
+            game._data.livePlayers.sockbot = 1;
+            game.getActions('oops').should.eql([{
+                actor: 'sockbot',
+                day: 1,
+                action: 'oops'
+            }]);
+        });
+        it('should return actions of requested day', () => {
+            actions[2].day = 7;
+            game._data.livePlayers.sockbot = 1;
+            game.getActions(undefined, 7).should.eql([{
+                actor: 'sockbot',
+                day: 7,
+                action: 'vote'
+            }]);
+        });
+    });
+    describe('revokeAction()', () => {
+        let game = null,
+            actions = null;
+        const actors = ['foobar', 'accalia', 'sockbot'];
+        beforeEach(() => {
+            game = new MafiaGame({});
+            game.save = sinon.stub().resolves();
+            actions = game._data.actions;
+            actors.forEach((actor) => {
+                game._data.livePlayers[actor] = {
+                    username: actor
+                };
+                actions.push({
+                    actor: actor,
+                    day: 1,
+                    action: 'vote'
+                });
+            });
+        });
+        it('should revoke action for userslug', () => {
+            const actor = game.getAction('accalia');
+            return game.revokeAction(100, 'accalia').then(() => {
+                actions[1].revokedId.should.equal(100);
+            });
+        });
+    });
 });

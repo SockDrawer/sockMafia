@@ -177,7 +177,7 @@ class MafiaGame {
         let actions = this._data.actions.filter((action) => {
             return action.actor === actor &&
                 action.day === day &&
-                action.type === type;
+                action.action === type;
         });
         if (target) {
             actions = actions.filter((action) => action.target === target);
@@ -199,7 +199,7 @@ class MafiaGame {
                 action.action === type &&
                 (
                     includeDeadPlayers ||
-                    !!this._data.livePlayers[action.actor.username]
+                    !!this._data.livePlayers[action.actor]
                 );
         });
         return actions;
