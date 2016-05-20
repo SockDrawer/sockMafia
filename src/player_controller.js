@@ -423,7 +423,7 @@ class MafiaPlayerController {
 				throw new Error('Target not in game');
 			}
 
-			if(!votee) {
+			if (!votee) {
 				throw new Error('No target specified');
 			}
 

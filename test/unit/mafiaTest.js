@@ -116,7 +116,7 @@ describe('mafia', () => {
 			});
 		});
 	});
-	describe('activate', () => {
+/*	describe('activate', () => {
 		let config = null,
 			forum = null;
 		beforeEach(() => {
@@ -193,7 +193,7 @@ describe('mafia', () => {
 
 			});
 		});
-	});
+	});*/
 
 	describe('echo()', () => {
 
