@@ -68,8 +68,8 @@ function logDebug(statement) {
 }
 
 class MafiaPlayerController {
-    constructor(dao, config) {
-        this.dao = dao;
+    constructor(d, config) {
+        this.dao = d;
     };
 
 	/**
@@ -97,8 +97,8 @@ class MafiaPlayerController {
 	/*Voting helpers*/
 
 	getNumVotesRequired(game, target) {
-		let properties = target.getPlayerProperty();
-		let numPlayers = game.getAllPlayers().length;
+		const properties = target.getPlayerProperty();
+		const numPlayers = game.getAllPlayers().length;
 		let numToLynch = Math.ceil(numPlayers / 2);
 
 		if (properties.indexOf('loved') > -1) {
@@ -136,15 +136,15 @@ class MafiaPlayerController {
 
 
 	checkForAutoLynch(game, target) {
-		let todaysVotes = game.getActions();
+		const todaysVotes = game.getActions();
 		let numVotesForTarget = 0;
 		for (let i = 0; i < todaysVotes.length; i++) {
-			if (todaysVotes[i].target == target) {
+			if (todaysVotes[i].target === target) {
 				numVotesForTarget++;
 			}
 		}
 
-		let numVotesRequired = this.getNumVotesRequired(game, target);
+		const numVotesRequired = this.getNumVotesRequired(game, target);
 
 		if (numVotesForTarget >= numVotesRequired) {
 			return this.lynchPlayer(game, target);
@@ -169,6 +169,7 @@ class MafiaPlayerController {
 	  * @param  {commands.command} command The command that was passed in.
 	  * @returns {Promise}        A promise that will resolve when the game is ready
 	  */
+	/* eslint-disable */
 	nolynchHandler (command) {
 		const game = command.post.topic_id;
 		const post = command.post.post_number;
@@ -301,6 +302,7 @@ class MafiaPlayerController {
 				});
 			});
 	};
+	/*eslint-enable*/
 
 	/**
 	  * Vote: Vote to lynch a player
@@ -329,16 +331,18 @@ class MafiaPlayerController {
 		// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
 		const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
 
-		logDebug('Received vote request from ' + voter + ' for ' + target + ' in game ' + game);
+		logDebug('Received vote request from ' + voter + ' for ' + targetString + ' in game ' + game);
+		return this.doVote(game, post, voter, targetString, command.input, 1);
 
-		let target = game.getPlayer(targetString);
+		//TODO: make doublevoter work
+	/*	let target = game.getPlayer(targetString);
 		let properties = target.getPlayerProperty();
 
 		if (properties.indexOf('doublevoter') > -1) {
 			return doVote(game, post, voter, target, command.input, 2);
 		} else {
 			return doVote(game, post, voter, target, command.input, 1);
-		}
+		}*/
 	};
 
 	forHandler (command) {
@@ -348,11 +352,30 @@ class MafiaPlayerController {
 		// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
 		// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
 		const target = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
-
 		logDebug('Received vote request from ' + voter + ' for ' + target + ' in game ' + game);
 		
-		return doVote(game, post, voter, target, command.input, 1);
+		return this.doVote(game, post, voter, target, command.input, 1);
 	};
+
+	verifyVotePreconditions (game, voter, target) {
+		if (!game.isActive) {
+			return Promise.reject('Incorrect game state');
+		}
+
+		if (!game.isDaytime) {
+			return Promise.reject('It is not day.');
+		}
+
+		if (!voter.isAlive) {
+			return Promise.reject('Voter not alive');
+		}
+
+		if (!target.isAlive) {
+			return Promise.reject('Target not alive');
+		}
+
+		return Promise.resolve();
+	}
 
 
 	doVote (gameId, post, actor, target, input, voteNum) {
@@ -373,26 +396,6 @@ class MafiaPlayerController {
 			return text;
 		}
 
-		function verifyPreconditions(game, voter, target) {
-			if (!game.isActive) {
-				return Promise.reject('Incorrect game state');
-			}
-
-			if (!game.isDaytime) {
-				return Promise.reject('It is not day.');
-			}
-
-			if (!voter.isAlive) {
-				return Promise.reject('Voter not alive');
-			}
-
-			if (!target.isAlive) {
-				return Promise.reject('Target not alive');
-			}
-
-			return Promise.resolve();
-		}
-
 		return this.dao.getGameByTopicId(gameId)
 		.catch(() => {
 			logWarning('Ignoring message in nonexistant game thread ' + game);
@@ -411,7 +414,7 @@ class MafiaPlayerController {
 			} catch (_) {
 				throw new Error('Target not in game');
 			}
-			return verifyPreconditions(game, voter, votee)
+			return this.verifyVotePreconditions(game, voter, votee);
 		})
 		.then(() => game.registerAction(post, voter, action, votee))
 		.then(() => {
@@ -420,7 +423,7 @@ class MafiaPlayerController {
 			logDebug('Vote succeeded');
 			return true;
 		})
-		.then(() => checkForAutoLynch(votee))
+		.then(() => this.checkForAutoLynch(votee))
 		.catch((reason) => {
 			if (reason === E_NOGAME) {
 				return Promise.resolve();

@@ -3,11 +3,10 @@ module.exports = {
 		loved: 'loved',
 		hated: 'hated',
 		doublevoter: 'doublevoter'
-	}
+	},
 
 	actions: {
 		vote: 'vote',
 		doublevote: 'dbvote'
 	}
-
-}
+};

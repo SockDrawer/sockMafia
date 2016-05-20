@@ -43,19 +43,19 @@ describe('player controller', () => {
 				nextPhase: () => 1,
 				getActions: () => 1,
 				topicId: 12
-			}
+			};
 
 			mockUser = {
 				username: 'Lars',
 				getPlayerProperty: () => [],
 				isAlive: true
-			}
+			};
 
 			mockTarget = {
 				username: 'Sadie',
 				getPlayerProperty: () => [],
 				isAlive: true
-			}
+			};
 
 			playerController = new PlayerController(null);
 		});
@@ -63,31 +63,31 @@ describe('player controller', () => {
 
 		describe('Votes to lynch', () => {
 			it('should return 1 for 2 players', () => {
-				sandbox.stub(mockGame,'getAllPlayers').returns(['Lars', 'Sadie']);
+				sandbox.stub(mockGame, 'getAllPlayers').returns(['Lars', 'Sadie']);
 				sandbox.stub(mockUser, 'getPlayerProperty').returns([]);
 				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(1);
 			});
 
 			it('should return 2 for 3 players', () => {
-				sandbox.stub(mockGame,'getAllPlayers').returns(['Lars', 'Sadie', 'Steven']);
+				sandbox.stub(mockGame, 'getAllPlayers').returns(['Lars', 'Sadie', 'Steven']);
 				sandbox.stub(mockUser, 'getPlayerProperty').returns([]);
 				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(2);
 			});
 
 			it('should return 2 for 4 players', () => {
-				sandbox.stub(mockGame,'getAllPlayers').returns(['Lars', 'Sadie', 'Steven', 'Pearl']);
+				sandbox.stub(mockGame, 'getAllPlayers').returns(['Lars', 'Sadie', 'Steven', 'Pearl']);
 				sandbox.stub(mockUser, 'getPlayerProperty').returns([]);
 				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(2);
 			});
 
 			it('should return 3 for 4 players + loved', () => {
-				sandbox.stub(mockGame,'getAllPlayers').returns(['Lars', 'Sadie', 'Steven', 'Pearl']);
+				sandbox.stub(mockGame, 'getAllPlayers').returns(['Lars', 'Sadie', 'Steven', 'Pearl']);
 				sandbox.stub(mockUser, 'getPlayerProperty').returns(['loved']);
 				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(3);
 			});
 
 			it('should return 1 for 4 players + hated', () => {
-				sandbox.stub(mockGame,'getAllPlayers').returns(['Lars', 'Sadie', 'Steven', 'Pearl']);
+				sandbox.stub(mockGame, 'getAllPlayers').returns(['Lars', 'Sadie', 'Steven', 'Pearl']);
 				sandbox.stub(mockUser, 'getPlayerProperty').returns(['hated']);
 				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(1);
 			});
@@ -99,8 +99,8 @@ describe('player controller', () => {
 			});
 
 			it('Should lynch successfully', () => {
-				sandbox.stub(mockGame,'killPlayer').resolves();
-				sandbox.stub(mockGame,'nextPhase').resolves();
+				sandbox.stub(mockGame, 'killPlayer').resolves();
+				sandbox.stub(mockGame, 'nextPhase').resolves();
 
 				return playerController.lynchPlayer(mockGame, mockUser).then(() => {
 					mockGame.killPlayer.calledWith(mockUser).should.equal(true);
@@ -110,8 +110,8 @@ describe('player controller', () => {
 			});
 
 			it('Should report errors', () => {
-				sandbox.stub(mockGame,'killPlayer').rejects('Terminator found');
-				sandbox.stub(mockGame,'nextPhase').resolves();
+				sandbox.stub(mockGame, 'killPlayer').rejects('Terminator found');
+				sandbox.stub(mockGame, 'nextPhase').resolves();
 
 				return playerController.lynchPlayer(mockGame, mockUser).then(() => {
 					view.respondInThread.calledWith(12).should.equal(true);
@@ -122,8 +122,8 @@ describe('player controller', () => {
 		});
 
 		describe('Autolynch', () => {
-			let voteForSadie = {};
-			let voteForLars = {};
+			const voteForSadie = {};
+			const voteForLars = {};
 
 			beforeEach(() => {
 				sandbox.stub(playerController, 'lynchPlayer').resolves();
@@ -171,13 +171,13 @@ describe('player controller', () => {
 					username: 'Lars',
 					getPlayerProperty: () => 1,
 					isAlive: true
-				}
+				};
 
 				mockTarget = {
 					username: 'Sadie',
 					getPlayerProperty: () => 1,
 					isAlive: true
-				}
+				};
 
 				mockGame = {
 					getAllPlayers: () => 1,
@@ -185,18 +185,23 @@ describe('player controller', () => {
 					nextPhase: () => 1,
 					registerAction: () => Promise.resolve('Ok'),
 					getPlayer: (player) => {
-						if (player == 'Lars') return mockVoter;
-						if (player == 'Sadie') return mockTarget;
+						if (player === 'Lars') { 
+							return mockVoter; 
+						}
+
+						if (player === 'Sadie') { 
+							return mockTarget; 
+						}
 						throw new Error('No such player: ' + player);
 					},
 					topicId: 12,
 					isActive: true,
 					isDaytime: true
-				}
+				};
 
 				mockdao = {
 					getGameByTopicId: () => Promise.resolve(mockGame)
-				}
+				};
 
 				playerController = new PlayerController(mockdao, null);
 				sandbox.stub(view, 'respondInThread');
@@ -224,7 +229,7 @@ describe('player controller', () => {
 		});
 		
 		it('should reject votes for non-players', () => {
-			sandbox.stub(mockGame,'getPlayer').withArgs('Sadie').throws('No such player');
+			sandbox.stub(mockGame, 'getPlayer').withArgs('Sadie').throws('No such player');
 
 			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
 				view.respondInThread.called.should.be.true;
@@ -288,8 +293,7 @@ describe('player controller', () => {
 			});
 		});
 	});
-	
-	
+
 	describe('unvote()', () => {
 
 		it ('should remain silent when no game is in session', () => {
