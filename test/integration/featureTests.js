@@ -13,9 +13,9 @@ const rimraf = require('rimraf-promise');
 
 chai.should();
 
-const playerController = require('../../src/player_controller');
+const PlayerController = require('../../src/player_controller');
 const modController = require('../../src/mod_controller');
-const DAO = require('../../src/dao.js');
+const DAO = require('../../src/dao');
 const Handlebars = require('handlebars');
 const view = require('../../src/view.js');
 
@@ -30,8 +30,7 @@ describe('MafiaBot', function() {
 
 	before(() => {
 		//Set up the database
-		return rimraf('intTesting.db')
-			.then(() => DAO.createDB(testConfig));
+		return rimraf('intTesting.db');
 	});
 
 	beforeEach(() => {
@@ -42,22 +41,29 @@ describe('MafiaBot', function() {
 		sandbox.stub(view, 'reportError').resolves();
 		sandbox.stub(view, 'respondWithTemplate').resolves();
 		sandbox.stub(view, 'respond').resolves();
-});
+	});
 
 	afterEach(() => {
 		sandbox.restore();
 	});
 
-	describe('Voting', function () {
+	describe.only('Voting', function () {
+		let dao, playerController, game;
 
 		before(() => {
 			//Set up the database
-			return DAO.addGame(1, 'testGame')
-				.then(() => DAO.addPlayerToGame(1, 'yamikuronue', DAO.playerStatus.alive))
-				.then(() => DAO.addPlayerToGame(1, 'accalia', DAO.playerStatus.alive))
-				.then(() => DAO.addPlayerToGame(1, 'dreikin', DAO.playerStatus.alive))
-				.then(() => DAO.addMod(1, 'ModdyMcModerson'))
-				.then(() => DAO.setGameStatus(1, DAO.gameStatus.running));
+			dao = new DAO('intTesting.db');
+			playerController = new PlayerController(dao, testConfig);
+
+			return dao.createGame(1, 'Game 1')
+				.then((g) =>  {
+					game = g;
+					return game.addPlayer('yamikuronue');
+				})
+				.then(() =>  game.addPlayer('accalia'))
+				.then(() =>  game.addPlayer('dreikin'))
+				.then(() =>  game.addPlayer('tehninja'));
+			
 		});
 
 		it('Should allow one player to vote for another', () => {
@@ -72,11 +78,12 @@ describe('MafiaBot', function() {
 			};
 
 			//Spies
-			sandbox.spy(DAO, 'addActionWithTarget');
+			sandbox.spy(game, 'registerAction');
 			return playerController.voteHandler(command).then(() => {
-				view.reportError.called.should.equal(false);
-				DAO.addActionWithTarget.called.should.equal(true);
+				view.respondInThread.called.should.equal(true);
 				view.respondInThread.firstCall.args[1].should.include('@yamikuronue voted for @accalia');
+				game.registerAction.called.should.equal(true);
+				
 			});
 		});
 
@@ -92,10 +99,10 @@ describe('MafiaBot', function() {
 			};
 
 			//Spies
-			sandbox.spy(DAO, 'addActionWithTarget');
+			sandbox.spy(game, 'registerAction');
 			return playerController.voteHandler(command).then(() => {
 				view.reportError.called.should.equal(true);
-				DAO.addActionWithTarget.called.should.equal(false);
+				game.registerAction.called.should.equal(false);
 			});
 		});
 
@@ -111,11 +118,11 @@ describe('MafiaBot', function() {
 			};
 
 			//Spies
-			sandbox.spy(DAO, 'addActionWithTarget');
+			sandbox.spy(game, 'registerAction');
 			return playerController.voteHandler(command).then(() => {
 				//view.reportError.called.should.equal(true);  //TODO: semantically, reportError makes more sense here
 				view.respondInThread.called.should.equal(true);
-				DAO.addActionWithTarget.called.should.equal(false);
+				game.registerAction.called.should.equal(false);
 			});
 		});
 
@@ -131,10 +138,10 @@ describe('MafiaBot', function() {
 			};
 
 			//Spies
-			sandbox.spy(DAO, 'addActionWithTarget');
+			sandbox.spy(game, 'registerAction');
 			return playerController.voteHandler(command).then(() => {
 				view.reportError.called.should.equal(false);
-				DAO.addActionWithTarget.called.should.equal(true);
+				game.registerAction.called.should.equal(true);
 				view.respondInThread.firstCall.args[1].should.include('@yamikuronue voted for @dreikin');
 			});
 		});
@@ -151,10 +158,10 @@ describe('MafiaBot', function() {
 			};
 
 			//Spies
-			sandbox.spy(DAO, 'revokeAction');
+			sandbox.spy(game, 'revokeAction');
 			return playerController.unvoteHandler(command).then(() => {
 				view.reportError.called.should.equal(false);
-				DAO.revokeAction.called.should.equal(true);
+				game.revokeAction.called.should.equal(true);
 				view.respond.firstCall.args[1].should.include('@yamikuronue unvoted');
 			});
 		});
@@ -171,10 +178,10 @@ describe('MafiaBot', function() {
 			};
 
 			//Spies
-			sandbox.spy(DAO, 'addActionWithTarget');
+			sandbox.spy(game, 'registerAction');
 			return playerController.voteHandler(command).then(() => {
 				view.reportError.called.should.equal(false);
-				DAO.addActionWithTarget.called.should.equal(true);
+				game.registerAction.called.should.equal(true);
 				view.respondInThread.firstCall.args[1].should.include('@yamikuronue voted for @dreikin');
 			});
 		});
@@ -193,17 +200,17 @@ describe('MafiaBot', function() {
 			};
 
 			//Spies
-			sandbox.spy(DAO, 'addActionWithTarget');
+			sandbox.spy(game, 'registerAction');
 			return playerController.voteHandler(command).then(() => {
 				view.reportError.called.should.equal(false);
-				DAO.addActionWithTarget.called.should.equal(true);
+				game.registerAction.called.should.equal(true);
 				view.respondInThread.firstCall.args[1].should.include('@accalia voted for @dreikin');
 				DAO.isPlayerAlive(1, 'dreikin').should.eventually.equal(false);
 			});
 		});
 	});
 
-
+/*eslint-disable*/
 	describe('Vote history', () => {
 		/*TODO: List-votes*/
 
