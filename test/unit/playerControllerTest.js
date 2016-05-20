@@ -48,12 +48,14 @@ describe('player controller', () => {
 
 			mockUser = {
 				username: 'Lars',
+				userslug: 'lars',
 				getProperties: () => [],
 				isAlive: true
 			};
 
 			mockTarget = {
 				username: 'Sadie',
+				userslug: 'sadie',
 				getProperties: () => [],
 				isAlive: true
 			};
@@ -123,8 +125,12 @@ describe('player controller', () => {
 		});
 
 		describe('Autolynch', () => {
-			const voteForSadie = {};
-			const voteForLars = {};
+			const voteForSadie = {
+				isCurrent: true
+			};
+			const voteForLars = {
+				isCurrent: true
+			};
 
 			beforeEach(() => {
 				sandbox.stub(playerController, 'lynchPlayer').resolves();

@@ -138,8 +138,7 @@ class MafiaPlayerController {
 		const todaysVotes = game.getActions();
 		let numVotesForTarget = 0;
 		for (let i = 0; i < todaysVotes.length; i++) {
-			console.log(todaysVotes[i].isCurrent)
-			if (todaysVotes[i].isCurrent && todaysVotes[i].target.username === target.username) {
+			if (todaysVotes[i].isCurrent && todaysVotes[i].target.userslug === target.userslug) {
 				numVotesForTarget++;
 			}
 		}
