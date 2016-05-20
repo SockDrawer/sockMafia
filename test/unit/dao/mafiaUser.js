@@ -9,7 +9,7 @@ chai.use(require('chai-as-promised'));
 
 chai.should();
 
-const MafiaUser = require('../../src/dao/mafiaUser');
+const MafiaUser = require('../../../src/dao/mafiaUser');
 
 describe('nouveau dao/MafiaUser', () => {
     it('should export a function', () => {

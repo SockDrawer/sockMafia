@@ -11,8 +11,8 @@ chai.should();
 
 const fs = require('fs');
 
-const MafiaDao = require('../../src/dao'),
-    MafiaGame = require('../../src/dao/mafiaGame');
+const MafiaDao = require('../../../src/dao'),
+    MafiaGame = require('../../../src/dao/mafiaGame');
 
 describe('nouveau dao', () => {
     it('should export a function', () => {
