@@ -189,59 +189,44 @@ class MafiaModController {
 	* @returns {Promise}        A promise that will resolve when the game is ready
 	*/
 	dayHandler (command) {
-		const game = command.post.topic_id;
-		const mod = command.post.username;
+		const gameId = command.post.topic_id;
+		const modName = command.post.username;
 		const data = {
 			numPlayers: 0,
 			toExecute: 0,
 			day: 0,
 			names: []
 		};
+		let currDay, game, mod;
 
 		logDebug('Received new day request from ' + mod + ' in thread ' + game);
-		return dao.getGameStatus(game)
-			.then((status) => {
-				if (status === dao.gameStatus.running) {
-					return Promise.resolve();
-				}
-				return Promise.reject('Game not started. Try `!start`.');
+		return  this.dao.getGameByTopicId(command.post.topic_id)
+			.then((g) => {
+				game = g;
+				currDay = game.day;
+				return game.isActive ? Promise.resolve() : Promise.reject('Game not started. Try `!start`.');
 			})
 			.then(() => {
-				return validator.mustBeTrue(dao.isPlayerMod, [game, mod], 'Poster is not mod');
+				mod = game.getPlayer(modName);
+				return mod.isModerator ? Promise.resolve() : Promise.reject('You are not a moderator');
 			})
-			.then(() => dao.getGameById(game))
-			.then((gameInstance) => {
-				if (gameInstance.time === dao.gameTime.day) {
-					return dao.setCurrentTime(game, dao.gameTime.night).then(() => {
-						const text = 'Incremented stage for ' + gameInstance.name;
-						view.respond(command, text);
+			.then(() => {
+				return game.nextPhase();
+			})
+			.then(() => {
+				if (game.day > currDay) {
+					const numPlayers = game.livePlayers.length;
+					data.toExecute = Math.ceil(numPlayers / 2);
+					data.numPlayers = game.livePlayers.length;
+					data.names = game.live.map((player) => {
+						return player.properName;
 					});
+
+					logDebug('Moved to new day in  ' + game);
+					view.respondWithTemplate('/templates/newDayTemplate.handlebars', data, command);
 				}
-
-				//Otherwise, do the whole hog
-				return dao.incrementDay(game).then(() => {
-					data.day = gameInstance.day;
-					return dao.setCurrentTime(game, dao.gameTime.day).then(() => {
-						const text = 'Incremented day for ' + gameInstance.name;
-						view.respond(command, text);
-					});
-				}).then(() => {
-					return Promise.join(
-						dao.getNumToLynch(game),
-						dao.getLivingPlayers(game),
-						(toLynch, livingPlayers) => {
-							data.toExecute = toLynch;
-							data.numPlayers = livingPlayers.length;
-
-							data.names = livingPlayers.map((row) => {
-								return row.player.properName;
-							});
-
-							logDebug('Moving to new day in  ' + game);
-							view.respondWithTemplate('/templates/newDayTemplate.handlebars', data, command);
-						}
-					);	
-				});	
+				view.respond(command, 'Incremented stage for ' + game.name);
+				return Promise.Resolve();	
 			})
 			.catch((err) => {
 				logRecoveredError('Error incrementing day: ' + err);
