@@ -940,9 +940,23 @@ describe('nouveau dao/MafiaGame', () => {
             });
         });
         it('should revoke action for userslug', () => {
-            const actor = game.getAction('accalia');
-            return game.revokeAction(100, 'accalia').then(() => {
-                actions[1].revokedId.should.equal(100);
+            return game.revokeAction(100, 'accalia').then((action) => {
+                action.isCurrent.should.be.false;
+            });
+        });
+        it('should store revocation post id in action', () => {
+            return game.revokeAction(101, 'accalia').then((action) => {
+                action.revokedId.should.equal(101);
+            });
+        });
+        it('should store revocation post id in game', () => {
+            return game.revokeAction(102, 'accalia').then(() => {
+                actions[1].revokedId.should.equal(102);
+            });
+        });
+        it('should save state after revocation', () => {
+            return game.revokeAction(103, 'accalia').then(() => {
+                game.save.called.should.be.true;
             });
         });
     });

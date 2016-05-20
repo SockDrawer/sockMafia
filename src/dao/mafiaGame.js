@@ -237,7 +237,7 @@ class MafiaGame {
         }
         const action = this.getAction(actor, target, type, actionToken, this.day);
         let rescind = null;
-        if (action) {
+        if (action && action.isCurrent) {
             rescind = action.revoke(postId);
         } else {
             rescind = Promise.resolve();
