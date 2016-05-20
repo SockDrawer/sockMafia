@@ -188,6 +188,8 @@ describe('MafiaBot', function() {
 				view.reportError.called.should.equal(false);
 				game.registerAction.called.should.equal(true);
 				view.respondInThread.firstCall.args[1].should.include('@yamikuronue voted for @dreikin');
+
+				//Verify that the unvote reduced the vote count so Dreikin is still alive
 				game.getPlayer('dreikin').isAlive.should.equal(true);
 			});
 		});
