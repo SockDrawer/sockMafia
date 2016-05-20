@@ -48,7 +48,7 @@ describe('MafiaBot', function() {
 	});
 
 	describe.only('Voting', function () {
-		let dao, playerController, game, sandbox;
+		let dao, playerController, game;
 
 		before(() => {
 			//Set up the database
@@ -70,16 +70,7 @@ describe('MafiaBot', function() {
 
 		after(() => {
 			dao.getGameByTopicId.restore();
-		})
-
-		beforeEach(() => {
-			sandbox = sinon.sandbox.create();
 		});
-
-		afterEach(() => {
-			sandbox.restore();
-		});
-
 
 		it('Should allow one player to vote for another', () => {
 			const command = {
@@ -197,6 +188,7 @@ describe('MafiaBot', function() {
 				view.reportError.called.should.equal(false);
 				game.registerAction.called.should.equal(true);
 				view.respondInThread.firstCall.args[1].should.include('@yamikuronue voted for @dreikin');
+				game.getPlayer('dreikin').isAlive.should.equal(true);
 			});
 		});
 

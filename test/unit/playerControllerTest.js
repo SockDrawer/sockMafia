@@ -42,18 +42,19 @@ describe('player controller', () => {
 				killPlayer: () => 1,
 				nextPhase: () => 1,
 				getActions: () => 1,
-				topicId: 12
+				topicId: 12,
+				livePlayers: []
 			};
 
 			mockUser = {
 				username: 'Lars',
-				getPlayerProperty: () => [],
+				getProperties: () => [],
 				isAlive: true
 			};
 
 			mockTarget = {
 				username: 'Sadie',
-				getPlayerProperty: () => [],
+				getProperties: () => [],
 				isAlive: true
 			};
 
@@ -63,32 +64,32 @@ describe('player controller', () => {
 
 		describe('Votes to lynch', () => {
 			it('should return 1 for 2 players', () => {
-				sandbox.stub(mockGame, 'getAllPlayers').returns(['Lars', 'Sadie']);
-				sandbox.stub(mockUser, 'getPlayerProperty').returns([]);
+				mockGame.livePlayers = ['Lars', 'Sadie'];
+				sandbox.stub(mockUser, 'getProperties').returns([]);
 				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(1);
 			});
 
 			it('should return 2 for 3 players', () => {
-				sandbox.stub(mockGame, 'getAllPlayers').returns(['Lars', 'Sadie', 'Steven']);
-				sandbox.stub(mockUser, 'getPlayerProperty').returns([]);
+				mockGame.livePlayers = ['Lars', 'Sadie', 'Steven'];
+				sandbox.stub(mockUser, 'getProperties').returns([]);
 				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(2);
 			});
 
 			it('should return 2 for 4 players', () => {
-				sandbox.stub(mockGame, 'getAllPlayers').returns(['Lars', 'Sadie', 'Steven', 'Pearl']);
-				sandbox.stub(mockUser, 'getPlayerProperty').returns([]);
+				mockGame.livePlayers = ['Lars', 'Sadie', 'Steven', 'Pearl'];
+				sandbox.stub(mockUser, 'getProperties').returns([]);
 				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(2);
 			});
 
 			it('should return 3 for 4 players + loved', () => {
-				sandbox.stub(mockGame, 'getAllPlayers').returns(['Lars', 'Sadie', 'Steven', 'Pearl']);
-				sandbox.stub(mockUser, 'getPlayerProperty').returns(['loved']);
+				mockGame.livePlayers = ['Lars', 'Sadie', 'Steven', 'Pearl'];
+				sandbox.stub(mockUser, 'getProperties').returns(['loved']);
 				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(3);
 			});
 
 			it('should return 1 for 4 players + hated', () => {
-				sandbox.stub(mockGame, 'getAllPlayers').returns(['Lars', 'Sadie', 'Steven', 'Pearl']);
-				sandbox.stub(mockUser, 'getPlayerProperty').returns(['hated']);
+				mockGame.livePlayers = ['Lars', 'Sadie', 'Steven', 'Pearl'];
+				sandbox.stub(mockUser, 'getProperties').returns(['hated']);
 				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(1);
 			});
 		});
