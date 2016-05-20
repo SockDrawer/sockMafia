@@ -97,8 +97,8 @@ class MafiaPlayerController {
 	/*Voting helpers*/
 
 	getNumVotesRequired(game, target) {
-		const properties = target.getPlayerProperty();
-		const numPlayers = game.getAllPlayers().length;
+		const properties = target.getProperties();
+		const numPlayers = game.livePlayers.length;
 		let numToLynch = Math.ceil(numPlayers / 2);
 
 		if (properties.indexOf('loved') > -1) {
@@ -142,7 +142,6 @@ class MafiaPlayerController {
 				numVotesForTarget++;
 			}
 		}
-
 		const numVotesRequired = this.getNumVotesRequired(game, target);
 
 		if (numVotesForTarget >= numVotesRequired) {
@@ -436,7 +435,7 @@ class MafiaPlayerController {
 			logDebug('Vote succeeded');
 			return true;
 		})
-		.then(() => this.checkForAutoLynch(votee))
+		.then(() => this.checkForAutoLynch(game, votee))
 		.catch((reason) => {
 			if (reason === E_NOGAME) {
 				return Promise.resolve();

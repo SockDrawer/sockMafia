@@ -48,7 +48,7 @@ describe('MafiaBot', function() {
 	});
 
 	describe.only('Voting', function () {
-		let dao, playerController, game;
+		let dao, playerController, game, sandbox;
 
 		before(() => {
 			//Set up the database
@@ -58,6 +58,7 @@ describe('MafiaBot', function() {
 			return dao.createGame(1, 'Game 1')
 				.then((g) =>  {
 					game = g;
+					sinon.stub(dao, 'getGameByTopicId').resolves(game);
 					return game.addPlayer('yamikuronue');
 				})
 				.then(() =>  game.addPlayer('accalia'))
@@ -66,6 +67,19 @@ describe('MafiaBot', function() {
 				.then(() =>  game.newDay());
 			
 		});
+
+		after(() => {
+			dao.getGameByTopicId.restore();
+		})
+
+		beforeEach(() => {
+			sandbox = sinon.sandbox.create();
+		});
+
+		afterEach(() => {
+			sandbox.restore();
+		});
+
 
 		it('Should allow one player to vote for another', () => {
 			const command = {
@@ -81,10 +95,10 @@ describe('MafiaBot', function() {
 			//Spies
 			sandbox.spy(game, 'registerAction');
 			return playerController.voteHandler(command).then(() => {
+				game.registerAction.called.should.equal(true);
+
 				view.respondInThread.called.should.equal(true);
 				view.respondInThread.firstCall.args[1].should.include('@yamikuronue voted for @accalia');
-				game.registerAction.called.should.equal(true);
-				
 			});
 		});
 
@@ -102,7 +116,6 @@ describe('MafiaBot', function() {
 			//Spies
 			sandbox.spy(game, 'registerAction');
 			return playerController.voteHandler(command).then(() => {
-				view.reportError.called.should.equal(true);
 				game.registerAction.called.should.equal(false);
 			});
 		});
@@ -206,7 +219,7 @@ describe('MafiaBot', function() {
 				view.reportError.called.should.equal(false);
 				game.registerAction.called.should.equal(true);
 				view.respondInThread.firstCall.args[1].should.include('@accalia voted for @dreikin');
-				DAO.isPlayerAlive(1, 'dreikin').should.eventually.equal(false);
+				game.getPlayer('dreikin').isAlive.should.equal(false);
 			});
 		});
 	});

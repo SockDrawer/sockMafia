@@ -866,7 +866,8 @@ describe('nouveau dao/MafiaGame', () => {
             });
             chai.expect(game.getAction('foobar', undefined, undefined, 'cde')).to.be.null;
         });
-    });describe('getAction()', () => {
+    });
+    describe('getAction()', () => {
         let game = null,
             actions = null;
         const baseActions = [{actor:'foobar'}];
