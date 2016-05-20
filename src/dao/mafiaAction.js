@@ -32,5 +32,8 @@ class MafiaAction {
         this._data.revokedId = postId;
         return this._game.save().then(() => this);
     }
+    toJSON(){
+        return this._data;
+    }
 }
 module.exports = MafiaAction;
