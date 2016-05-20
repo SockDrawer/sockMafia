@@ -867,12 +867,23 @@ describe('nouveau dao/MafiaGame', () => {
             chai.expect(game.getAction('foobar', undefined, undefined, 'cde')).to.be.null;
         });
     });
-    describe('getAction()', () => {
+    describe('getActions()', () => {
         let game = null,
             actions = null;
-        const baseActions = [{actor:'foobar'}];
+        const actors = ['foobar', 'accalia', 'sockbot'];
         beforeEach(() => {
             game = new MafiaGame({});
             actions = game._data.actions;
-        });});
+            actors.forEach((actor) => {
+                actions.push({
+                    actor: actor,
+                    day: 1,
+                    action: 'vote'
+                });
+            });
+        });
+        it('should return all votes for current day', () => {
+            game.getActions(undefined, undefined, true).should.have.length(3);
+        });
+    });
 });
