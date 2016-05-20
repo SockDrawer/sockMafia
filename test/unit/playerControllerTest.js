@@ -224,7 +224,7 @@ describe('player controller', () => {
 				view.respondInThread.called.should.be.true;
 				
 				const output = view.respondInThread.getCall(0).args[1];
-				output.should.include('Voter not in game');
+				output.should.include('You are not yet a player');
 			});
 		});
 		
@@ -235,7 +235,7 @@ describe('player controller', () => {
 				view.respondInThread.called.should.be.true;
 				
 				const output = view.respondInThread.getCall(0).args[1];
-				output.should.include('Target not in game');
+				output.should.include('your princess is in another castle');
 			});
 		});
 		
@@ -262,7 +262,7 @@ describe('player controller', () => {
 		});
 		
 		it('should reject votes at night', () => {
-			mockGame.isDaytime = false;
+			mockGame.isDay = false;
 
 			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
 				view.respondInThread.called.should.be.true;
@@ -284,6 +284,16 @@ describe('player controller', () => {
 			});
 		});
 	
+		it('should register your vote', () => {
+			sandbox.spy(mockGame, 'registerAction');
+			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
+				//Args: (postId, actor, target, type, actionToken)
+				const expectedArgs = [43, 'Lars', 'Sadie', 'vote']
+				mockGame.registerAction.called.should.equal(true);
+				mockGame.registerAction.getCall(0).args.should.deep.equal(expectedArgs);
+			});
+		});
+
 		it('should echo your vote when successful', () => {
 			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
 				view.respondInThread.called.should.be.true;
@@ -294,7 +304,7 @@ describe('player controller', () => {
 		});
 	});
 
-	describe.only('unvote()', () => {
+	describe('unvote()', () => {
 		let mockGame, mockVoter, mockTarget, mockdao, playerController;
 		beforeEach(() => {
 

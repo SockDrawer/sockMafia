@@ -429,7 +429,7 @@ class MafiaPlayerController {
 
 			return this.verifyVotePreconditions(game, voter, votee);
 		})
-		.then(() => game.registerAction(post, voter, action, votee))
+		.then(() => game.registerAction(post, actor, target, 'vote'))
 		.then(() => {
 			const text = getVoteAttemptText(game, true);
 			view.respondInThread(game, text);
@@ -449,7 +449,6 @@ class MafiaPlayerController {
 				text += getVoteAttemptText(false);
 
 				//Log error
-				console.log(reason.stack)
 				logRecoveredError('Vote failed: ' + reason);
 				view.respondInThread(game, text);
 			});
