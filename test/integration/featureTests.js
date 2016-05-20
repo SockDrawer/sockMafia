@@ -62,7 +62,8 @@ describe('MafiaBot', function() {
 				})
 				.then(() =>  game.addPlayer('accalia'))
 				.then(() =>  game.addPlayer('dreikin'))
-				.then(() =>  game.addPlayer('tehninja'));
+				.then(() =>  game.addPlayer('tehninja'))
+				.then(() =>  game.newDay());
 			
 		});
 

@@ -324,6 +324,7 @@ class MafiaPlayerController {
 	  * @returns {Promise}        A promise that will resolve when the game is ready
 	  */
 	voteHandler (command) {
+		const gameId = command.post.topic_id;
 		const game = this.dao.getGameByTopicId(command.post.topic_id);
 		const post = command.post.post_number;
 		const voter = command.post.username;
@@ -332,7 +333,7 @@ class MafiaPlayerController {
 		const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
 
 		logDebug('Received vote request from ' + voter + ' for ' + targetString + ' in game ' + game);
-		return this.doVote(game, post, voter, targetString, command.input, 1);
+		return this.doVote(gameId, post, voter, targetString, command.input, 1);
 
 		//TODO: make doublevoter work
 	/*	let target = game.getPlayer(targetString);
@@ -362,7 +363,7 @@ class MafiaPlayerController {
 			return Promise.reject('Incorrect game state');
 		}
 
-		if (!game.isDaytime) {
+		if (!game.isDay) {
 			return Promise.reject('It is not day.');
 		}
 
@@ -436,6 +437,7 @@ class MafiaPlayerController {
 				text += getVoteAttemptText(false);
 
 				//Log error
+				console.log(reason.stack)
 				logRecoveredError('Vote failed: ' + reason);
 				view.respondInThread(game, text);
 			});

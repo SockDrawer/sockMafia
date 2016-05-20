@@ -12,7 +12,7 @@ chai.should();
 const expect = chai.expect;
 
 const mafia = require('../../src/mafiabot');
-const mafiaDAO = require('../../src/dao.js');
+const mafiaDAO = require('../../src/dao');
 const view = require('../../src/view.js');
 const modController = require('../../src/mod_controller');
 const playerController = require('../../src/player_controller');
@@ -137,9 +137,7 @@ describe('mafia', () => {
 			};
 			mafia.internals.configuration = config;
 			mafia.internals.forum = forum;
-			sandbox.stub(mafiaDAO, 'createDB').resolves();
-			sandbox.stub(mafiaDAO, 'addPlayerToGame').resolves();
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
+			
 		});
 		it('should register commands', () => {
 			return mafia.activate().then(() => {

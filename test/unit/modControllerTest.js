@@ -11,7 +11,7 @@ require('chai-as-promised');
 chai.should();
 
 const mafia = require('../../src/mod_controller');
-const mafiaDAO = require('../../src/dao/index.js');
+const mafiaDAO = require('../../src/dao');
 const Handlebars = require('handlebars');
 const view = require('../../src/view.js');
 
