@@ -196,13 +196,13 @@ class MafiaGame {
         day = day || this.day;
         const actions = this._data.actions.filter((action) => {
             return action.day === day &&
-                action.type === type &&
+                action.action === type &&
                 (
                     includeDeadPlayers ||
-                    !!this._data.livePlayers[action.actor]
+                    !!this._data.livePlayers[action.actor.username]
                 );
         });
-        return actions.map((action) => new MafiaAction(action, this));
+        return actions;
     }
     registerAction(postId, actor, target, type, actionToken) {
         actor = getUser(this, this._data.livePlayers, actor);

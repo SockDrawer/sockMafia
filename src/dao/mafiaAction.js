@@ -28,6 +28,11 @@ class MafiaAction {
     get revokedId() {
         return this._data.revokedId;
     }
+
+    get day() {
+        return this._data.day;
+    }
+
     revoke(postId) {
         this._data.revokedId = postId;
         return this._game.save().then(() => this);
