@@ -33,7 +33,7 @@ describe('player controller', () => {
 	});
 
 
-	describe.only('Vote helpers', () => {
+	describe('Vote helpers', () => {
 		let mockGame, mockUser, mockTarget, mockdao, playerController;
 
 		beforeEach(() => {
@@ -196,7 +196,7 @@ describe('player controller', () => {
 					},
 					topicId: 12,
 					isActive: true,
-					isDaytime: true
+					isDay: true
 				};
 
 				mockdao = {
@@ -294,9 +294,38 @@ describe('player controller', () => {
 		});
 	});
 
-	describe('unvote()', () => {
+	describe.only('unvote()', () => {
+		let mockGame, mockVoter, mockTarget, mockdao, playerController;
+		beforeEach(() => {
 
-		it ('should remain silent when no game is in session', () => {
+			mockVoter = {
+				username: 'tehNinja',
+				getPlayerProperty: () => 1,
+				isAlive: true
+			};
+
+			mockGame = {
+				getAllPlayers: () => 1,
+				killPlayer: () => 1,
+				nextPhase: () => 1,
+				registerAction: () => Promise.resolve('Ok'),
+				revokeAction: () => Promise.resolve('Ok'),
+				getPlayer: (player) => mockVoter,
+				topicId: 12,
+				isActive: true,
+				isDay: true
+			};
+
+			mockdao = {
+				getGameByTopicId: () => Promise.resolve(mockGame)
+			};
+
+			playerController = new PlayerController(mockdao, null);
+			sandbox.stub(view, 'respondInThread');
+			sandbox.stub(view, 'respond');
+		});
+
+		it('should remain silent when no game is in session', () => {
 			const command = {
 				post: {
 					username: 'tehNinja',
@@ -307,14 +336,10 @@ describe('player controller', () => {
 				input: '!for @noLunch'
 			};
 
-			sandbox.stub(view, 'respondInThread');
-			sandbox.stub(view, 'reportError');
-			sandbox.stub(mafiaDAO, 'ensureGameExists').rejects();
+			sandbox.stub(mockdao, 'getGameByTopicId').rejects();
 
-			return mafia.unvoteHandler(command).then(() => {
+			return playerController.unvoteHandler(command).then(() => {
 				view.respondInThread.called.should.be.false;
-				view.reportError.called.should.be.false;
-				
 			});
 		});
 
@@ -329,18 +354,8 @@ describe('player controller', () => {
 				input: '!unvote'
 			};
 
-			sandbox.stub(view, 'respond');
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(validator, 'isDaytime').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(false);
-			sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(true);
-			sandbox.stub(mafiaDAO, 'getCurrentActionByPlayer').resolves(undefined);
-			sandbox.stub(mafiaDAO, 'getCurrentVoteByPlayer').resolves(undefined);
-			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
-			sandbox.stub(mafiaDAO, 'revokeAction').resolves();
-
-			return mafia.unvoteHandler(command).then(() => {
+			sandbox.stub(mockGame, 'getPlayer').throws('No such player');
+			return playerController.unvoteHandler(command).then(() => {
 				view.respond.called.should.be.true;
 
 				const output = view.respond.getCall(0).args[1];
@@ -359,19 +374,8 @@ describe('player controller', () => {
 				input: '!unvote'
 			};
 
-			sandbox.stub(view, 'respond');
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(validator, 'isDaytime').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(false);
-			sandbox.stub(mafiaDAO, 'getCurrentTime').resolves(mafiaDAO.gameTime.day);
-			sandbox.stub(mafiaDAO, 'addActionWithTarget').resolves(true);
-			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
-			sandbox.stub(mafiaDAO, 'getCurrentActionByPlayer').resolves(undefined);
-			sandbox.stub(mafiaDAO, 'getCurrentVoteByPlayer').resolves(undefined);
-
-			return mafia.unvoteHandler(command).then(() => {
+			mockVoter.isAlive = false;
+			return playerController.unvoteHandler(command).then(() => {
 				view.respond.called.should.be.true;
 
 				const output = view.respond.getCall(0).args[1];
@@ -390,18 +394,8 @@ describe('player controller', () => {
 				input: '!unvote'
 			};
 
-			sandbox.stub(view, 'respond');
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(true);
-			sandbox.stub(validator, 'isDaytime').resolves(false);
-			sandbox.stub(mafiaDAO, 'addActionWithTarget').resolves(true);
-			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
-			sandbox.stub(mafiaDAO, 'getCurrentActionByPlayer').resolves(undefined);
-			sandbox.stub(mafiaDAO, 'getCurrentVoteByPlayer').resolves(undefined);
-
-			return mafia.unvoteHandler(command).then(() => {
+			mockGame.isDay = false;
+			return playerController.unvoteHandler(command).then(() => {
 				view.respond.called.should.be.true;
 
 				const output = view.respond.getCall(0).args[1];
@@ -409,65 +403,6 @@ describe('player controller', () => {
 			});
 		});
 		
-		it('should not revoke nonexistant votes', () => {
-			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
-				args: [],
-				input: '!unvote'
-			};
-
-			sandbox.stub(view, 'respond');
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(true);
-			sandbox.stub(validator, 'isDaytime').resolves(true);
-			sandbox.stub(mafiaDAO, 'addActionWithTarget').resolves(true);
-			sandbox.stub(mafiaDAO, 'getCurrentActionByPlayer').resolves(undefined);
-			sandbox.stub(mafiaDAO, 'getCurrentVoteByPlayer').resolves(undefined);
-			sandbox.stub(mafiaDAO, 'revokeAction').resolves();
-			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
-
-			return mafia.unvoteHandler(command).then(() => {
-				mafiaDAO.revokeAction.called.should.be.false;
-			});
-		});
-		
-		it('should not revoke nonexistant votes for the wrong player', () => {
-			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
-				args: ['Yamikuronue'],
-				input: '!unvote'
-			};
-
-			sandbox.stub(view, 'respond');
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(true);
-			sandbox.stub(validator, 'isDaytime').resolves(true);
-			sandbox.stub(mafiaDAO, 'addActionWithTarget').resolves(true);
-			sandbox.stub(mafiaDAO, 'getCurrentVoteByPlayer').resolves([{
-				target: {
-					name: 'Jack frost'
-				}
-			}]);
-			sandbox.stub(mafiaDAO, 'revokeAction').resolves();
-			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
-
-			return mafia.unvoteHandler(command).then(() => {
-				mafiaDAO.revokeAction.called.should.be.false;
-			});
-		});
-		
 		it('should rescind your vote', () => {
 			const command = {
 				post: {
@@ -479,106 +414,13 @@ describe('player controller', () => {
 				input: '!unvote'
 			};
 
-			sandbox.stub(view, 'respond');
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(true);
-			sandbox.stub(validator, 'isDaytime').resolves(true);
-			sandbox.stub(mafiaDAO, 'addActionWithTarget').resolves(true);
-			sandbox.stub(mafiaDAO, 'getCurrentVoteByPlayer').resolves([{
-				id: 1,
-				post: 98556,
-				name: 'charlie'
-			}]);
-			sandbox.stub(mafiaDAO, 'revokeAction').resolves();
-			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
+			sandbox.spy(mockGame, 'revokeAction');
+			return playerController.unvoteHandler(command).then(() => {
+				mockGame.revokeAction.called.should.be.true;
 
-			return mafia.unvoteHandler(command).then(() => {
-				mafiaDAO.getCurrentVoteByPlayer.called.should.be.true;
-				mafiaDAO.revokeAction.called.should.be.true;
-				mafiaDAO.revokeAction.getCall(0).args[0].should.equal(12345);
-				mafiaDAO.revokeAction.getCall(0).args[1].should.equal(98556);
-				mafiaDAO.revokeAction.getCall(0).args[2].should.equal(98765);
-				
-				view.respond.called.should.be.true;
-
-				const output = view.respond.getCall(0).args[1];
-				output.should.include('@tehNinja unvoted in post ');
-			});
-		});
-		
-		it('should rescind both votes for a doublevoter', () => {
-			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
-				args: [],
-				input: '!unvote'
-			};
-
-			sandbox.stub(view, 'respond');
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(true);
-			sandbox.stub(validator, 'isDaytime').resolves(true);
-			sandbox.stub(mafiaDAO, 'addActionWithTarget').resolves(true);
-			sandbox.stub(mafiaDAO, 'getCurrentVoteByPlayer').resolves([{
-				target: {
-					name: 'Yamikuronue'
-				},
-				post: 123
-			},
-			{
-				target: {
-					name: 'accalia'
-				},
-				post: 456
-			}]);
-			sandbox.stub(mafiaDAO, 'revokeAction').resolves();
-			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
-
-			return mafia.unvoteHandler(command).then(() => {
-				mafiaDAO.revokeAction.calledWith(12345, 123, 98765).should.be.true;
-				mafiaDAO.revokeAction.calledWith(12345, 456, 98765).should.be.true;
-			});
-		});
-		
-		it('should rescind your vote', () => {
-			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
-				args: [],
-				input: '!unvote'
-			};
-
-			sandbox.stub(view, 'respond');
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(true);
-			sandbox.stub(validator, 'isDaytime').resolves(true);
-			sandbox.stub(mafiaDAO, 'addActionWithTarget').resolves(true);
-			sandbox.stub(mafiaDAO, 'getCurrentVoteByPlayer').resolves([{
-				id: 1,
-				post: 98556,
-				name: 'charlie'
-			}]);
-			sandbox.stub(mafiaDAO, 'revokeAction').resolves();
-			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
-
-			return mafia.unvoteHandler(command).then(() => {
-				mafiaDAO.getCurrentVoteByPlayer.called.should.be.true;
-				mafiaDAO.revokeAction.called.should.be.true;
-				mafiaDAO.revokeAction.getCall(0).args[0].should.equal(12345);
-				mafiaDAO.revokeAction.getCall(0).args[1].should.equal(98556);
-				mafiaDAO.revokeAction.getCall(0).args[2].should.equal(98765);
+				//Args: (postId, actor, target, type, actionToken) 
+				const expectedArgs = [98765, 'tehNinja', undefined, 'vote']
+				mockGame.revokeAction.getCall(0).args.should.deep.equal(expectedArgs);
 				
 				view.respond.called.should.be.true;
 

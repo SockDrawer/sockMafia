@@ -113,19 +113,18 @@ class MafiaPlayerController {
 
 	getVotingErrorText(reason, voter, target) {
 		let text = ':wtf:';
-
-		if (reason === 'Voter not in game') {
+		if (reason.toString().indexOf('Voter not in game') > -1) {
 			text = '@' + voter + ': You are not yet a player.\n'
 				+ 'Please use `@' + myName + ' join` to join the game.';
-		} else if (reason === 'Voter not alive') {
+		} else if (reason.toString().indexOf('Voter not alive') > -1) {
 			text = 'Aaagh! Ghosts!\n'
 				+ '(@' + voter + ': You are no longer among the living.)';
-		} else if (reason === 'Target not in game') {
+		} else if (reason.toString().indexOf('Target not in game') > -1) {
 			text = 'Who? I\'m sorry, @' + voter + ' but your princess is in another castle.\n'
 				+ '(' + target + ' is not in this game.)';
-		} else if (reason === 'Target not alive') {
+		} else if (reason.toString().indexOf('Target not alive') > -1) {
 			text = '@' + voter + ': You would be wise to not speak ill of the dead.';
-		} else if (reason === 'Vote failed') {
+		} else if (reason.toString().indexOf('Vote failed') > -1) {
 			text = ':wtf:\nSorry, @' + voter + ': your vote failed.  No, I don\'t know why.'
 				+ ' You\'ll have to ask @' + myOwner + ' about that.';
 		} else {
@@ -238,14 +237,14 @@ class MafiaPlayerController {
 	  * @returns {Promise}        A promise that will resolve when the game is ready
 	  */
 	unvoteHandler (command) {
-		const game = command.post.topic_id;
+		const gameId = command.post.topic_id;
 		const post = command.post.post_number;
-		const voter = command.post.username;
+		const actor = command.post.username;
 		let target = undefined;
+		let voter, votee, game;
 
 		logDebug('Received unvote request from ' + voter + ' in game ' + game);
 
-		
 		if (command.args.length > 0) {
 			target = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
 		}
@@ -261,26 +260,34 @@ class MafiaPlayerController {
 		}
 		
 		/*Validation*/
-		return dao.ensureGameExists(game)
+		return this.dao.getGameByTopicId(gameId)
 			.catch(() => {
 				logWarning('Ignoring message in nonexistant game thread ' + game);
 				throw(E_NOGAME);
 			})
-			.then( () => dao.getGameStatus(game))
-			.then((status) => {
-				if (status === dao.gameStatus.running) {
-					return Promise.resolve();
+			.then((g) => {
+				game = g;
+				try {
+					voter = game.getPlayer(actor);
+				} catch (_) {
+					throw new Error('Voter not in game');
 				}
-				return Promise.reject('Incorrect game state: ' + status);
-			})
-			.then(() => verifyPlayerCanVote(game, voter))
-			.then(() => {
+
 				if (target) {
-					return revokeCurrentVoteFor(game, voter, target, post);
+					try {
+						votee = game.getPlayer(target);
+					} catch (_) {
+						throw new Error('Target not in game');
+					}
 				} else {
-					return revokeCurrentVote(game, voter, post);
+					votee = null;
 				}
-			})/* Revoke current vote, now a Controller responsibility */
+
+				return this.verifyVotePreconditions(game, voter, votee);
+			})
+			.then(() => {
+				game.revokeAction(post, actor, target, 'vote')
+			})
 			.then(() => {
 				const text = getVoteAttemptText(true);
 				view.respond(command, text);
@@ -293,7 +300,7 @@ class MafiaPlayerController {
 				}
 
 				/*Error handling*/
-				return getVotingErrorText(reason, voter)
+				return this.getVotingErrorText(reason, voter)
 				.then((text) => {
 					text += '\n<hr />\n';
 					text += getVoteAttemptText(false);
@@ -371,7 +378,7 @@ class MafiaPlayerController {
 			return Promise.reject('Voter not alive');
 		}
 
-		if (!target.isAlive) {
+		if (target && !target.isAlive) {
 			return Promise.reject('Target not alive');
 		}
 
@@ -415,6 +422,11 @@ class MafiaPlayerController {
 			} catch (_) {
 				throw new Error('Target not in game');
 			}
+
+			if(!votee) {
+				throw new Error('No target specified');
+			}
+
 			return this.verifyVotePreconditions(game, voter, votee);
 		})
 		.then(() => game.registerAction(post, voter, action, votee))
