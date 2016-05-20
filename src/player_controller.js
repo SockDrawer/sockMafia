@@ -170,58 +170,60 @@ class MafiaPlayerController {
 	  */
 	/* eslint-disable */
 	nolynchHandler (command) {
-		const game = command.post.topic_id;
+		const gameId = command.post.topic_id;
 		const post = command.post.post_number;
-		const voter = command.post.username;
+		const actor = command.post.username;
+		let voter, votee, game;
 
-		logDebug('Received nolynch request from ' + voter + ' in game ' + game);
-
+		logDebug('Received noLynch request from ' + voter + ' in game ' + game);
+		
 		function getVoteAttemptText(success) {
-			let text = '@' + command.post.username +  (success ? ' voted for ' : ' tried to vote for ') + 'no-lynch ';
+			let text = '@' + command.post.username + (success ? ' voted to not lynch ' : ' tried to vote to not lynch ');
 
 			text = text	+ 'in post #<a href="https://what.thedailywtf.com/t/'
-					+ command.post.topic_id + '/' + command.post.post_number + '">'
-					+ command.post.post_number + '</a>.\n\n'
+					+ game + '/' + post + '">'
+					+ post + '</a>.\n\n'
 					+ 'Vote text:\n[quote]\n' + command.input + '\n[/quote]';
 			return text;
 		}
 		
 		/*Validation*/
-		return dao.ensureGameExists(game)
-			.catch(() => {
-				logWarning('Ignoring message in nonexistant game thread ' + game);
-				throw(E_NOGAME);
-			})
-			.then( () => dao.getGameStatus(game))
-			.then((status) => {
-				if (status === dao.gameStatus.running) {
-					return Promise.resolve();
-				}
-				return Promise.reject('Incorrect game state: ' + status);
-			})
-			.then(() => verifyPlayerCanVote(game, voter))
-			.then(() => revokeCurrentVote(game, voter, post))/* Revoke current vote, now a Controller responsibility */
-			.then(() => dao.addActionWithoutTarget(game, post, voter, 'nolynch'))
-			.then(() => {
-				const text = getVoteAttemptText(true);
+		return this.dao.getGameByTopicId(gameId)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + game);
+			throw(E_NOGAME);
+		})
+		.then((g) => {
+			game = g;
+			try {
+				voter = game.getPlayer(actor);
+			} catch (_) {
+				throw new Error('Voter not in game');
+			}
+
+			return this.verifyVotePreconditions(game, voter, null);
+		})
+		.then(() => game.registerAction(post, actor, undefined, 'vote'))
+		.then(() => {
+			const text = getVoteAttemptText(true);
+			view.respond(command, text);
+			logDebug('Nolynch vote succeeded');
+			return true;
+		})
+		.catch((reason) => {
+			if (reason === E_NOGAME) {
+				return Promise.resolve();
+			}
+
+			/*Error handling*/
+			return this.getVotingErrorText(reason, voter)
+			.then((text) => {
+				text += '\n<hr />\n';
+				text += getVoteAttemptText(false);
 				view.respond(command, text);
-				logDebug('Nolynch was successful');
-				return true;
-			})
-			.catch((reason) => {
-				/*Silent bypass*/
-				if (reason === E_NOGAME) {
-					return Promise.resolve();
-				}
-				/*Error handling*/
-				return getVotingErrorText(reason, voter)
-				.then((text) => {
-					text += '\n<hr />\n';
-					text += getVoteAttemptText(false);
-					view.respond(command, text);
-					logRecoveredError('Nolynch failed: ' + reason);
-				});
+				logDebug('Nolynch failed: ' + reason);
 			});
+		});
 	};
 
 	/**
@@ -261,53 +263,51 @@ class MafiaPlayerController {
 		
 		/*Validation*/
 		return this.dao.getGameByTopicId(gameId)
-			.catch(() => {
-				logWarning('Ignoring message in nonexistant game thread ' + game);
-				throw(E_NOGAME);
-			})
-			.then((g) => {
-				game = g;
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + game);
+			throw(E_NOGAME);
+		})
+		.then((g) => {
+			game = g;
+			try {
+				voter = game.getPlayer(actor);
+			} catch (_) {
+				throw new Error('Voter not in game');
+			}
+
+			if (target) {
 				try {
-					voter = game.getPlayer(actor);
+					votee = game.getPlayer(target);
 				} catch (_) {
-					throw new Error('Voter not in game');
+					throw new Error('Target not in game');
 				}
+			} else {
+				votee = null;
+			}
 
-				if (target) {
-					try {
-						votee = game.getPlayer(target);
-					} catch (_) {
-						throw new Error('Target not in game');
-					}
-				} else {
-					votee = null;
-				}
+			return this.verifyVotePreconditions(game, voter, votee);
+		})
+		.then(() =>	game.revokeAction(post, actor, target, 'vote'))
+		.then(() => {
+			const text = getVoteAttemptText(true);
+			view.respond(command, text);
+			logDebug('Unvote succeeded');
+			return true;
+		})
+		.catch((reason) => {
+			if (reason === E_NOGAME) {
+				return Promise.resolve();
+			}
 
-				return this.verifyVotePreconditions(game, voter, votee);
-			})
-			.then(() => {
-				game.revokeAction(post, actor, target, 'vote')
-			})
-			.then(() => {
-				const text = getVoteAttemptText(true);
+			/*Error handling*/
+			return this.getVotingErrorText(reason, voter)
+			.then((text) => {
+				text += '\n<hr />\n';
+				text += getVoteAttemptText(false);
 				view.respond(command, text);
-				logDebug('Unvote succeeded');
-				return true;
-			})
-			.catch((reason) => {
-				if (reason === E_NOGAME) {
-					return Promise.resolve();
-				}
-
-				/*Error handling*/
-				return this.getVotingErrorText(reason, voter)
-				.then((text) => {
-					text += '\n<hr />\n';
-					text += getVoteAttemptText(false);
-					view.respond(command, text);
-					logDebug('Unvote failed: ' + reason);
-				});
+				logDebug('Unvote failed: ' + reason);
 			});
+		});
 	};
 	/*eslint-enable*/
 
