@@ -1200,6 +1200,57 @@ describe('nouveau dao/MafiaGame', () => {
             });
         });
     });
+    describe('getValue()', () => {
+        let game = null,
+            values = null;
+        beforeEach(() => {
+            game = new MafiaGame({});
+            game.save = sinon.stub().resolves(game);
+            values = game._data.values;
+        });
+        it('should return undefined for unknown key', () => {
+            const name = `keykey${Math.random()}`;
+            values.should.not.have.any.key(name);
+            chai.expect(game.getValue(name)).to.be.undefined;
+        });
+        it('should return saved value for key', () => {
+            const name = `keykey${Math.random()}`;
+            const expected = `valuevalue${Math.random()}`;
+            values[name] = expected;
+            game.getValue(name).should.equal(expected);
+        });
+    });
+    describe('setValue()', () => {
+        let game = null,
+            values = null;
+        beforeEach(() => {
+            game = new MafiaGame({});
+            game.save = sinon.stub().resolves(game);
+            values = game._data.values;
+        });
+        it('should set value', () => {
+            const name = `keykey${Math.random()}`;
+            const expected = `valuevalue${Math.random()}`;
+            return game.setValue(name, expected).then(() => {
+                values[name].should.equal(expected);
+            });
+        });
+        it('should save new value', () => {
+            const name = `keykey${Math.random()}`;
+            const expected = `valuevalue${Math.random()}`;
+            return game.setValue(name, expected).then(() => {
+                game.save.called.should.be.true;
+            });
+        });
+        it('should resolve to overridden value', () => {
+            const name = `keykey${Math.random()}`;
+            const expected = `valuevalue${Math.random()}`;
+            values[name] = expected;
+            return game.setValue(name, 'foobar').then((oldvalue) => {
+                oldvalue.should.equal(expected);
+            });
+        });
+    });
     describe('toJSON()', () => {
         it('should return internal data store', () => {
             const data = {};

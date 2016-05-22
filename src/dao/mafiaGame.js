@@ -51,6 +51,7 @@ class MafiaGame {
         data.deadPlayers = setDefault(data.deadPlayers, {});
         data.moderators = setDefault(data.moderators, {});
         data.actions = setDefault(data.actions, []);
+        data.values = setDefault(data.values, {});
         this._data = data;
         this._dao = dao;
     }
@@ -244,6 +245,14 @@ class MafiaGame {
         }
         return rescind
             .then(() => action);
+    }
+    getValue(key) {
+        return this._data.values[key];
+    }
+    setValue(key, data) {
+        const oldVal = this._data.values[key];
+        this._data.values[key] = data;
+        return this.save().then(() => oldVal);
     }
     toJSON() {
         return this._data;
