@@ -3,7 +3,7 @@
 
 const chai = require('chai'),
 	sinon = require('sinon');
-	
+
 //promise library plugins
 require('sinon-as-promised');
 const chaiAsPromised = require('chai-as-promised');
@@ -24,7 +24,7 @@ const testConfig = {
 
 };
 
-describe('MafiaBot', function() {
+describe('MafiaBot', function () {
 	this.timeout(50000);
 	let sandbox;
 
@@ -56,16 +56,16 @@ describe('MafiaBot', function() {
 			playerController = new PlayerController(dao, testConfig);
 
 			return dao.createGame(1, 'Game 1')
-				.then((g) =>  {
+				.then((g) => {
 					game = g;
 					sinon.stub(dao, 'getGameByTopicId').resolves(game);
 					return game.addPlayer('yamikuronue');
 				})
-				.then(() =>  game.addPlayer('accalia'))
-				.then(() =>  game.addPlayer('dreikin'))
-				.then(() =>  game.addPlayer('tehninja'))
-				.then(() =>  game.newDay());
-			
+				.then(() => game.addPlayer('accalia'))
+				.then(() => game.addPlayer('dreikin'))
+				.then(() => game.addPlayer('tehninja'))
+				.then(() => game.newDay());
+
 		});
 
 		after(() => {
@@ -206,7 +206,16 @@ describe('MafiaBot', function() {
 				args: ['@dreikin'],
 				input: '!vote @dreikin'
 			};
-
+			// "cheat", and add tehninja's action to push dreikin over the autolynch limit
+			//TODO: work with yami to do this properly
+			game._data.actions.push({
+				postId: -1,
+				actor: 'tehninja',
+				target: 'dreikin',
+				action: 'vote',
+				token: 'vote',
+				day: 2
+			});
 			//Spies
 			sandbox.spy(game, 'registerAction');
 			return playerController.voteHandler(command).then(() => {
@@ -218,7 +227,7 @@ describe('MafiaBot', function() {
 		});
 	});
 
-/*eslint-disable*/
+	/*eslint-disable*/
 	describe('Vote history', () => {
 		/*TODO: List-votes*/
 
@@ -377,14 +386,14 @@ describe('MafiaBot', function() {
 			sandbox.spy(DAO, 'incrementDay');
 			sandbox.spy(DAO, 'setCurrentTime');
 
-			
+
 			return modController.startHandler(command).then(() => {
 				view.reportError.called.should.equal(true);
 				DAO.setGameStatus.called.should.equal(false);
-				DAO.incrementDay.called.should.equal(false);	
+				DAO.incrementDay.called.should.equal(false);
 			});
 		});
-		
+
 		it('Should allow the game to be started', () => {
 			const command = {
 				post: {
@@ -399,15 +408,15 @@ describe('MafiaBot', function() {
 			sandbox.spy(DAO, 'incrementDay');
 			sandbox.spy(DAO, 'setCurrentTime');
 
-			
+
 			return DAO.addPlayerToGame(2, 'accalia').then(() => DAO.addPlayerToGame(2, 'dreikin'))
-			.then(() => modController.startHandler(command))
-			.then(() => {
-				view.reportError.called.should.equal(false);
-				DAO.setGameStatus.calledWith(2, 'running').should.equal(true);
-				DAO.setCurrentTime.calledWith(2, DAO.gameTime.day).should.equal(true);
-				DAO.incrementDay.called.should.equal(true);	
-			});
+				.then(() => modController.startHandler(command))
+				.then(() => {
+					view.reportError.called.should.equal(false);
+					DAO.setGameStatus.calledWith(2, 'running').should.equal(true);
+					DAO.setCurrentTime.calledWith(2, DAO.gameTime.day).should.equal(true);
+					DAO.incrementDay.called.should.equal(true);
+				});
 		});
 
 		/*TODO: List players*/
@@ -425,11 +434,11 @@ describe('MafiaBot', function() {
 			sandbox.spy(DAO, 'incrementDay');
 			sandbox.spy(DAO, 'setCurrentTime');
 
-			
+
 			return modController.dayHandler(command).then(() => {
 				view.reportError.called.should.equal(false);
 				DAO.setCurrentTime.calledWith(2, DAO.gameTime.night).should.equal(true);
-				DAO.incrementDay.called.should.equal(false);	
+				DAO.incrementDay.called.should.equal(false);
 			});
 		});
 
@@ -446,11 +455,11 @@ describe('MafiaBot', function() {
 			sandbox.spy(DAO, 'incrementDay');
 			sandbox.spy(DAO, 'setCurrentTime');
 
-			
+
 			return modController.dayHandler(command).then(() => {
 				view.reportError.called.should.equal(false);
 				DAO.setCurrentTime.calledWith(2, DAO.gameTime.day).should.equal(true);
-				DAO.incrementDay.called.should.equal(true);	
+				DAO.incrementDay.called.should.equal(true);
 			});
 		});
 
@@ -468,12 +477,12 @@ describe('MafiaBot', function() {
 			sandbox.spy(DAO, 'incrementDay');
 			sandbox.spy(DAO, 'setCurrentTime');
 
-			
+
 			return modController.killHandler(command).then(() => {
 				view.reportError.called.should.equal(false);
 				DAO.killPlayer.calledWith(2, 'yamikuronue').should.equal(true);
-				DAO.incrementDay.called.should.equal(false);	
-				DAO.setCurrentTime.called.should.equal(false);	
+				DAO.incrementDay.called.should.equal(false);
+				DAO.setCurrentTime.called.should.equal(false);
 			});
 		});
 
@@ -490,7 +499,7 @@ describe('MafiaBot', function() {
 			sandbox.spy(DAO, 'setGameStatus');
 			sandbox.spy(playerController, 'listAllPlayersHandler');
 
-			
+
 			return modController.finishHandler(command).then(() => {
 				view.reportError.called.should.equal(false);
 				DAO.setGameStatus.calledWith(2, 'finished').should.equal(true);

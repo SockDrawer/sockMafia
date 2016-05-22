@@ -143,7 +143,6 @@ class MafiaPlayerController {
 			}
 		}
 		const numVotesRequired = this.getNumVotesRequired(game, target);
-
 		if (numVotesForTarget >= numVotesRequired) {
 			return this.lynchPlayer(game, target);
 		} else {

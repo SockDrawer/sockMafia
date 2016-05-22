@@ -893,6 +893,13 @@ describe('nouveau dao/MafiaGame', () => {
                 });
             });
         });
+        it('should return MafiaActions', () => {
+            game._data.livePlayers.accalia = 1;
+            game._data.livePlayers.sockbot = 1;
+            game.getActions().forEach((action)=>{
+                action.should.be.an.instanceOf(MafiaAction);
+            });
+        });
         it('should return actions for living players', () => {
             game._data.livePlayers.accalia = 1;
             game._data.livePlayers.sockbot = 1;
@@ -904,20 +911,22 @@ describe('nouveau dao/MafiaGame', () => {
         it('should return actions of requested type', () => {
             actions[2].action = 'oops';
             game._data.livePlayers.sockbot = 1;
-            game.getActions('oops').should.eql([{
+            game.getActions('oops')[0].toJSON().should.eql({
                 actor: 'sockbot',
                 day: 1,
-                action: 'oops'
-            }]);
+                action: 'oops',
+                token: 'vote'
+            });
         });
         it('should return actions of requested day', () => {
             actions[2].day = 7;
             game._data.livePlayers.sockbot = 1;
-            game.getActions(undefined, 7).should.eql([{
+            game.getActions(undefined, 7)[0].toJSON().should.eql({
                 actor: 'sockbot',
                 day: 7,
-                action: 'vote'
-            }]);
+                action: 'vote',
+                token: 'vote'
+            });
         });
     });
     describe('registerAction()', () => {

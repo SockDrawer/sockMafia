@@ -170,15 +170,20 @@ class MafiaGame {
         this._data.phase = this._data.phases[0];
         return this.save();
     }
-    getAction(actor, target, type, actionToken, day) {
+    getAction(actor, target, type, actionToken, day, includeRevokedActions) {
         actor = getUserSlug(actor);
         target = getUserSlug(target);
         type = type || 'vote';
         day = day || this.day;
+        includeRevokedActions = includeRevokedActions || false;
         let actions = this._data.actions.filter((action) => {
             return action.actor === actor &&
                 action.day === day &&
-                action.action === type;
+                action.action === type &&
+                (
+                    includeRevokedActions ||
+                    !action.revokedId
+                );
         });
         if (target) {
             actions = actions.filter((action) => action.target === target);
@@ -203,7 +208,7 @@ class MafiaGame {
                     !!this._data.livePlayers[action.actor]
                 );
         });
-        return actions;
+        return actions.map((action)=> new MafiaAction(action, this));
     }
     registerAction(postId, actor, target, type, actionToken) {
         actor = getUser(this, this._data.livePlayers, actor);
