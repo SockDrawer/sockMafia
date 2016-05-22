@@ -54,7 +54,7 @@ describe('nouveau dao/MafiaAction', () => {
     describe('simple getters', () => {
         let user = null;
         beforeEach(() => user = new MafiaAction({}));
-        ['postId', 'action', 'token', 'revokedId'].forEach((getter) => {
+        ['postId', 'action', 'token', 'revokedId', 'day'].forEach((getter) => {
             it(`should have a simple getter for ${getter}`, () => {
                 const expected = Math.random();
                 user._data[getter] = expected;
@@ -149,5 +149,10 @@ describe('nouveau dao/MafiaAction', () => {
                 game.save.called.should.be.true;
             });
         });
+    });
+    describe('toJSON()', () => {
+        const obj = {};
+        const action = new MafiaAction(obj);
+        action.toJSON().should.equal(obj);
     });
 });

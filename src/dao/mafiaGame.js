@@ -206,27 +206,27 @@ class MafiaGame {
     }
     registerAction(postId, actor, target, type, actionToken) {
         actor = getUser(this, this._data.livePlayers, actor);
-        target = getUser(this, this._data.livePlayers, target);
+        target = getUserSlug(target);
         if (!actor) {
             return Promise.reject('E_ACTOR_NOT_ALIVE');
         }
-        const prior = this.getAction(actor, target, type, actionToken, this.day);
-        let rescind = null;
+        const prior = this.getAction(actor, undefined, type, actionToken, this.day);
+        let revoker = null;
         if (prior) {
-            rescind = prior.revoke(postId);
+            revoker = prior.revoke(postId);
         } else {
-            rescind = Promise.resolve();
+            revoker = Promise.resolve();
         }
         const action = new MafiaAction({
             postId: postId,
             actor: actor.userslug,
-            target: target.userslug,
+            target: target,
             action: type,
-            actionToken: actionToken,
+            token: actionToken,
             day: this.day
         }, this);
-        this._data.actions.push(action);
-        return rescind
+        this._data.actions.push(action.toJSON());
+        return revoker
             .then(() => this.save())
             .then(() => action);
     }

@@ -920,6 +920,118 @@ describe('nouveau dao/MafiaGame', () => {
             }]);
         });
     });
+    describe('registerAction()', () => {
+        let game = null,
+            actions = null;
+        beforeEach(() => {
+            game = new MafiaGame({
+                livePlayers: {
+                    accalia: {
+                        username: 'accalia'
+                    },
+                    fred: {
+                        username: 'fred'
+                    }
+                }
+            });
+            game.save = sinon.stub().resolves(game);
+            actions = game._data.actions;
+        });
+        it('should add action to action list', () => {
+            actions.should.have.length(0);
+            return game.registerAction(4, 'accalia', 'fred', 'vote', 'boo').then(() => {
+                actions.should.have.length(1);
+            });
+        });
+        it('should store raw data in action list', () => {
+            return game.registerAction(4, 'accalia', 'fred', 'vote', 'boo').then(() => {
+                actions[0].should.not.be.an.instanceOf(MafiaAction);
+            });
+        });
+        it('should resolve to created action', () => {
+            return game.registerAction(4, 'accalia', 'fred', 'vote', 'boo').then((action) => {
+                action.should.be.an.instanceOf(MafiaAction);
+            });
+        });
+        it('should register actor by userslug', () => {
+            return game.registerAction(4, 'AcCaLiA', 'fred', 'vote', 'boo').then(() => {
+                actions[0].actor.should.equal('accalia');
+            });
+        });
+        it('should register target by userslug', () => {
+            return game.registerAction(4, 'accalia', 'FreD', 'vote', 'boo').then(() => {
+                actions[0].target.should.equal('fred');
+            });
+        });
+        it('should register action against non-living target', () => {
+            return game.registerAction(4, 'accalia', 'barney', 'vote', 'boo').then(() => {
+                actions[0].target.should.equal('barney');
+            });
+        });
+        it('should register action against null target', () => {
+            return game.registerAction(4, 'accalia', null, 'vote', 'boo').then(() => {
+                chai.expect(actions[0].target).to.equal(null);
+            });
+        });
+        it('should register action of custom type', () => {
+            const expected = `action${Math.random()}`;
+            return game.registerAction(4, 'accalia', null, expected, 'boo').then(() => {
+                chai.expect(actions[0].action).to.equal(expected);
+            });
+        });
+        it('should register action of default type', () => {
+            return game.registerAction(4, 'accalia', null, undefined, 'boo').then(() => {
+                chai.expect(actions[0].action).to.equal('vote');
+            });
+        });
+        it('should register action of custom token', () => {
+            const expected = `action${Math.random()}`;
+            return game.registerAction(4, 'accalia', null, 'vote', expected).then(() => {
+                chai.expect(actions[0].token).to.equal(expected);
+            });
+        });
+        it('should register action of default type', () => {
+            return game.registerAction(4, 'accalia', null, 'vote').then(() => {
+                chai.expect(actions[0].token).to.equal('vote');
+            });
+        });
+        it('should save after adding action', () => {
+            return game.registerAction(4, 'accalia', null).then(() => {
+                game.save.called.should.be.true;
+            });
+        });
+        it('should revoke prior action', () => {
+            actions.push({
+                day: 1,
+                action: 'vote',
+                actor: 'accalia',
+                target: 'wilma'
+            });
+            return game.registerAction(4, 'accalia', 'barney').then(() => {
+                actions.should.have.length(2);
+                actions[0].revokedId.should.equal(4);
+                actions[0].target.should.equal('wilma');
+                actions[1].target.should.equal('barney');
+            });
+        });
+        it('should register action with same type and different token', () => {
+            actions.push({
+                day: 1,
+                action: 'vote',
+                actor: 'accalia',
+                target: 'wilma'
+            });
+            return game.registerAction(4, 'accalia', 'barney', 'vote', 'fubar').then(() => {
+                actions.should.have.length(2);
+                chai.expect(actions[0].revokedId).to.be.undefined;
+                actions[0].target.should.equal('wilma');
+                actions[1].target.should.equal('barney');
+            });
+        });
+        it('should require actor to be alive', () => {
+            return game.registerAction(4, 'jack_skelleton', 'barney', 'vote', 'fubar').should.be.rejectedWith('E_ACTOR_NOT_ALIVE');
+        });
+    });
     describe('revokeAction()', () => {
         let game = null,
             actions = null;
@@ -944,8 +1056,24 @@ describe('nouveau dao/MafiaGame', () => {
                 action.isCurrent.should.be.false;
             });
         });
+        it('should revoke action for userslug', () => {
+            const actor = new MafiaUser({
+                username: 'ACCALIA'
+            });
+            return game.revokeAction(100, actor).then((action) => {
+                action.isCurrent.should.be.false;
+            });
+        });
         it('should store revocation post id in action', () => {
             return game.revokeAction(101, 'accalia').then((action) => {
+                action.revokedId.should.equal(101);
+            });
+        });
+        it('should store revocation post id in action for MafiaUser', () => {
+            const actor = new MafiaUser({
+                username: 'ACCALIA'
+            });
+            return game.revokeAction(101, actor).then((action) => {
                 action.revokedId.should.equal(101);
             });
         });
@@ -954,10 +1082,129 @@ describe('nouveau dao/MafiaGame', () => {
                 actions[1].revokedId.should.equal(102);
             });
         });
+        it('should store revocation post id in game for MafiaUser', () => {
+            const actor = new MafiaUser({
+                username: 'ACCALIA'
+            });
+            return game.revokeAction(102, actor).then(() => {
+                actions[1].revokedId.should.equal(102);
+            });
+        });
         it('should save state after revocation', () => {
             return game.revokeAction(103, 'accalia').then(() => {
                 game.save.called.should.be.true;
             });
+        });
+        it('should save state after revocation for MafiaUser', () => {
+            const actor = new MafiaUser({
+                username: 'ACCALIA'
+            });
+            return game.revokeAction(103, actor).then(() => {
+                game.save.called.should.be.true;
+            });
+        });
+        it('should resolve for revoking non action', () => {
+            return game.revokeAction(103, 'accalia', 'nobody').should.be.fulfilled;
+        });
+        it('should resolve for revoking non action for MafiaUser', () => {
+            const actor = new MafiaUser({
+                username: 'ACCALIA'
+            });
+            return game.revokeAction(103, actor, 'nobody').should.be.fulfilled;
+        });
+        it('should resolve without saving for revoking revoked action', () => {
+            actions[1].revokedId = 52;
+            return game.revokeAction(103, 'accalia').then(() => {
+                game.save.called.should.be.false;
+            });
+        });
+        it('should resolve without saving for revoking revoked action for MafiaUser', () => {
+            const actor = new MafiaUser({
+                username: 'ACCALIA'
+            });
+            actions[1].revokedId = 52;
+            return game.revokeAction(103, actor).then(() => {
+                game.save.called.should.be.false;
+            });
+        });
+        it('should resolve for revoking revoked action', () => {
+            actions[1].revokedId = 52;
+            return game.revokeAction(103, 'accalia').should.be.fulfilled;
+        });
+        it('should resolve for revoking revoked action for MafiaUser', () => {
+            const actor = new MafiaUser({
+                username: 'ACCALIA'
+            });
+            actions[1].revokedId = 52;
+            return game.revokeAction(103, actor).should.be.fulfilled;
+        });
+        it('should resolve without saving for revoking revoked action', () => {
+            actions[1].revokedId = 52;
+            return game.revokeAction(103, 'accalia').then(() => {
+                game.save.called.should.be.false;
+            });
+        });
+        it('should resolve without saving for revoking revoked action for MafiaUser', () => {
+            const actor = new MafiaUser({
+                username: 'ACCALIA'
+            });
+            actions[1].revokedId = 52;
+            return game.revokeAction(103, actor).then(() => {
+                game.save.called.should.be.false;
+            });
+        });
+        it('should not allow revoking the actions of the dead', () => {
+            game._data.livePlayers = [];
+            return game.revokeAction(103, 'accalia').should.be.rejectedWith('E_ACTOR_NOT_ALIVE');
+        });
+        it('should not allow revoking the actions of the dead for MafiaUser', () => {
+            const actor = new MafiaUser({
+                username: 'ACCALIA'
+            });
+            game._data.livePlayers = [];
+            return game.revokeAction(103, actor).should.be.rejectedWith('E_ACTOR_NOT_ALIVE');
+        });
+        it('should revoke action target', () => {
+            actions.push({
+                actor: 'accalia',
+                day: 1,
+                action: 'vote',
+                target: 'boxer'
+            });
+            return game.revokeAction(103, 'accalia', 'boxer').then(() => {
+                chai.expect(actions[1].revokedId).to.be.undefined;
+                actions[3].revokedId.should.equal(103);
+            });
+        });
+        it('should revoke action type', () => {
+            actions.push({
+                actor: 'accalia',
+                day: 1,
+                action: 'boxer'
+            });
+            return game.revokeAction(103, 'accalia', undefined, 'boxer').then(() => {
+                chai.expect(actions[1].revokedId).to.be.undefined;
+                actions[3].revokedId.should.equal(103);
+            });
+        });
+        it('should revoke action token', () => {
+            actions.push({
+                actor: 'accalia',
+                day: 1,
+                action: 'vote',
+                token: 'boxer'
+            });
+            return game.revokeAction(103, 'accalia', undefined, undefined, 'boxer').then(() => {
+                chai.expect(actions[1].revokedId).to.be.undefined;
+                actions[3].revokedId.should.equal(103);
+            });
+        });
+    });
+    describe('toJSON()', () => {
+        it('should return internal data store', () => {
+            const data = {};
+            const game = new MafiaGame(data);
+            game.toJSON().should.equal(data);
         });
     });
 });
