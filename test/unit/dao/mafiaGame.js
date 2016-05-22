@@ -801,7 +801,25 @@ describe('nouveau dao/MafiaGame', () => {
             });
             chai.expect(game.getAction('foobar')).to.be.null;
         });
-        it('should return action when a action matches', () => {
+        it('should return action when includeRevokedActions is set', () => {
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                revokedId: 50
+            });
+            game.getAction('foobar', undefined, undefined, undefined, undefined, true).should.be.an.instanceOf(MafiaAction);
+        });
+        it('should not return action when includeRevokedActions is unset', () => {
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                revokedId: 50
+            });
+            chai.expect(game.getAction('foobar', undefined, undefined, undefined, undefined, false)).to.be.null;
+        });
+        it('should return revoked action when  action matches', () => {
             actions.push({
                 actor: 'foobar',
                 day: 1,

@@ -175,7 +175,7 @@ class MafiaGame {
         target = getUserSlug(target);
         type = type || 'vote';
         day = day || this.day;
-        includeRevokedActions = includeRevokedActions || false;
+        includeRevokedActions = includeRevokedActions !== undefined ? includeRevokedActions : true;
         let actions = this._data.actions.filter((action) => {
             return action.actor === actor &&
                 action.day === day &&
@@ -208,7 +208,7 @@ class MafiaGame {
                     !!this._data.livePlayers[action.actor]
                 );
         });
-        return actions.map((action)=> new MafiaAction(action, this));
+        return actions.map((action) => new MafiaAction(action, this));
     }
     registerAction(postId, actor, target, type, actionToken) {
         actor = getUser(this, this._data.livePlayers, actor);
@@ -216,7 +216,7 @@ class MafiaGame {
         if (!actor) {
             return Promise.reject('E_ACTOR_NOT_ALIVE');
         }
-        const prior = this.getAction(actor, undefined, type, actionToken, this.day);
+        const prior = this.getAction(actor, undefined, type, actionToken, this.day, false);
         let revoker = null;
         if (prior) {
             revoker = prior.revoke(postId);
