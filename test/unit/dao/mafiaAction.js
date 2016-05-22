@@ -97,7 +97,7 @@ describe('nouveau dao/MafiaAction', () => {
         it('should get user via game._getPlayer()', () => {
             const name = `name${Math.random()}`;
             action._data.actor = name;
-            const actor = action.actor;
+            action.actor.should.equal(name);
             game._getPlayer.calledWith(name).should.be.true;
         });
     });
@@ -122,7 +122,7 @@ describe('nouveau dao/MafiaAction', () => {
         it('should get user via game._getPlayer()', () => {
             const name = `name${Math.random()}`;
             action._data.target = name;
-            const actor = action.target;
+            action.target.should.equal(name);
             game._getPlayer.calledWith(name).should.be.true;
         });
     });
