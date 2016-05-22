@@ -206,16 +206,6 @@ describe('MafiaBot', function () {
 				args: ['@dreikin'],
 				input: '!vote @dreikin'
 			};
-			// "cheat", and add tehninja's action to push dreikin over the autolynch limit
-			//TODO: work with yami to do this properly
-			game._data.actions.push({
-				postId: -1,
-				actor: 'tehninja',
-				target: 'dreikin',
-				action: 'vote',
-				token: 'vote',
-				day: 2
-			});
 			//Spies
 			sandbox.spy(game, 'registerAction');
 			return playerController.voteHandler(command).then(() => {
