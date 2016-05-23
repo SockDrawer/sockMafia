@@ -12,6 +12,13 @@ exports.init = function(forum) {
 	eventLogger = forum;
 };
 
+
+const validProperties = [
+	'loved',
+	'hated',
+	'doublevoter'
+]
+
 /*eslint-disable no-extend-native*/
 Array.prototype.contains = function(element){
 	return this.indexOf(element) > -1;
@@ -128,38 +135,47 @@ class MafiaModController {
 	};
 
 	setHandler (command) {
-		const game = command.post.topic_id;
-		const mod = command.post.username;
-		const target = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
+		const gameId = command.post.topic_id;
+		const modName = command.post.username;
+		// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
+		// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
+		const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
 		const property = command.args[1];
-		
-		const validProperties = [
-			'loved',
-			'hated',
-			'doublevoter'
-		];
-		
-		logDebug('Received set property request for ' + target + ' in thread ' + game);
-		return dao.getGameStatus(game)
-			.then((status) => {
-				if (status === dao.gameStatus.finished) {
-					return Promise.reject('The game is over!');
-				}
-				return Promise.resolve();
+		let game, mod, target;
+
+		logDebug('Received set property request from ' + modName + 'for ' + target + ' in thread ' + gameId);
+
+		return this.dao.getGameByTopicId(command.post.topic_id)
+			.then((g) => {
+				game = g;
+				return game.isActive ? Promise.resolve() : Promise.reject('Game not started. Try `!start`.');
 			})
-			.then(() => validator.mustBeTrue(dao.isPlayerMod, [game, mod], 'Poster is not mod'))
-			.then(() => validator.mustBeTrue(dao.isPlayerInGame, [game, target], 'Target not valid'))
+			.then(() => {
+				mod = game.getPlayer(modName);
+				if (!mod) {
+					throw new Error('You are not in the game!');
+				}
+				return mod.isModerator ? Promise.resolve() : Promise.reject('You are not a moderator');
+			})
 			.then(() => {
 				if (!validProperties.contains(property.toLowerCase())) {
 					return Promise.reject('Property not valid.\n Valid properties: ' + validProperties.join(', '));
 				}
 			})
-			.then(() => dao.addPropertyToPlayer(game, target, property.toLowerCase()))
 			.then(() => {
-				logDebug('Player ' + target + ' is now ' + property + ' in ' + game);
+				try {
+					target = game.getPlayer(targetString);
+				} catch (_) {
+					throw new Error('Target not in game');
+				}
+				return target.isAlive ? Promise.resolve() : Promise.reject('Target not alive');
+			})
+			.then(() => target.addProperty(property))
+			.then(() => {
+				logDebug('Player ' + target.username + ' is now ' + property + ' in ' + game);
 				return view.respondWithTemplate('templates/modSuccess.handlebars', {
 					command: 'Set property',
-					results: 'Player ' + target + ' is now ' + property,
+					results: 'Player ' + target.username + ' is now ' + property,
 					game: game
 				}, command);
 			})
