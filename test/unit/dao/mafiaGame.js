@@ -335,7 +335,7 @@ describe('nouveau dao/MafiaGame', () => {
             });
             game._data.livePlayers = Array.apply(null, Array(10)).map((_, i) => {
                 return {
-                    username: `user${10*i}`
+                    username: `user${10 + i}`
                 };
             });
             const firstResult = game.allPlayers.map(player => player.username).join(' ');
