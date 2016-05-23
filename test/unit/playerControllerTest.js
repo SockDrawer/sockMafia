@@ -65,10 +65,10 @@ describe('player controller', () => {
 
 
 		describe('Votes to lynch', () => {
-			it('should return 1 for 2 players', () => {
+			it('should return 2 for 2 players', () => {
 				mockGame.livePlayers = ['Lars', 'Sadie'];
 				sandbox.stub(mockUser, 'getProperties').returns([]);
-				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(1);
+				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(2);
 			});
 
 			it('should return 2 for 3 players', () => {
@@ -77,22 +77,22 @@ describe('player controller', () => {
 				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(2);
 			});
 
-			it('should return 2 for 4 players', () => {
+			it('should return 3 for 4 players', () => {
 				mockGame.livePlayers = ['Lars', 'Sadie', 'Steven', 'Pearl'];
 				sandbox.stub(mockUser, 'getProperties').returns([]);
-				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(2);
-			});
-
-			it('should return 3 for 4 players + loved', () => {
-				mockGame.livePlayers = ['Lars', 'Sadie', 'Steven', 'Pearl'];
-				sandbox.stub(mockUser, 'getProperties').returns(['loved']);
 				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(3);
 			});
 
-			it('should return 1 for 4 players + hated', () => {
+			it('should return 4 for 4 players + loved', () => {
+				mockGame.livePlayers = ['Lars', 'Sadie', 'Steven', 'Pearl'];
+				sandbox.stub(mockUser, 'getProperties').returns(['loved']);
+				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(4);
+			});
+
+			it('should return 2 for 4 players + hated', () => {
 				mockGame.livePlayers = ['Lars', 'Sadie', 'Steven', 'Pearl'];
 				sandbox.stub(mockUser, 'getProperties').returns(['hated']);
-				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(1);
+				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(2);
 			});
 		});
 

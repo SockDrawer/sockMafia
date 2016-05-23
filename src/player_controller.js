@@ -99,7 +99,7 @@ class MafiaPlayerController {
 	getNumVotesRequired(game, target) {
 		const properties = target.getProperties();
 		const numPlayers = game.livePlayers.length;
-		let numToLynch = Math.ceil(numPlayers / 2);
+		let numToLynch = Math.ceil((numPlayers+1) / 2);
 
 		if (properties.indexOf('loved') > -1) {
 			numToLynch += 1;
