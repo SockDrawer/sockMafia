@@ -17,7 +17,7 @@ const validProperties = [
 	'loved',
 	'hated',
 	'doublevoter'
-]
+];
 
 /*eslint-disable no-extend-native*/
 Array.prototype.contains = function(element){
