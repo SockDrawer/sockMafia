@@ -291,7 +291,7 @@ describe('nouveau dao/MafiaGame', () => {
             secondResult.should.not.equal(firstResult);
         });
     });
-     describe('getter allPlayers', () => {
+    describe('getter allPlayers', () => {
         let game = null;
         beforeEach(() => game = new MafiaGame({}));
         it('should be empty array for no players', () => {
@@ -310,7 +310,7 @@ describe('nouveau dao/MafiaGame', () => {
             });
             game.allPlayers.forEach((player) => player.should.be.an.instanceOf(MafiaUser));
         });
-         it('should contain all players', () => {
+        it('should contain all players', () => {
             game._data.deadPlayers = Array.apply(null, Array(2)).map((_, i) => {
                 return {
                     username: `user${i}`
@@ -328,7 +328,7 @@ describe('nouveau dao/MafiaGame', () => {
         it('should shuffle the array of `MafiaUser`s', () => {
             const numbers = Array.apply(null, Array(20)).map((_, i) => i);
             const expected = numbers.map((n) => `user${n}`).join(' ');
-             game._data.deadPlayers = Array.apply(null, Array(10)).map((_, i) => {
+            game._data.deadPlayers = Array.apply(null, Array(10)).map((_, i) => {
                 return {
                     username: `user${i}`
                 };
@@ -967,7 +967,7 @@ describe('nouveau dao/MafiaGame', () => {
         it('should return MafiaActions', () => {
             game._data.livePlayers.accalia = 1;
             game._data.livePlayers.sockbot = 1;
-            game.getActions().forEach((action)=>{
+            game.getActions().forEach((action) => {
                 action.should.be.an.instanceOf(MafiaAction);
             });
         });
