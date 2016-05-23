@@ -194,6 +194,47 @@ describe('MafiaBot', function () {
 			});
 		});
 
+		it('Should allow no lynching', () => {
+			const command = {
+				post: {
+					username: 'tehninja',
+					'topic_id': 1,
+					'post_number': 11
+				},
+				args: [''],
+				input: '!noLynch'
+			};
+
+			//Spies
+			sandbox.spy(game, 'registerAction');
+			return playerController.nolynchHandler(command).then(() => {
+				game.registerAction.called.should.equal(true);
+
+				view.respond.called.should.equal(true);
+				view.respond.firstCall.args[1].should.include('@tehninja voted to not lynch');
+			});
+		});
+
+		it('Should allow un-nolynching', () => {
+			const command = {
+				post: {
+					username: 'tehninja',
+					'topic_id': 1,
+					'post_number': 12
+				},
+				args: ['@dreikin'],
+				input: '!vote @dreikin'
+			};
+
+			//Spies
+			sandbox.spy(game, 'registerAction');
+			return playerController.voteHandler(command).then(() => {
+				view.reportError.called.should.equal(false);
+				game.registerAction.called.should.equal(true);
+				view.respondInThread.firstCall.args[1].should.include('@tehninja voted for @dreikin');
+			});
+		});
+
 		/*TODO: No-lynch*/
 
 		it('Should auto-lynch', () => {

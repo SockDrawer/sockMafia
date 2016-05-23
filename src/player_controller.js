@@ -150,6 +150,26 @@ class MafiaPlayerController {
 		}
 	}
 
+
+	verifyVotePreconditions (game, voter, target) {
+		if (!game.isActive) {
+			return Promise.reject('Incorrect game state');
+		}
+
+		if (!game.isDay) {
+			return Promise.reject('It is not day.');
+		}
+
+		if (!voter.isAlive) {
+			return Promise.reject('Voter not alive');
+		}
+
+		if (target && !target.isAlive) {
+			return Promise.reject('Target not alive');
+		}
+		return Promise.resolve();
+	}
+
 	/**
 	  * nolynch: Vote to not lynch this day
 	  * Must be used in the game thread.
@@ -198,7 +218,6 @@ class MafiaPlayerController {
 			} catch (_) {
 				throw new Error('Voter not in game');
 			}
-
 			return this.verifyVotePreconditions(game, voter, null);
 		})
 		.then(() => game.registerAction(post, actor, undefined, 'vote'))
@@ -362,26 +381,6 @@ class MafiaPlayerController {
 		
 		return this.doVote(game, post, voter, target, command.input, 1);
 	};
-
-	verifyVotePreconditions (game, voter, target) {
-		if (!game.isActive) {
-			return Promise.reject('Incorrect game state');
-		}
-
-		if (!game.isDay) {
-			return Promise.reject('It is not day.');
-		}
-
-		if (!voter.isAlive) {
-			return Promise.reject('Voter not alive');
-		}
-
-		if (target && !target.isAlive) {
-			return Promise.reject('Target not alive');
-		}
-
-		return Promise.resolve();
-	}
 
 
 	doVote (gameId, post, actor, target, input, voteNum) {
