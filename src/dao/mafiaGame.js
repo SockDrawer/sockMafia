@@ -86,6 +86,11 @@ class MafiaGame {
         shuffle(players);
         return players.map((player) => new MafiaUser(this._data.deadPlayers[player], this));
     }
+    get allPlayers() {
+        const players = this.livePlayers.concat(this.deadPlayers);
+        shuffle(players);
+        return players;
+    }
     get moderators() {
         const mods = Object.keys(this._data.moderators);
         return mods.map((mod) => new MafiaUser(this._data.moderators[mod], this));

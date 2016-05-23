@@ -291,6 +291,59 @@ describe('nouveau dao/MafiaGame', () => {
             secondResult.should.not.equal(firstResult);
         });
     });
+     describe('getter allPlayers', () => {
+        let game = null;
+        beforeEach(() => game = new MafiaGame({}));
+        it('should be empty array for no players', () => {
+            game.allPlayers.should.eql([]);
+        });
+        it('should be an array of `MafiaUser`s', () => {
+            game._data.deadPlayers = Array.apply(null, Array(10)).map((_, i) => {
+                return {
+                    username: `user${i}`
+                };
+            });
+            game._data.livePlayers = Array.apply(null, Array(10)).map((_, i) => {
+                return {
+                    username: `user${i}`
+                };
+            });
+            game.allPlayers.forEach((player) => player.should.be.an.instanceOf(MafiaUser));
+        });
+         it('should contain all players', () => {
+            game._data.deadPlayers = Array.apply(null, Array(2)).map((_, i) => {
+                return {
+                    username: `user${i}`
+                };
+            });
+            game._data.livePlayers = Array.apply(null, Array(3)).map((_, i) => {
+                return {
+                    username: `user${i}`
+                };
+            });
+            const players = game.allPlayers;
+            players.length.should.equal(5);
+        });
+
+        it('should shuffle the array of `MafiaUser`s', () => {
+            const numbers = Array.apply(null, Array(20)).map((_, i) => i);
+            const expected = numbers.map((n) => `user${n}`).join(' ');
+             game._data.deadPlayers = Array.apply(null, Array(10)).map((_, i) => {
+                return {
+                    username: `user${i}`
+                };
+            });
+            game._data.livePlayers = Array.apply(null, Array(10)).map((_, i) => {
+                return {
+                    username: `user${10*i}`
+                };
+            });
+            const firstResult = game.allPlayers.map(player => player.username).join(' ');
+            firstResult.should.not.equal(expected);
+            const secondResult = game.allPlayers.map(player => player.username).join(' ');
+            secondResult.should.not.equal(firstResult);
+        });
+    });
     describe('getter moderators', () => {
         let game = null;
         beforeEach(() => game = new MafiaGame({}));
