@@ -491,6 +491,8 @@ describe('player controller', () => {
 				input: '!for @noLunch'
 			};
 
+			sandbox.stub(mockdao, 'getGameByTopicId').rejects();
+
 			return playerController.nolynchHandler(command).then(() => {
 				view.respondInThread.called.should.be.false;			
 			});
@@ -581,8 +583,42 @@ describe('player controller', () => {
 		});
 	});
 
-/*
+
 	describe('join()', () => {
+
+		let mockGame, mockUser, mockdao, playerController;
+		beforeEach(() => {
+
+			mockUser = {
+				username: 'tehNinja',
+				getPlayerProperty: () => 1,
+				isAlive: true
+			};
+
+			mockGame = {
+				allPlayers: [],
+				killPlayer: () => 1,
+				nextPhase: () => 1,
+				registerAction: () => Promise.resolve('Ok'),
+				revokeAction: () => Promise.resolve('Ok'),
+				getPlayer: () => 1,
+				addPlayer: () => Promise.resolve(),
+				topicId: 12,
+				isActive: false,
+				isDay: true
+			};
+
+			mockdao = {
+				getGameByTopicId: () => Promise.resolve(mockGame)
+			};
+
+			playerController = new PlayerController(mockdao, null);
+			sandbox.stub(view, 'respondInThread');
+			sandbox.stub(view, 'respond');
+			sandbox.stub(view, 'reportError');
+		});
+
+
 		it ('should remain silent when no game is in session', () => {
 			const command = {
 				post: {
@@ -590,15 +626,13 @@ describe('player controller', () => {
 					'topic_id': 12345,
 					'post_number': 98765
 				},
-				args: ['@noLunch'],
-				input: '!for @noLunch'
+				args: [''],
+				input: '!join'
 			};
 
-			sandbox.stub(view, 'respondInThread');
-			sandbox.stub(view, 'reportError');
-			sandbox.stub(mafiaDAO, 'ensureGameExists').rejects();
+			sandbox.stub(mockdao, 'getGameByTopicId').rejects();
 
-			return mafia.joinHandler(command).then(() => {
+			return playerController.joinHandler(command).then(() => {
 				view.respondInThread.called.should.be.false;
 				view.reportError.called.should.be.false;
 				
@@ -614,18 +648,14 @@ describe('player controller', () => {
 				}
 			};
 
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.prep);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'addPlayerToGame').resolves();
-			sandbox.stub(view, 'respond');
-			sandbox.stub(view, 'reportError');
+			mockGame.allPlayers = [mockUser];
+			sandbox.spy(mockGame, 'addPlayer');
 
-			return mafia.joinHandler(command).then( () => {
-				mafiaDAO.addPlayerToGame.called.should.be.false;
+			return playerController.joinHandler(command).then( () => {
+				mockGame.addPlayer.called.should.be.false;
 				view.reportError.called.should.be.true;
 				
-				const output = view.reportError.getCall(0).args[2];
+				const output = view.reportError.getCall(0).args[2].toString();
 				output.should.include('You are already in this game, @tehNinja!');
 			});
 		});
@@ -639,15 +669,9 @@ describe('player controller', () => {
 				}
 			};
 
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.prep);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(false);
-			sandbox.stub(mafiaDAO, 'addPlayerToGame').rejects('I AM ERROR');
-			
-			sandbox.stub(view, 'respond');
-			sandbox.stub(view, 'reportError');
+			sandbox.stub(mockGame, 'addPlayer').rejects('Error!');
 
-			return mafia.joinHandler(command).then( () => {
+			return playerController.joinHandler(command).then( () => {
 				view.reportError.called.should.be.true;
 				
 				const preface = view.reportError.getCall(0).args[1];
@@ -664,19 +688,14 @@ describe('player controller', () => {
 					'post_number': 98765
 				}
 			};
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(false);
-			sandbox.stub(mafiaDAO, 'addPlayerToGame').resolves();
+			mockGame.isActive = true;
+			sandbox.spy(mockGame, 'addPlayer');
 
-			sandbox.stub(view, 'respond');
-			sandbox.stub(view, 'reportError');
-
-			return mafia.joinHandler(command).then( () => {
-				mafiaDAO.addPlayerToGame.called.should.be.false;
+			return playerController.joinHandler(command).then( () => {
+				mockGame.addPlayer.called.should.be.false;
 				view.reportError.called.should.be.true;
 				
-				const output = view.reportError.getCall(0).args[2];
+				const output = view.reportError.getCall(0).args[2].toString();
 				output.should.include('Cannot join game in progress.');
 			});
 		});
@@ -689,14 +708,8 @@ describe('player controller', () => {
 					'post_number': 98765
 				}
 			};
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.prep);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(false);
-			sandbox.stub(mafiaDAO, 'addPlayerToGame').resolves();
-
-			sandbox.stub(view, 'respond');
-
-			return mafia.joinHandler(command).then( () => {
+			
+			return playerController.joinHandler(command).then( () => {
 				view.respond.called.should.be.true;
 				
 				const output = view.respond.getCall(0).args[1];
@@ -704,7 +717,7 @@ describe('player controller', () => {
 			});
 		});
 	});
-	
+	/*
 	describe('list-all-players()', () => {
 		it ('should remain silent when no game is in session', () => {
 			const command = {

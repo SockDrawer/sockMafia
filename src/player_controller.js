@@ -466,26 +466,32 @@ class MafiaPlayerController {
 	  * @returns {Promise}        A promise that will resolve when the game is ready
 	  */
 	joinHandler(command) {
-		const id = command.post.topic_id;
+		const gameId = command.post.topic_id;
 		const player = command.post.username;
+		let game;
 
-		logDebug('Received join request from ' + player + ' in game ' + id);
-		
-		return dao.ensureGameExists(id)
+		logDebug('Received join request from ' + player + ' in game ' + gameId);
+
+		return this.dao.getGameByTopicId(gameId)
 			.catch(() => {
-				logWarning('Ignoring message in nonexistant game thread ' + id);
+				logWarning('Ignoring message in nonexistant game thread ' + game);
 				throw(E_NOGAME);
 			})
-			.then(() => dao.getGameStatus(id))
-			.then((status) => {
-				if (status === dao.gameStatus.prep) {
-					return Promise.resolve();
+			.then((g) => {
+				game = g;
+				if (game.isActive) {
+					return Promise.reject('Cannot join game in progress.');
 				}
-				return Promise.reject('Cannot join game in progress.');
+				if (game.allPlayers.map((p) => p.username).indexOf(player) >= 0) {
+					return Promise.reject('You are already in this game, @' + player + '!');
+				}
+				return game.addPlayer(player);
 			})
-			.then(() => validator.mustBeFalse(dao.isPlayerInGame, [id, player], 'You are already in this game, @' + player + '!'))
-			.then(() => dao.addPlayerToGame(id, player))
-			.then(() => view.respond(command, 'Welcome to the game, @' + player))
+			.then(() => {
+				view.respond(command, 'Welcome to the game, @' + player);
+				logDebug('Added ' + player);
+				return true;
+			})
 			.catch((err) => {
 				if (err === E_NOGAME) {
 					return Promise.resolve();
