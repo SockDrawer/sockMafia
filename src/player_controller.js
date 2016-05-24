@@ -516,32 +516,24 @@ class MafiaPlayerController {
 	  */
 	listPlayersHandler (command) {
 		const id = command.post.topic_id;
+		let game;
 
 		logDebug('Received list request from ' + command.post.username + ' in game ' + id);
 
-		return dao.ensureGameExists(id)
+		return this.dao.getGameByTopicId(id)
 			.catch(() => {
-				logWarning('Ignoring message in nonexistant game thread ' + id);
+				logWarning('Ignoring message in nonexistant game thread ' + game);
 				throw(E_NOGAME);
 			})
-			.then(() => dao.getAllPlayers(id))
-			.then( (rows) => {
-				let alive = [];
-				const mods = [];
+			.then((g) => {
+				game = g;
 
-				rows.forEach((row) => {
-					if (row.playerStatus === dao.playerStatus.alive) {
-						alive.push(row.player.properName);
-					}
-
-					if (row.playerStatus === dao.playerStatus.mod) {
-						mods.push(row.player.properName);
-					}
-				});
-
+				//Store a reference otherwise it'll shuffle every time we dip
+				const alive = game.livePlayers;
+				const mods =  game.moderators;
+				
 				const numLiving = alive.length;
 				const numMods = mods.length;
-				alive = shuffle(alive);
 
 				let output = '##Player List\n';
 				output += '###Living:\n';
@@ -549,7 +541,7 @@ class MafiaPlayerController {
 					output += 'Nobody! Aren\'t you special?\n';
 				} else {
 					for (let i = 0; i < numLiving; i++) {
-						output += '- ' + alive[i] + '\n';
+						output += '- ' + alive[i].username + '\n';
 					}
 				}
 
@@ -558,17 +550,20 @@ class MafiaPlayerController {
 					output += 'None. Weird.';
 				} else {
 					mods.forEach((mod) => {
-						output += '- ' + mod + '\n';
+						output += '- ' + mod.username + '\n';
 					});
 				}
 
 				view.respond(command, output);
 				return Promise.resolve();
-			}).catch((err) => {
+			})
+			.catch((err) => {
 				if (err === E_NOGAME) {
 					return Promise.resolve();
 				}
+
 				view.reportError(command, 'Error resolving list: ', err);
+				logRecoveredError('List failed ' + err);
 			});
 	};
 
@@ -586,74 +581,67 @@ class MafiaPlayerController {
 	  * @returns {Promise}        A promise that will resolve when the game is ready
 	  */
 	listAllPlayersHandler(command) {
+		let game;
 		const id = command.post.topic_id;
 
 		logDebug('Received list all request from ' + command.post.username + ' in game ' + id);
 
-		return dao.ensureGameExists(id)
-		.catch(() => {
-			logWarning('Ignoring message in nonexistant game thread ' + id);
-			throw(E_NOGAME);
-		})
-		.then(() => dao.getAllPlayers(id))
-		.then( (rows) => {
-			let alive = [];
-			let dead = [];
-			const mods = [];
+		return this.dao.getGameByTopicId(id)
+			.catch(() => {
+				logWarning('Ignoring message in nonexistant game thread ' + game);
+				throw(E_NOGAME);
+			})
+			.then((g) => {
+				game = g;
 
-			rows.forEach((row) => {
-				if (row.playerStatus === dao.playerStatus.alive) {
-					alive.push(row.player.properName);
-				} else if (row.playerStatus === dao.playerStatus.dead) {
-					dead.push(row.player.properName);
-				} else if (row.playerStatus === dao.playerStatus.mod) {
-					mods.push(row.player.properName);
+				//Store a reference otherwise it'll shuffle every time we dip
+				const alive = game.livePlayers;
+				const mods =  game.moderators;
+				const dead = game.deadPlayers;
+				
+				const numLiving = alive.length;
+				const numDead = dead.length;
+				const numMods = mods.length;
+
+				let output = '##Player List\n';
+				output += '###Living:\n';
+				if (numLiving <= 0) {
+					output += 'Nobody! Aren\'t you special?\n';
+				} else {
+					for (let i = 0; i < numLiving; i++) {
+						output += '- ' + alive[i].username + '\n';
+					}
 				}
-			});
 
-			const numLiving = alive.length;
-			const numDead = dead.length;
-			const numMod = mods.length;
-			
-			alive = shuffle(alive);
-			dead = shuffle(dead);
-
-			let output = '##Player List\n';
-			output += '###Living:\n';
-			if (numLiving <= 0) {
-				output += 'Nobody! Aren\'t you special?\n';
-			} else {
-				for (let i = 0; i < numLiving; i++) {
-					output += '- ' + alive[i] + '\n';
+				output += '\n###Dead:\n';
+				if (numDead <= 0) {
+					output += 'Nobody! Aren\'t you special?\n';
+				} else {
+					for (let i = 0; i < numDead; i++) {
+						output += '- ' + dead[i].username + '\n';
+					}
 				}
-			}
 
-			output += '\n###Dead:\n';
-			if (numDead <= 0) {
-				output += 'Nobody! Aren\'t you special?\n';
-			} else {
-				for (let i = 0; i < numDead; i++) {
-					output += '- ' + dead[i] + '\n';
+				output += '###Mod(s):\n';
+				if (numMods <= 0) {
+					output += 'None. Weird.';
+				} else {
+					mods.forEach((mod) => {
+						output += '- ' + mod.username + '\n';
+					});
 				}
-			}
 
-			output += '###Mod(s):\n';
-			if (numMod <= 0) {
-				output += 'None. Weird.';
-			} else {
-				mods.forEach((mod) => {
-					output += '- ' + mod + '\n';
-				});
-			}
-
-			view.respond(command, output);
-			return Promise.resolve();
-		}).catch((err) => {
-			if (err === E_NOGAME) {
+				view.respond(command, output);
 				return Promise.resolve();
-			}
-			view.reportError(command, 'Error resolving list: ', err);
-		});
+			})
+			.catch((err) => {
+				if (err === E_NOGAME) {
+					return Promise.resolve();
+				}
+
+				view.reportError(command, 'Error resolving list: ', err);
+				logRecoveredError('List failed ' + err);
+			});
 	};
 
 	/**
