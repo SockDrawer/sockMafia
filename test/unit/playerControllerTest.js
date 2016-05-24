@@ -63,7 +63,6 @@ describe('player controller', () => {
 			playerController = new PlayerController(null);
 		});
 
-
 		describe('Votes to lynch', () => {
 			it('should return 2 for 2 players', () => {
 				mockGame.livePlayers = ['Lars', 'Sadie'];
@@ -720,7 +719,7 @@ describe('player controller', () => {
 		});
 	});
 	
-	describe('list functions', () => {
+	describe('list players', () => {
 
 		let mockGame, mockdao, playerController, mockUsers;
 
@@ -937,8 +936,109 @@ describe('player controller', () => {
 			});
 		});
 	});
-/*
-	describe('list-votes()', () => {
+
+	describe('Voting record', () => {
+		let mockGame, mockdao, playerController, mockUsers, mockActions;
+
+		beforeEach(() => {
+			mockUsers = {
+				yamikuronue: {
+					username: 'Yamikuronue',
+					getProperties: () => [],
+					isAlive: true,
+					isModerator: false
+				},
+
+				accalia: {
+					username: 'Accalia',
+					getProperties: () => [],
+					isAlive: true,
+					isModerator: false
+				},
+
+				ninja: {
+					username: 'TehNinja',
+					getProperties: () => [],
+					isAlive: true,
+					isModerator: false
+				},
+
+				dreikin: {
+					username: 'Dreikin',
+					getProperties: () => [],
+					isAlive: true,
+					isModerator: false
+				}
+			};
+
+			mockActions = [
+				{
+					postId: 1,
+					actor: mockUsers.accalia,
+					target: mockUsers.yamikuronue,
+					action: 'vote',
+					revokedId: 2,
+					isCurrent: false
+				},
+				{
+					postId: 3,
+					actor: mockUsers.accalia,
+					target: mockUsers.dreikin,
+					action: 'vote',
+					revokedId: undefined,
+					isCurrent: true
+				},
+				{
+					postId: 4,
+					actor: mockUsers.yamikuronue,
+					target: mockUsers.dreikin,
+					action: 'vote',
+					revokedId: undefined,
+					isCurrent: true
+				},
+				{
+					postId: 5,
+					actor: mockUsers.dreikin,
+					target: mockUsers.yamikuronue,
+					action: 'boogie',
+					revokedId: undefined,
+					isCurrent: true
+				}
+			];
+
+			mockGame = {
+				allPlayers: [mockUsers.yamikuronue, mockUsers.dreikin, mockUsers.accalia, mockUsers.ninja],
+				livePlayers: [mockUsers.yamikuronue, mockUsers.dreikin, mockUsers.accalia, mockUsers.ninja],
+				deadPlayers: [],
+				moderators: [],
+				killPlayer: () => 1,
+				nextPhase: () => 1,
+				registerAction: () => Promise.resolve('Ok'),
+				revokeAction: () => Promise.resolve('Ok'),
+				getPlayer: (player) => {
+							return mockUsers[player.toLowerCase()];
+						},
+				addPlayer: () => Promise.resolve(),
+				getActions: () => mockActions,
+				topicId: 12,
+				isActive: true,
+				isDay: true
+			};
+
+			mockdao = {
+				getGameByTopicId: () => Promise.resolve(mockGame)
+			};
+
+			playerController = new PlayerController(mockdao, null);
+			sandbox.stub(view, 'respondInThread');
+			sandbox.stub(view, 'respondWithTemplate');
+			sandbox.stub(view, 'respond');
+			sandbox.stub(view, 'reportError');
+		});
+
+		describe('list-votes()', () => {
+		
+
 		it ('should remain silent when no game is in session', () => {
 			const command = {
 				post: {
@@ -950,19 +1050,15 @@ describe('player controller', () => {
 				input: '!for @noLunch'
 			};
 
-			sandbox.stub(view, 'respondInThread');
-			sandbox.stub(view, 'reportError');
-			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
-			sandbox.stub(mafiaDAO, 'ensureGameExists').rejects();
+			mockGame.isActive = false;
 
-			return mafia.listVotesHandler(command).then(() => {
+			return playerController.listVotesHandler(command).then(() => {
 				view.respondInThread.called.should.be.false;
 				view.reportError.called.should.be.false;
-
 			});
 		});
 
-		it('should output votes', () => {
+		it('should extract who is not voting', () => {
 			const command = {
 				post: {
 					username: 'tehNinja',
@@ -971,60 +1067,19 @@ describe('player controller', () => {
 				}
 			};
 
-			const players = [
-				{player: {'name': 'yamikuronue', properName: 'Yamikuronue'}, 'playerStatus': 'alive'},
-				{player: {'name': 'accalia', properName: 'accalia'}, 'playerStatus': 'alive'}
-			];
-
-
-			const votes = [
-				{
-					target: {
-						name: 'accalia',
-						properName: 'accalia'
-					},
-					player: {
-						name: 'yamikuronue',
-						properName: 'Yamikuronue'
-					},
-					post: 123,
-					isCurrent: true,
-					rescindedAt: null
-				}
-			];
-
-
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(42);
-			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(69);
-			sandbox.stub(mafiaDAO, 'getAllVotesForDaySorted').resolves(votes);
-			sandbox.stub(mafiaDAO, 'getLivingPlayers').resolves(players);
-			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
-			const fakeTemplate = sandbox.stub().returns('Some string output');
-			sandbox.stub(Handlebars, 'compile').returns(fakeTemplate);
-
-			sandbox.stub(view, 'respondWithTemplate');
-
-			return mafia.listVotesHandler(command).then(() => {
+			return playerController.listVotesHandler(command).then(() => {
 				view.respondWithTemplate.called.should.be.true;
 				const dataSent = view.respondWithTemplate.getCall(0).args[1];
 
-				dataSent.numPlayers.should.equal(2);
-				dataSent.notVoting.should.include('accalia');
+				dataSent.numPlayers.should.equal(4);
+				dataSent.notVoting.should.include('Dreikin');
+				dataSent.notVoting.should.include('TehNinja');
 				dataSent.notVoting.should.not.include('Yamikuronue');
-				dataSent.numNotVoting.should.equal(1);
-				dataSent.votes.accalia.names.length.should.equal(1);
-				dataSent.votes.accalia.names.should.include({
-						voter: 'Yamikuronue',
-						retracted: false,
-						retractedAt: null,
-						post: 123,
-						game: 12345
-				});
+				dataSent.numNotVoting.should.equal(2);
 			});
 		});
 
-		it('should output outdated votes', () => {
+		it('should output votes and only votes', () => {
 			const command = {
 				post: {
 					username: 'tehNinja',
@@ -1033,73 +1088,14 @@ describe('player controller', () => {
 				}
 			};
 
-			const players = [
-				{player: {'name': 'yamikuronue', properName: 'Yamikuronue'}, 'playerStatus': 'alive'},
-				{player: {'name': 'accalia', properName: 'accalia'}, 'playerStatus': 'alive'}
-			];
-
-
-			const votes = [
-				{
-					target: {
-						name: 'tehninja',
-						properName: 'tehNinja'
-					},
-					player: {
-						name: 'yamikuronue',
-						properName: 'Yamikuronue'
-					},
-					post: 121,
-					isCurrent: false,
-					rescindedAt: 123
-				},
-				{
-					target: {
-						name: 'accalia',
-						properName: 'accalia'
-					},
-					player: {
-						name: 'yamikuronue',
-						properName: 'Yamikuronue'
-					},
-					post: 123,
-					isCurrent: true,
-					rescindedAt: null
-				}
-			];
-
-
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(42);
-			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(69);
-			sandbox.stub(mafiaDAO, 'getAllVotesForDaySorted').resolves(votes);
-			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
-			sandbox.stub(mafiaDAO, 'getLivingPlayers').resolves(players);
-			const fakeTemplate = sandbox.stub().returns('Some string output');
-			sandbox.stub(Handlebars, 'compile').returns(fakeTemplate);
-
-			sandbox.stub(view, 'respondWithTemplate');
-
-			return mafia.listVotesHandler(command).then(() => {
+			return playerController.listVotesHandler(command).then(() => {
 				view.respondWithTemplate.called.should.be.true;
 				const dataSent = view.respondWithTemplate.getCall(0).args[1];
 
-				dataSent.votes.accalia.names.length.should.equal(1);
-				dataSent.votes.accalia.names.should.include({
-						voter: 'Yamikuronue',
-						retracted: false,
-						retractedAt: null,
-						post: 123,
-						game: 12345
-				});
-				dataSent.votes.tehNinja.names.length.should.equal(1);
-				dataSent.votes.tehNinja.names.should.include({
-						voter: 'Yamikuronue',
-						retracted: true,
-						retractedAt: 123,
-						post: 121,
-						game: 12345
-				});
+				dataSent.votes.Yamikuronue.votes.should.include(mockActions[0]);
+				dataSent.votes.Yamikuronue.votes.should.not.include(mockActions[3]);
+				dataSent.votes.Dreikin.votes.should.include(mockActions[1]);
+				dataSent.votes.Dreikin.votes.should.include(mockActions[2]);
 			});
 		});
 
@@ -1112,45 +1108,10 @@ describe('player controller', () => {
 				}
 			};
 
-			const players = [
-				{player: {'name': 'yamikuronue', properName: 'Yamikuronue'}, 'playerStatus': 'alive'},
-				{player: {'name': 'accalia', properName: 'accalia'}, 'playerStatus': 'alive'}
-			];
-
-
-			const votes = [
-				{
-					target: {
-						name: 'accalia',
-						properName: 'accalia'
-					},
-					player: {
-						name: 'yamikuronue',
-						properName: 'Yamikuronue'
-					},
-					post: 123,
-					isCurrent: true,
-					rescindedAt: null
-				}
-			];
-
-
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(42);
-			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(69);
-			sandbox.stub(mafiaDAO, 'getAllVotesForDaySorted').resolves(votes);
-			sandbox.stub(mafiaDAO, 'getLivingPlayers').resolves(players);
-			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
-			const fakeTemplate = sandbox.stub().returns('Some string output');
-			sandbox.stub(Handlebars, 'compile').returns(fakeTemplate);
-
-			sandbox.stub(view, 'respondWithTemplate');
-
-			return mafia.listVotesHandler(command).then(() => {
+			return playerController.listVotesHandler(command).then(() => {
 				view.respondWithTemplate.called.should.be.true;
 				const dataSent = view.respondWithTemplate.getCall(0).args[1];
-
-				dataSent.votes.accalia.mod.should.equal(0);
+				dataSent.votes.Dreikin.mod.should.equal(0);
 			});
 		});
 
@@ -1163,45 +1124,12 @@ describe('player controller', () => {
 				}
 			};
 
-			const players = [
-				{player: {'name': 'yamikuronue', properName: 'Yamikuronue'}, 'playerStatus': 'alive'},
-				{player: {'name': 'accalia', properName: 'accalia'}, 'playerStatus': 'alive'}
-			];
-
-
-			const votes = [
-				{
-					target: {
-						name: 'accalia',
-						properName: 'accalia'
-					},
-					player: {
-						name: 'yamikuronue',
-						properName: 'Yamikuronue'
-					},
-					post: 123,
-					isCurrent: true,
-					rescindedAt: null
-				}
-			];
-
-
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(42);
-			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(69);
-			sandbox.stub(mafiaDAO, 'getAllVotesForDaySorted').resolves(votes);
-			sandbox.stub(mafiaDAO, 'getLivingPlayers').resolves(players);
-			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('loved');
-			const fakeTemplate = sandbox.stub().returns('Some string output');
-			sandbox.stub(Handlebars, 'compile').returns(fakeTemplate);
-
-			sandbox.stub(view, 'respondWithTemplate');
-
-			return mafia.listVotesHandler(command).then(() => {
+			sandbox.stub(mockUsers.dreikin, 'getProperties').returns(['loved']);
+			return playerController.listVotesHandler(command).then(() => {
 				view.respondWithTemplate.called.should.be.true;
 				const dataSent = view.respondWithTemplate.getCall(0).args[1];
 
-				dataSent.votes.accalia.mod.should.equal(1);
+				dataSent.votes.Dreikin.mod.should.equal(1);
 			});
 		});
 
@@ -1214,49 +1142,16 @@ describe('player controller', () => {
 				}
 			};
 
-			const players = [
-				{player: {'name': 'yamikuronue', properName: 'Yamikuronue'}, 'playerStatus': 'alive'},
-				{player: {'name': 'accalia', properName: 'accalia'}, 'playerStatus': 'alive'}
-			];
-
-
-			const votes = [
-				{
-					target: {
-						name: 'accalia',
-						properName: 'accalia'
-					},
-					player: {
-						name: 'yamikuronue',
-						properName: 'Yamikuronue'
-					},
-					post: 123,
-					isCurrent: true,
-					rescindedAt: null
-				}
-			];
-
-
-			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
-			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(42);
-			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(69);
-			sandbox.stub(mafiaDAO, 'getAllVotesForDaySorted').resolves(votes);
-			sandbox.stub(mafiaDAO, 'getLivingPlayers').resolves(players);
-			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('hated');
-			const fakeTemplate = sandbox.stub().returns('Some string output');
-			sandbox.stub(Handlebars, 'compile').returns(fakeTemplate);
-
-			sandbox.stub(view, 'respondWithTemplate');
-
-			return mafia.listVotesHandler(command).then(() => {
+			sandbox.stub(mockUsers.dreikin, 'getProperties').returns(['hated']);
+			return playerController.listVotesHandler(command).then(() => {
 				view.respondWithTemplate.called.should.be.true;
 				const dataSent = view.respondWithTemplate.getCall(0).args[1];
 
-				dataSent.votes.accalia.mod.should.equal(-1);
+				dataSent.votes.Dreikin.mod.should.equal(-1);
 			});
 		});
 	});
+});
 
-*/
 });
 

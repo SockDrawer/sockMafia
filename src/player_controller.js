@@ -97,18 +97,25 @@ class MafiaPlayerController {
 	/*Voting helpers*/
 
 	getNumVotesRequired(game, target) {
-		const properties = target.getProperties();
 		const numPlayers = game.livePlayers.length;
 		let numToLynch = Math.ceil((numPlayers + 1) / 2);
 
-		if (properties.indexOf('loved') > -1) {
-			numToLynch += 1;
-		}
-		if (properties.indexOf('hated') > -1) {
-			numToLynch -= 1;
+		if (target) {
+			numToLynch += this.getVoteModifierForTarget(game, target);
 		}
 
 		return numToLynch;
+	}
+
+	getVoteModifierForTarget(game, target) {
+		const properties = target.getProperties();
+		if (properties.indexOf('loved') > -1) {
+			return 1;
+		}
+		if (properties.indexOf('hated') > -1) {
+			return -1;
+		}
+		return 0;
 	}
 
 	getVotingErrorText(reason, voter, target) {
@@ -670,34 +677,38 @@ class MafiaPlayerController {
 			toExecute: 0
 		};
 		const id = command.post.topic_id;
-		logDebug('Received list votes request from ' + command.post.username + ' in game ' + id);
+		let game;
 
-		const currentlyVoting = [];
+		logDebug('Received list request from ' + command.post.username + ' in game ' + id);
 
-		
-		return dao.ensureGameExists(id)
+		return this.dao.getGameByTopicId(id)
 			.catch(() => {
-				logWarning('Ignoring message in nonexistant game thread ' + id);
-				throw E_NOGAME;
+				logWarning('Ignoring message in nonexistant game thread ' + game);
+				throw(E_NOGAME);
 			})
-			.then(() => dao.getCurrentDay(id))
-			.then((day) => {
-				data.day = day;
-				return dao.getNumToLynch(id);
-			}).then((num) => {
-				data.toExecute = num;
-				return dao.getAllVotesForDaySorted(id, data.day);
-			}).then((rows) => {
-				rows.forEach((row) => {
-					const votee = row.target.properName;
-					const voter = row.player.properName;
+			.then((g) => {
+				game = g;
+				data.toExecute = this.getNumVotesRequired(game);
+
+				const actions = game.getActions(); //default settings are fine
+				const currentlyVoting = [];
+
+				actions.forEach((row) => {
+					if (row.action !== 'vote') {
+						return;
+					}
+					const votee = row.target.username;
+					const voter = row.actor.username;
+
+					const mod = this.getVoteModifierForTarget(game, row.target);
 
 					if (!data.votes.hasOwnProperty(votee)) {
 						data.votes[votee] = {
 							target: votee,
 							num: 0,
 							percent: 0,
-							names: []
+							votes: [],
+							mod: mod
 						};
 					}
 
@@ -707,57 +718,33 @@ class MafiaPlayerController {
 						currentlyVoting.push(voter);
 					}
 
-					data.votes[votee].names.push({
+					/*data.votes[votee].names.push({
 						voter: voter,
 						retracted: !row.isCurrent,
-						retractedAt: row.rescindedAt,
-						post: row.post,
+						retractedAt: row.revokedId,
+						post: row.postId,
 						game: id
-					});
+					});*/
+
+					data.votes[votee].votes.push(row);
 				});
-				
-				return dao.getLivingPlayers(id);
-			}).then((rows) => {
-				const players = rows.map((row) => {
-					return row.player.properName;
-				});
-				data.numPlayers = players.length;
-				data.notVoting = players.filter((element) => {
-					return currentlyVoting.indexOf(element) < 0;
-				});
-				data.notVoting = shuffle(data.notVoting);
-				data.numNotVoting = data.notVoting.length;
-				
-				//Add modifiers
-				const pendingLookups = [];
-				let currLookup;
-				players.forEach((target) => {
-					if (data.votes.hasOwnProperty(target)) {
-						currLookup = dao.getPlayerProperty(id, target).then((property) => {
-							let mod;
-							if (property === 'loved') {
-								mod = 1;
-							} else if (property === 'hated') {
-								mod = -1;
-							} else {
-								mod = 0;
-							}
-							
-							data.votes[target].mod = mod;
-						});
-						pendingLookups.push(currLookup);
+
+				game.livePlayers.forEach((player) => {
+					if (currentlyVoting.indexOf(player.username) === -1) {
+						data.notVoting.push(player.username);
+						data.numNotVoting++;
 					}
 				});
-				
-				return Promise.all(pendingLookups);
-			}).then(() => {
+
+				data.numPlayers = game.livePlayers.length;
 				return view.respondWithTemplate('/templates/voteTemplate.handlebars', data, command);
 			})
-			.catch((reason) => {
-				if (reason === E_NOGAME) {
+			.catch((err) => {
+				if (err === E_NOGAME) {
 					return Promise.resolve();
 				}
-				return view.reportError(command, 'Error reporting votes: ', reason);
+				view.reportError(command, 'Error resolving list: ', err);
+				logRecoveredError('List failed ' + err);
 			});
 	};
 
