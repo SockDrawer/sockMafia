@@ -3,7 +3,7 @@
 
 const chai = require('chai'),
 	sinon = require('sinon');
-	
+
 //promise library plugins
 require('sinon-as-promised');
 require('chai-as-promised');
@@ -45,12 +45,12 @@ describe('mod controller', () => {
 				nextPhase: () => 1,
 				getActions: () => 1,
 				getPlayer: (player) => {
-					if (player === 'God') { 
-						return mockUser; 
+					if (player === 'God') {
+						return mockUser;
 					}
 
-					if (player === 'Margaret') { 
-						return mockTarget; 
+					if (player === 'Margaret') {
+						return mockTarget;
 					}
 					throw new Error('No such player: ' + player);
 				},
@@ -90,13 +90,13 @@ describe('mod controller', () => {
 			};
 
 			mockUser.isModerator = false;
-			
+
 			return modController.killHandler(command).then( () => {
 				const output = view.reportError.getCall(0).args[2];
 				output.should.include('You are not a moderator');
 			});
 		});
-		
+
 		it('Should not kill dead players', () => {
 			const command = {
 				post: {
@@ -118,7 +118,7 @@ describe('mod controller', () => {
 				output.should.include('Target not alive');
 			});
 		});
-		
+
 		it('Should not kill players not in the game', () => {
 			const command = {
 				post: {
@@ -133,14 +133,14 @@ describe('mod controller', () => {
 
 			sandbox.stub(mockGame, 'getPlayer').returns(mockUser).withArgs('Margaret').throws('NoSuchPlayer');
 			sandbox.spy(mockGame, 'killPlayer');
-			
+
 			return modController.killHandler(command).then( () => {
 				mockGame.killPlayer.called.should.be.false;
 				const output = view.reportError.getCall(0).args[2];
 				output.toString().should.include('Target not in game');
 			});
 		});
-		
+
 		it('Should report errors', () => {
 			const command = {
 				post: {
@@ -162,7 +162,7 @@ describe('mod controller', () => {
 				output.toString().should.include('an error occurred');
 			});
 		});
-		
+
 		it('Should kill players', () => {
 			const command = {
 				post: {
@@ -181,7 +181,7 @@ describe('mod controller', () => {
 				results: 'Killed @Margaret',
 				game: 'testMafia'
 			} ;
-			
+
 			return modController.killHandler(command).then( () => {
 				mockGame.killPlayer.calledWith('Margaret').should.be.true;
 				const output = view.respondWithTemplate.getCall(0).args[1];
@@ -189,7 +189,7 @@ describe('mod controller', () => {
 			});
 		});
 	});
-	
+
 	describe('new-day()', () => {
 		let mockGame, mockUser, mockdao, modController;
 
@@ -233,14 +233,14 @@ describe('mod controller', () => {
 			return modController.dayHandler(command).then( () => {
 				//Game actions
 				mockGame.nextPhase.called.should.equal(false);
-				
+
 				//Output back to mod
 				view.reportError.calledWith(command).should.be.true;
 				const modOutput = view.reportError.getCall(0).args[2].toString();
 				modOutput.should.include('You are not a moderator');
 			});
 		});
-		
+
 		it('Should reject non-existant game', () => {
 			const command = {
 				post: {
@@ -252,8 +252,8 @@ describe('mod controller', () => {
 
 			sandbox.stub(mockdao, 'getGameByTopicId').rejects('No such game');
 			sandbox.spy(mockGame, 'nextPhase');
-			
-			return modController.dayHandler(command).then( () => {			
+
+			return modController.dayHandler(command).then( () => {
 				//Output back to mod
 				view.reportError.calledWith(command).should.be.true;
 				const modOutput = view.reportError.getCall(0).args[2];
@@ -276,19 +276,19 @@ describe('mod controller', () => {
 			return modController.dayHandler(command).then( () => {
 				//Game actions
 				mockGame.nextPhase.called.should.be.true;
-				
+
 				//Output back to mod
 				view.respond.calledWith(command).should.be.true;
 				const modOutput = view.respond.getCall(0).args[1];
 				modOutput.should.include('Incremented stage for testMafia');
-				
+
 				//Output to game
 				view.respondWithTemplate.called.should.not.be.true;
 
 			});
 		});
 	});
-	
+
 	describe('set()', () => {
 
 		let mockGame, mockUser, mockTarget, mockdao, modController;
@@ -316,12 +316,12 @@ describe('mod controller', () => {
 				nextPhase: () => 1,
 				getActions: () => 1,
 				getPlayer: (player) => {
-						if (player === 'God') { 
-							return mockUser; 
+						if (player === 'God') {
+							return mockUser;
 						}
 
-						if (player === 'Margaret') { 
-							return mockTarget; 
+						if (player === 'Margaret') {
+							return mockTarget;
 						}
 						throw new Error('E_USER_NOT_EXIST');
 					},
@@ -352,8 +352,8 @@ describe('mod controller', () => {
 			};
 
 			mockUser.isModerator = false;
-			
-			
+
+
 			return modController.setHandler(command).then( () => {
 				view.reportError.calledWith(command).should.be.true;
 				const output = view.reportError.getCall(0).args[2];
@@ -382,7 +382,7 @@ describe('mod controller', () => {
 				output.should.include('Target not in game');
 			});
 		});
-		
+
 		it('Should allow loved', () => {
 			const command = {
 				post: {
@@ -402,14 +402,14 @@ describe('mod controller', () => {
 				results: 'Player Margaret is now loved',
 				game: mockGame
 			};
-			
+
 			return modController.setHandler(command).then( () => {
 				view.respondWithTemplate.called.should.be.true;
 				const output = view.respondWithTemplate.getCall(0).args[1];
 				output.should.deep.equal(expected);
 			});
 		});
-		
+
 		it('Should allow hated', () => {
 			const command = {
 				post: {
@@ -428,14 +428,14 @@ describe('mod controller', () => {
 				results: 'Player Margaret is now hated',
 				game: mockGame
 			};
-			
+
 			return modController.setHandler(command).then( () => {
 				view.respondWithTemplate.called.should.be.true;
 				const output = view.respondWithTemplate.getCall(0).args[1];
 				output.should.deep.equal(expected);
 			});
 		});
-		
+
 		it('Should allow doublevoter', () => {
 			const command = {
 				post: {
@@ -448,20 +448,20 @@ describe('mod controller', () => {
 					'doublevoter'
 				]
 			};
-			
+
 			const expected = {
 				command: 'Set property',
 				results: 'Player Margaret is now doublevoter',
 				game: mockGame
 			};
-			
+
 			return modController.setHandler(command).then( () => {
 				view.respondWithTemplate.called.should.be.true;
 				const output = view.respondWithTemplate.getCall(0).args[1];
 				output.should.deep.equal(expected);
 			});
 		});
-		
+
 		it('Should reject doodoohead', () => {
 			const command = {
 				post: {
@@ -483,7 +483,7 @@ describe('mod controller', () => {
 				output.should.include('Valid properties: loved, hated, doublevote');
 			});
 		});
-		
+
 		it('Should bubble up errors', () => {
 			const command = {
 				post: {

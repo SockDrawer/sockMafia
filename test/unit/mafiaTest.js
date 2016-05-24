@@ -137,7 +137,7 @@ describe('mafia', () => {
 			};
 			mafia.internals.configuration = config;
 			mafia.internals.forum = forum;
-			
+
 		});
 		it('should register commands', () => {
 			return mafia.activate().then(() => {

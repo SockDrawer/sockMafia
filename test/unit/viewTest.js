@@ -279,8 +279,8 @@ describe('View', () => {
 	it('should wrap post.reply as respond', () => {
 		return view.respond({
 			post: {
-				topic_id: 123,
-				post_number: 345
+				'topic_id': 123,
+				'post_number': 345
 			}
 		}, 'This is a reply').then(() => {
 			postShim.reply.calledWith(123, 345, 'This is a reply').should.equal(true);
@@ -296,8 +296,8 @@ describe('View', () => {
 	it('should wrap post.reply as reportError', () => {
 		return view.reportError({
 			post: {
-				topic_id: 123,
-				post_number: 345
+				'topic_id': 123,
+				'post_number': 345
 			}
 		}, 'ERR: ', 'This is an error').then(() => {
 			postShim.reply.calledWith(123, 345, 'ERR: This is an error').should.equal(true);
@@ -311,8 +311,8 @@ describe('View', () => {
 		sandbox.stub(Handlebars, 'compile').returns(fakeTemplate);
 		return view.respondWithTemplate('foo.hbrs', data, {
 			post: {
-				topic_id: 123,
-				post_number: 345
+				'topic_id': 123,
+				'post_number': 345
 			}
 		}).then(() => {
 			Handlebars.compile.calledWith('read file').should.equal(true);

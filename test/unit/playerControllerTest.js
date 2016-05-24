@@ -3,7 +3,7 @@
 
 const chai = require('chai'),
 	sinon = require('sinon');
-	
+
 //promise library plugins
 require('sinon-as-promised');
 require('chai-as-promised');
@@ -148,7 +148,7 @@ describe('player controller', () => {
 				return playerController.checkForAutoLynch(mockGame, mockTarget).then(() => {
 					playerController.lynchPlayer.called.should.equal(true);
 				});
-			});			
+			});
 
 			it('should not lynch under threshold-1', () => {
 				sandbox.stub(playerController, 'getNumVotesRequired').returns(2);
@@ -192,12 +192,12 @@ describe('player controller', () => {
 					nextPhase: () => 1,
 					registerAction: () => Promise.resolve('Ok'),
 					getPlayer: (player) => {
-						if (player === 'Lars') { 
-							return mockVoter; 
+						if (player === 'Lars') {
+							return mockVoter;
 						}
 
-						if (player === 'Sadie') { 
-							return mockTarget; 
+						if (player === 'Sadie') {
+							return mockTarget;
 						}
 						throw new Error('No such player: ' + player);
 					},
@@ -229,29 +229,29 @@ describe('player controller', () => {
 
 			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
 				view.respondInThread.called.should.be.true;
-				
+
 				const output = view.respondInThread.getCall(0).args[1];
 				output.should.include('You are not yet a player');
 			});
 		});
-		
+
 		it('should reject votes for non-players', () => {
 			sandbox.stub(mockGame, 'getPlayer').withArgs('Sadie').throws('No such player');
 
 			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
 				view.respondInThread.called.should.be.true;
-				
+
 				const output = view.respondInThread.getCall(0).args[1];
 				output.should.include('your princess is in another castle');
 			});
 		});
-		
+
 		it('should reject votes for the dead', () => {
 			mockTarget.isAlive = false;
 
 			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
 				view.respondInThread.called.should.be.true;
-				
+
 				const output = view.respondInThread.getCall(0).args[1];
 				output.should.include('You would be wise to not speak ill of the dead.');
 			});
@@ -262,18 +262,18 @@ describe('player controller', () => {
 
 			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
 				view.respondInThread.called.should.be.true;
-				
+
 				const output = view.respondInThread.getCall(0).args[1];
 				output.should.include('Aaagh! Ghosts!');
 			});
 		});
-		
+
 		it('should reject votes at night', () => {
 			mockGame.isDay = false;
 
 			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
 				view.respondInThread.called.should.be.true;
-				
+
 				const output = view.respondInThread.getCall(0).args[1];
 				output.should.include('It is not day');
 			});
@@ -285,12 +285,12 @@ describe('player controller', () => {
 
 			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
 				view.respondInThread.called.should.be.true;
-				
+
 				const output = view.respondInThread.getCall(0).args[1];
 				output.should.include(':wtf:');
 			});
 		});
-	
+
 		it('should register your vote', () => {
 			sandbox.spy(mockGame, 'registerAction');
 			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
@@ -304,7 +304,7 @@ describe('player controller', () => {
 		it('should echo your vote when successful', () => {
 			return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
 				view.respondInThread.called.should.be.true;
-				
+
 				const output = view.respondInThread.getCall(0).args[1];
 				output.should.include('@Lars voted for @Sadie');
 			});
@@ -379,7 +379,7 @@ describe('player controller', () => {
 				output.should.include('You are not yet a player.');
 			});
 		});
-		
+
 		it('should reject unvotes from the dead', () => {
 			const command = {
 				post: {
@@ -399,7 +399,7 @@ describe('player controller', () => {
 				output.should.include('You are no longer among the living.');
 			});
 		});
-		
+
 		it('should reject unvotes at night', () => {
 			const command = {
 				post: {
@@ -419,7 +419,7 @@ describe('player controller', () => {
 				output.should.include('It is not day');
 			});
 		});
-		
+
 		it('should rescind your vote', () => {
 			const command = {
 				post: {
@@ -435,10 +435,10 @@ describe('player controller', () => {
 			return playerController.unvoteHandler(command).then(() => {
 				mockGame.revokeAction.called.should.be.true;
 
-				//Args: (postId, actor, target, type, actionToken) 
+				//Args: (postId, actor, target, type, actionToken)
 				const expectedArgs = [98765, 'tehNinja', undefined, 'vote'];
 				mockGame.revokeAction.getCall(0).args.should.deep.equal(expectedArgs);
-				
+
 				view.respond.called.should.be.true;
 
 				const output = view.respond.getCall(0).args[1];
@@ -446,7 +446,7 @@ describe('player controller', () => {
 			});
 		});
 	});
-	
+
 	describe('noLynch()', () => {
 
 		let mockGame, mockVoter, mockdao, playerController;
@@ -494,7 +494,7 @@ describe('player controller', () => {
 			sandbox.stub(mockdao, 'getGameByTopicId').rejects();
 
 			return playerController.nolynchHandler(command).then(() => {
-				view.respondInThread.called.should.be.false;			
+				view.respondInThread.called.should.be.false;
 			});
 		});
 
@@ -517,7 +517,7 @@ describe('player controller', () => {
 				output.should.include('You are not yet a player.');
 			});
 		});
-		
+
 		it('should reject votes from the dead', () => {
 			const command = {
 				post: {
@@ -537,7 +537,7 @@ describe('player controller', () => {
 				output.should.include('You are no longer among the living.');
 			});
 		});
-		
+
 		it('should reject votes at night', () => {
 			const command = {
 				post: {
@@ -574,7 +574,7 @@ describe('player controller', () => {
 				const output = view.respond.getCall(0).args[1];
 				output.should.include('@tehNinja voted to not lynch in post ');
 
-				//Args: (postId, actor, target, type, actionToken) 
+				//Args: (postId, actor, target, type, actionToken)
 				const expectedArgs = [98765, 'tehNinja', undefined, 'vote'];
 				mockGame.registerAction.getCall(0).args.should.deep.equal(expectedArgs);
 
@@ -635,7 +635,7 @@ describe('player controller', () => {
 			return playerController.joinHandler(command).then(() => {
 				view.respondInThread.called.should.be.false;
 				view.reportError.called.should.be.false;
-				
+
 			});
 		});
 
@@ -654,7 +654,7 @@ describe('player controller', () => {
 			return playerController.joinHandler(command).then( () => {
 				mockGame.addPlayer.called.should.be.false;
 				view.reportError.called.should.be.true;
-				
+
 				const output = view.reportError.getCall(0).args[2].toString();
 				output.should.include('You are already in this game, @tehNinja!');
 			});
@@ -673,7 +673,7 @@ describe('player controller', () => {
 
 			return playerController.joinHandler(command).then( () => {
 				view.reportError.called.should.be.true;
-				
+
 				const preface = view.reportError.getCall(0).args[1];
 				preface.should.include('Error when adding to game:');
 			});
@@ -694,7 +694,7 @@ describe('player controller', () => {
 			return playerController.joinHandler(command).then( () => {
 				mockGame.addPlayer.called.should.be.false;
 				view.reportError.called.should.be.true;
-				
+
 				const output = view.reportError.getCall(0).args[2].toString();
 				output.should.include('Cannot join game in progress.');
 			});
@@ -708,10 +708,10 @@ describe('player controller', () => {
 					'post_number': 98765
 				}
 			};
-			
+
 			return playerController.joinHandler(command).then( () => {
 				view.respond.called.should.be.true;
-				
+
 				const output = view.respond.getCall(0).args[1];
 				output.should.include('Welcome to the game, @tehNinja');
 			});
@@ -738,7 +738,7 @@ describe('player controller', () => {
 			return mafia.listAllPlayersHandler(command).then(() => {
 				view.respondInThread.called.should.be.false;
 				view.reportError.called.should.be.false;
-				
+
 			});
 		});
 
@@ -750,7 +750,7 @@ describe('player controller', () => {
 					'post_number': 98765
 				}
 			};
-			
+
 			const players = [
 				{player: {'name': 'yamikuronue', properName: 'Yamikuronue'}, 'playerStatus': 'alive'},
 				{player: {'name': 'accalia', properName: 'accalia'}, 'playerStatus': 'dead'},
@@ -760,19 +760,19 @@ describe('player controller', () => {
 
 			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
 			sandbox.stub(mafiaDAO, 'getAllPlayers').resolves(players);
-			
+
 			sandbox.stub(view, 'respond');
 
 			return mafia.listAllPlayersHandler(command).then(() => {
 				view.respond.called.should.be.true;
-				
+
 				const output = view.respond.getCall(0).args[1];
 				output.should.include('Yamikuronue');
 				output.should.include('accalia');
 				output.should.include('dreikin');
 			});
 		});
-		
+
 		it('should report when no living players exist', () => {
 			//TODO: Probably a 'game over' message?
 			const command = {
@@ -782,7 +782,7 @@ describe('player controller', () => {
 					'post_number': 98765
 				}
 			};
-			
+
 			const players = [
 				{player: {'name': 'yamikuronue', properName: 'Yamikuronue'}, 'playerStatus': 'dead'},
 				{player: {'name': 'accalia', properName: 'accalia'}, 'playerStatus': 'dead'}
@@ -791,17 +791,17 @@ describe('player controller', () => {
 
 			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
 			sandbox.stub(mafiaDAO, 'getAllPlayers').resolves(players);
-			
+
 			sandbox.stub(view, 'respond');
 
 			return mafia.listAllPlayersHandler(command).then(() => {
 				view.respond.called.should.be.true;
-				
+
 				const output = view.respond.getCall(0).args[1];
 				output.should.include('###Living:\nNobody! Aren\'t you special?\n');
 			});
 		});
-		
+
 		it('should report when no dead players exist', () => {
 			const command = {
 				post: {
@@ -810,7 +810,7 @@ describe('player controller', () => {
 					'post_number': 98765
 				}
 			};
-			
+
 			const players = [
 				{player: {'name': 'yamikuronue', properName: 'Yamikuronue'}, 'playerStatus': 'alive'},
 				{player: {'name': 'accalia', properName: 'accalia'}, 'playerStatus': 'alive'},
@@ -820,17 +820,17 @@ describe('player controller', () => {
 
 			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
 			sandbox.stub(mafiaDAO, 'getAllPlayers').resolves(players);
-			
+
 			sandbox.stub(view, 'respond');
 
 			return mafia.listAllPlayersHandler(command).then(() => {
 				view.respond.called.should.be.true;
-				
+
 				const output = view.respond.getCall(0).args[1];
 				output.should.include('###Dead:\nNobody! Aren\'t you special?\n');
 			});
 		});
-		
+
 		it('should report when there are no mods', () => {
 			const command = {
 				post: {
@@ -839,7 +839,7 @@ describe('player controller', () => {
 					'post_number': 98765
 				}
 			};
-			
+
 			const players = [
 				{player: {'name': 'yamikuronue', properName: 'Yamikuronue'}, 'playerStatus': 'alive'},
 				{player: {'name': 'accalia', properName: 'accalia'}, 'playerStatus': 'dead'}
@@ -848,18 +848,18 @@ describe('player controller', () => {
 
 			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
 			sandbox.stub(mafiaDAO, 'getAllPlayers').resolves(players);
-			
+
 			sandbox.stub(view, 'respond');
 
 			return mafia.listAllPlayersHandler(command).then(() => {
 				view.respond.called.should.be.true;
-				
+
 				const output = view.respond.getCall(0).args[1];
 				output.should.include('###Mod(s):\nNone. Weird.');
 			});
 		});
 	});
-	
+
 	describe('list-players()', () => {
 		it ('should remain silent when no game is in session', () => {
 			const command = {
@@ -880,7 +880,7 @@ describe('player controller', () => {
 			return mafia.listPlayersHandler(command).then(() => {
 				view.respondInThread.called.should.be.false;
 				view.reportError.called.should.be.false;
-				
+
 			});
 		});
 
@@ -892,7 +892,7 @@ describe('player controller', () => {
 					'post_number': 98765
 				}
 			};
-			
+
 			const players = [
 				{player: {'name': 'yamikuronue', properName: 'Yamikuronue'}, 'playerStatus': 'alive'},
 				{player: {'name': 'accalia', properName: 'accalia'}, 'playerStatus': 'dead'},
@@ -902,19 +902,19 @@ describe('player controller', () => {
 
 			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
 			sandbox.stub(mafiaDAO, 'getAllPlayers').resolves(players);
-			
+
 			sandbox.stub(view, 'respond');
 
 			return mafia.listPlayersHandler(command).then(() => {
 				view.respond.called.should.be.true;
-				
+
 				const output = view.respond.getCall(0).args[1];
 				output.should.include('Yamikuronue');
 				output.should.not.include('accalia');
 				output.should.include('dreikin');
 			});
 		});
-		
+
 		it('should report lack of living players', () => {
 			const command = {
 				post: {
@@ -923,7 +923,7 @@ describe('player controller', () => {
 					'post_number': 98765
 				}
 			};
-			
+
 			const players = [
 				{player: {'name': 'yamikuronue'}, 'playerStatus': 'dead'},
 				{player: {'name': 'accalia'}, 'playerStatus': 'dead'}
@@ -932,12 +932,12 @@ describe('player controller', () => {
 
 			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
 			sandbox.stub(mafiaDAO, 'getAllPlayers').resolves(players);
-			
+
 			sandbox.stub(view, 'respond');
 
 			return mafia.listPlayersHandler(command).then(() => {
 				view.respond.called.should.be.true;
-				
+
 				const output = view.respond.getCall(0).args[1];
 				output.should.include('Nobody! Aren\'t you special?\n');
 				output.should.not.include('accalia');
@@ -946,7 +946,7 @@ describe('player controller', () => {
 			});
 		});
 	});
-	
+
 	describe('list-votes()', () => {
 		it ('should remain silent when no game is in session', () => {
 			const command = {
@@ -967,7 +967,7 @@ describe('player controller', () => {
 			return mafia.listVotesHandler(command).then(() => {
 				view.respondInThread.called.should.be.false;
 				view.reportError.called.should.be.false;
-				
+
 			});
 		});
 
@@ -979,13 +979,13 @@ describe('player controller', () => {
 					'post_number': 98765
 				}
 			};
-			
+
 			const players = [
 				{player: {'name': 'yamikuronue', properName: 'Yamikuronue'}, 'playerStatus': 'alive'},
 				{player: {'name': 'accalia', properName: 'accalia'}, 'playerStatus': 'alive'}
 			];
 
-			
+
 			const votes = [
 				{
 					target: {
@@ -1001,8 +1001,8 @@ describe('player controller', () => {
 					rescindedAt: null
 				}
 			];
-			
-			
+
+
 			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
 			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(42);
 			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(69);
@@ -1011,13 +1011,13 @@ describe('player controller', () => {
 			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
 			const fakeTemplate = sandbox.stub().returns('Some string output');
 			sandbox.stub(Handlebars, 'compile').returns(fakeTemplate);
-			
+
 			sandbox.stub(view, 'respondWithTemplate');
 
 			return mafia.listVotesHandler(command).then(() => {
 				view.respondWithTemplate.called.should.be.true;
 				const dataSent = view.respondWithTemplate.getCall(0).args[1];
-				
+
 				dataSent.numPlayers.should.equal(2);
 				dataSent.notVoting.should.include('accalia');
 				dataSent.notVoting.should.not.include('Yamikuronue');
@@ -1032,7 +1032,7 @@ describe('player controller', () => {
 				});
 			});
 		});
-		
+
 		it('should output outdated votes', () => {
 			const command = {
 				post: {
@@ -1041,13 +1041,13 @@ describe('player controller', () => {
 					'post_number': 98765
 				}
 			};
-			
+
 			const players = [
 				{player: {'name': 'yamikuronue', properName: 'Yamikuronue'}, 'playerStatus': 'alive'},
 				{player: {'name': 'accalia', properName: 'accalia'}, 'playerStatus': 'alive'}
 			];
 
-			
+
 			const votes = [
 				{
 					target: {
@@ -1076,8 +1076,8 @@ describe('player controller', () => {
 					rescindedAt: null
 				}
 			];
-			
-			
+
+
 			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
 			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(42);
 			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(69);
@@ -1086,7 +1086,7 @@ describe('player controller', () => {
 			sandbox.stub(mafiaDAO, 'getLivingPlayers').resolves(players);
 			const fakeTemplate = sandbox.stub().returns('Some string output');
 			sandbox.stub(Handlebars, 'compile').returns(fakeTemplate);
-			
+
 			sandbox.stub(view, 'respondWithTemplate');
 
 			return mafia.listVotesHandler(command).then(() => {
@@ -1111,7 +1111,7 @@ describe('player controller', () => {
 				});
 			});
 		});
-		
+
 		it('should output mod of 0 for vanilla', () => {
 			const command = {
 				post: {
@@ -1120,13 +1120,13 @@ describe('player controller', () => {
 					'post_number': 98765
 				}
 			};
-			
+
 			const players = [
 				{player: {'name': 'yamikuronue', properName: 'Yamikuronue'}, 'playerStatus': 'alive'},
 				{player: {'name': 'accalia', properName: 'accalia'}, 'playerStatus': 'alive'}
 			];
 
-			
+
 			const votes = [
 				{
 					target: {
@@ -1142,8 +1142,8 @@ describe('player controller', () => {
 					rescindedAt: null
 				}
 			];
-			
-			
+
+
 			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
 			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(42);
 			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(69);
@@ -1152,17 +1152,17 @@ describe('player controller', () => {
 			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('vanilla');
 			const fakeTemplate = sandbox.stub().returns('Some string output');
 			sandbox.stub(Handlebars, 'compile').returns(fakeTemplate);
-			
+
 			sandbox.stub(view, 'respondWithTemplate');
-			
+
 			return mafia.listVotesHandler(command).then(() => {
 				view.respondWithTemplate.called.should.be.true;
 				const dataSent = view.respondWithTemplate.getCall(0).args[1];
-				
+
 				dataSent.votes.accalia.mod.should.equal(0);
 			});
 		});
-		
+
 		it('should output mod of +1 for loved', () => {
 			const command = {
 				post: {
@@ -1171,13 +1171,13 @@ describe('player controller', () => {
 					'post_number': 98765
 				}
 			};
-			
+
 			const players = [
 				{player: {'name': 'yamikuronue', properName: 'Yamikuronue'}, 'playerStatus': 'alive'},
 				{player: {'name': 'accalia', properName: 'accalia'}, 'playerStatus': 'alive'}
 			];
 
-			
+
 			const votes = [
 				{
 					target: {
@@ -1193,8 +1193,8 @@ describe('player controller', () => {
 					rescindedAt: null
 				}
 			];
-			
-			
+
+
 			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
 			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(42);
 			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(69);
@@ -1203,17 +1203,17 @@ describe('player controller', () => {
 			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('loved');
 			const fakeTemplate = sandbox.stub().returns('Some string output');
 			sandbox.stub(Handlebars, 'compile').returns(fakeTemplate);
-			
+
 			sandbox.stub(view, 'respondWithTemplate');
-			
+
 			return mafia.listVotesHandler(command).then(() => {
 				view.respondWithTemplate.called.should.be.true;
 				const dataSent = view.respondWithTemplate.getCall(0).args[1];
-				
+
 				dataSent.votes.accalia.mod.should.equal(1);
 			});
 		});
-		
+
 		it('should output mod of -1 for hated', () => {
 			const command = {
 				post: {
@@ -1222,13 +1222,13 @@ describe('player controller', () => {
 					'post_number': 98765
 				}
 			};
-			
+
 			const players = [
 				{player: {'name': 'yamikuronue', properName: 'Yamikuronue'}, 'playerStatus': 'alive'},
 				{player: {'name': 'accalia', properName: 'accalia'}, 'playerStatus': 'alive'}
 			];
 
-			
+
 			const votes = [
 				{
 					target: {
@@ -1244,8 +1244,8 @@ describe('player controller', () => {
 					rescindedAt: null
 				}
 			];
-			
-			
+
+
 			sandbox.stub(mafiaDAO, 'ensureGameExists').resolves();
 			sandbox.stub(mafiaDAO, 'getCurrentDay').resolves(42);
 			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(69);
@@ -1254,13 +1254,13 @@ describe('player controller', () => {
 			sandbox.stub(mafiaDAO, 'getPlayerProperty').resolves('hated');
 			const fakeTemplate = sandbox.stub().returns('Some string output');
 			sandbox.stub(Handlebars, 'compile').returns(fakeTemplate);
-			
+
 			sandbox.stub(view, 'respondWithTemplate');
-			
+
 			return mafia.listVotesHandler(command).then(() => {
 				view.respondWithTemplate.called.should.be.true;
 				const dataSent = view.respondWithTemplate.getCall(0).args[1];
-				
+
 				dataSent.votes.accalia.mod.should.equal(-1);
 			});
 		});
