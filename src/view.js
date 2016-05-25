@@ -2,8 +2,6 @@
 const debug = require('debug')('sockbot:mafia:view');
 
 const Handlebars = require('handlebars');
-Handlebars.registerHelper('voteChart', require('./templates/helpers/voteChart'));
-Handlebars.registerHelper('listNames', require('./templates/helpers/listNames'));
 
 let post = {
 	reply: () => {
@@ -11,10 +9,18 @@ let post = {
 	}
 };
 
+let formatter = {
+	urlForPost: () => {
+		return "";
+	},
+	quotePost: (text) => {
+		return text;
+	}
+}
 
 let readFile = require('fs-readfile-promise');
 
-exports.init = function(postObject, rf) {
+exports.init = function(postObject, rf, forum) {
 	//TODO:
 	//This currently always replies in a static way
 	//because by the time the controller is done, we've lost Post context.
@@ -25,6 +31,15 @@ exports.init = function(postObject, rf) {
 	debug('init of mafiaview');
 	post = postObject;
 	readFile = rf || require('fs-readfile-promise');
+	formatter = forum ? forum.Format : formatter;
+
+	//Template helpers
+	Handlebars.unregisterHelper('voteChart');
+	Handlebars.unregisterHelper('listNames');
+	Handlebars.registerHelper('voteChart', require('./templates/helpers/voteChart')(formatter));
+	Handlebars.registerHelper('listNames', require('./templates/helpers/listNames')(formatter));
+
+
 };
 
 exports.respond = function(command, output) {

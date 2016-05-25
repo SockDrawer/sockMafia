@@ -12,18 +12,24 @@ chai.use(chaiAsPromised);
 chai.should();
 
 const view = require('../../src/view');
-const listNamesHelper = require('../../src/templates/helpers/listNames');
-const voteChartHelper = require('../../src/templates/helpers/voteChart');
+const NameHelperGenerator = require('../../src/templates/helpers/listNames');
+const VoteChartGenerator = require('../../src/templates/helpers/voteChart');
 const mafia = require('../../src/mafiabot');
 
 const Handlebars = require('handlebars');
 
 describe('View helpers', () => {
 
-	let sandbox;
+	let sandbox, fakeFormatter;
 	beforeEach(() => {
 		sandbox = sinon.sandbox.create();
 		mafia.internals.configuration = mafia.defaultConfig;
+
+		fakeFormatter = {
+			urlForTopic: (topicId, slug, postId) => {
+				return '/t/' + slug + '/' + topicId + '/' + postId;
+			}
+		}	
 	});
 	
 	afterEach(() => {
@@ -31,8 +37,11 @@ describe('View helpers', () => {
 	});
 
 	describe('listNames()', () => {
+		let listNamesHelper;
+
 		beforeEach(() => {
 			sandbox.stub(Math, 'random').returns(0);
+			listNamesHelper = NameHelperGenerator(fakeFormatter);
 		});
 	
 		it('Should one player without a comma', () => {
@@ -52,7 +61,14 @@ describe('View helpers', () => {
 				post: 43,
 				voter: 'yamikuronue'
 			}];
+
+			sandbox.spy(fakeFormatter, 'urlForTopic');
 			listNamesHelper(input).toString().should.contain('/t/slug/123/43');
+			
+			fakeFormatter.urlForTopic.called.should.be.true;
+			const args = fakeFormatter.urlForTopic.getCall(0).args;
+			args[0].should.equal(123);
+			args[2].should.equal(43);
 		});
 		
 		it('Should bold current posts', () => {
@@ -73,8 +89,11 @@ describe('View helpers', () => {
 				retracted: true,
 				retractedAt: 44
 			}];
-			listNamesHelper(input).toString().should.contain('<s>');
-			listNamesHelper(input).toString().should.contain('</s>');
+			const output = listNamesHelper(input).toString();
+			output.should.contain('<s>');
+			output.should.contain('</s>');
+
+
 		});
 		
 		it('Should link to the retraction', () => {
@@ -85,7 +104,14 @@ describe('View helpers', () => {
 				retracted: true,
 				retractedAt: 44
 			}];
+
+			sandbox.spy(fakeFormatter, 'urlForTopic');
 			listNamesHelper(input).toString().should.contain('/t/slug/123/44');
+
+			fakeFormatter.urlForTopic.calledTwice.should.be.true;
+			const args = fakeFormatter.urlForTopic.getCall(1).args;
+			args[0].should.equal(123);
+			args[2].should.equal(44);
 		});
 
 		it('Should list two votes with a comma', () => {
@@ -108,6 +134,11 @@ describe('View helpers', () => {
 	});
 	
 	describe('voteChart()', () => {
+
+		let voteChartHelper;
+		beforeEach(() => {
+			voteChartHelper = VoteChartGenerator(fakeFormatter);
+		});
 
 		const colors = {
 			DARK_RED: '#560000',
