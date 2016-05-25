@@ -131,7 +131,7 @@ function registerMods(game, mods) {
 			mods,
 			function (mod) {
 				console.log('Mafia: Adding mod: ' + mod);
-				return game.addMod(mod)
+				return game.addModerator(mod)
 					.catch((err) => {
 						console.log('Mafia: Adding mod: failed to add mod: ' + mod + '\n\tReason: ' + err);
 						return Promise.resolve();
@@ -187,6 +187,18 @@ exports.createFromDB = function (plugConfig) {
 	let game;
 
 	return dao.createGame(plugConfig.thread, plugConfig.name)
+		.catch((err) => {
+			/*eslint-disable no-console*/
+			if (err === 'E_GAME_EXISTS') {
+				console.log('Existing game found, augmenting');
+				return dao.getGameByTopicId(plugConfig.thread);
+			} else {
+				console.log('ERROR! ' + err, err.stack);
+				/*eslint-enable no-console*/
+				throw err; // rethrow error to fail bot startup
+			}
+		
+		})
 		.then((g) => {
 			game = g;
 			if (plugConfig.players) {
