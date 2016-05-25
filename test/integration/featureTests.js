@@ -9,8 +9,6 @@ require('sinon-as-promised');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 
-const rimraf = require('rimraf-promise');
-
 chai.should();
 
 const PlayerController = require('../../src/player_controller');
@@ -27,11 +25,6 @@ const testConfig = {
 describe('MafiaBot', function () {
 	this.timeout(50000);
 	let sandbox;
-
-	before(() => {
-		//Set up the database
-		return rimraf('intTesting.db');
-	});
 
 	beforeEach(() => {
 		sandbox = sinon.sandbox.create();
@@ -52,7 +45,7 @@ describe('MafiaBot', function () {
 
 		before(() => {
 			//Set up the database
-			dao = new DAO('intTesting.db');
+			dao = new DAO(':memory:');
 			playerController = new PlayerController(dao, testConfig);
 
 			return dao.createGame(1, 'Game 1')
