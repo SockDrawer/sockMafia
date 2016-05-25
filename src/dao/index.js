@@ -43,6 +43,9 @@ function readData(filename) {
  * @returns {Promise} Resolves when data has been written, rejects on serialization or file access error
  */
 function saveData(filename, data) {
+    if (filename === ':memory:'){
+        return Promise.resolve(data);
+    }
     return new Promise((resolve, reject) => {
         fs.writeFile(filename, JSON.stringify(data, null, '\t'), 'utf8', (err) => {
             if (err) {

@@ -119,6 +119,13 @@ describe('nouveau dao', () => {
                 fs.writeFile.called.should.be.true;
             });
         });
+        it('should not write to destination `:memory:`', () => {
+            const connection = ':memory:';
+            const obj = new MafiaDao(connection);
+            return obj.save().then(() => {
+                fs.writeFile.called.should.be.false;
+            });
+        });
         it('should write to connection string destination', () => {
             const connection = `connection${Math.random()}`;
             const obj = new MafiaDao(connection);
