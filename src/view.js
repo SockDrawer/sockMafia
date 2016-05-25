@@ -20,7 +20,7 @@ let formatter = {
 
 let readFile = require('fs-readfile-promise');
 
-exports.init = function(postObject, rf, forum) {
+exports.init = function(postObject, forum, rf) {
 	//TODO:
 	//This currently always replies in a static way
 	//because by the time the controller is done, we've lost Post context.

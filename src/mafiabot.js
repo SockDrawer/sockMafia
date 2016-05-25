@@ -11,16 +11,15 @@
 
 // Requisites
 
-const dao = require('./dao/index.js');
-const modController = require('./mod_controller');
-const playerController = require('./player_controller');
+const MafiaDao = require('./dao');
+const MafiaModController = require('./mod_controller');
+const MafiaPlayerController = require('./player_controller');
 const view = require('./view');
 const Promise = require('bluebird');
 const debug = require('debug')('sockbot:mafia');
 
-// Constants
+let dao, modController, playerController;
 
-const unvoteNicks = ['unvote', 'no-lynch', 'nolynch'];
 
 // Defaults
 
@@ -128,18 +127,17 @@ function registerCommands(events) {
  */
 /*eslint-disable no-console*/
 function registerMods(game, mods) {
-	return dao.ensureGameExists(game)
-		.then(() => Promise.mapSeries(
+	return Promise.mapSeries(
 			mods,
 			function (mod) {
 				console.log('Mafia: Adding mod: ' + mod);
-				return dao.addMod(game, mod)
+				return game.addMod(mod)
 					.catch((err) => {
 						console.log('Mafia: Adding mod: failed to add mod: ' + mod + '\n\tReason: ' + err);
 						return Promise.resolve();
 					});
 			}
-		));
+		);
 }
 /*eslint-enable no-console*/
 
@@ -151,18 +149,17 @@ function registerMods(game, mods) {
  */
 /*eslint-disable no-console*/
 function registerPlayers(game, players) {
-	return dao.ensureGameExists(game)
-		.then(() => Promise.mapSeries(
+	return Promise.mapSeries(
 			players,
 			function (player) {
 				console.log('Mafia: Adding player: ' + player);
-				return dao.addPlayerToGame(game, player)
+				return game.addPlayer(game, player)
 					.catch((err) => {
 						console.log('Mafia: Adding player: failed to add player: ' + player + '\n\tReason: ' + err);
 						return Promise.resolve();
 					});
 			}
-		));
+		);
 }
 
 /*eslint-enable no-console*/
@@ -184,6 +181,33 @@ exports.echoHandler = function (command) {
 		'\n[/quote]';
 	view.respond(command, text);
 	return Promise.resolve();
+};
+
+exports.createFromDB = function (plugConfig) {
+	let game;
+
+	return dao.createGame(plugConfig.thread, plugConfig.name)
+		.then((g) => {
+			game = g;
+			if (plugConfig.players) {
+				return registerPlayers(game, plugConfig.players);
+			} else {
+				return Promise.resolve();
+			}
+		})
+		.then(() => {
+			if (plugConfig.mods) {
+				return registerMods(game, plugConfig.mods);
+			} else {
+				return Promise.resolve();
+			}
+		})
+		.catch((err) => {
+			/*eslint-disable no-console*/
+			console.log('ERROR! ' + err, err.stack);
+			/*eslint-enable no-console*/
+			throw err; // rethrow error to fail bot startup
+		});
 };
 
 
@@ -222,36 +246,15 @@ exports.activate = function activate() {
 			return internals.forum.Commands.add(commandName, help, translateHandler);
 		}
 	};
-	return dao.createDB(internals.configuration)
-		.then(() => dao.ensureGameExists(plugConfig.thread, plugConfig.name, true))
-		.catch((reason) => {
-				console.log('Mafia: Error: Game not added to database.\n' + '\tReason: ' + reason);
-				return Promise.reject('Game not created');
-		})
-		.then(() => {
-			if (plugConfig.players) {
-				return registerPlayers(plugConfig.thread, plugConfig.players);
-			} else {
-				return Promise.resolve();
-			}
-		})
-		.then(() => {
-			if (plugConfig.mods) {
-				return registerMods(plugConfig.thread, plugConfig.mods);
-			} else {
-				return Promise.resolve();
-			}
-		})
-		.then(() => {
-			modController.init(internals.forum);
-			playerController.init(internals.forum);
-			view.init(internals.forum.Post);
-			registerCommands(fakeEvents);
-		})
-		.catch((err) => {
-			console.log('ERROR! ' + err, err.stack);
-			throw err; // rethrow error to fail bot startup
-		});
+
+	dao = new MafiaDao(plugConfig.db);
+	modController = new MafiaModController(dao, plugConfig);
+	playerController = new MafiaPlayerController(dao, plugConfig);
+	view.init(internals.forum.Post, internals.forum.Formatter);
+
+	return exports.createFromDB(plugConfig).then(() => {
+		return registerCommands(fakeEvents);
+	});
 };
 
 // Sockbot 3.0 Plugin function
@@ -270,9 +273,6 @@ exports.plugin = function plugin(forum, config) {
 			config[key] = exports.defaultConfig[key];
 		}
 	});
-	if (config.players) {
-		config.players.concat(unvoteNicks); // This is a noop as concat returns new array, not modifies self array
-	}
 	internals.configuration = config;
 	internals.forum = forum;
 
