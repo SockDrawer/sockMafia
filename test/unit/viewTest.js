@@ -29,7 +29,7 @@ describe('View helpers', () => {
 			urlForTopic: (topicId, slug, postId) => {
 				return '/t/' + slug + '/' + topicId + '/' + postId;
 			}
-		}	
+		};
 	});
 	
 	afterEach(() => {

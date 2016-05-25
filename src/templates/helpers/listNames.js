@@ -33,17 +33,17 @@ module.exports = function(formatter) {
 					+ '</s> </a>'
 					+ '<a href="'
 					+ formatter.urlForTopic(value.game, slugs[Math.floor(Math.random() * slugs.length)], value.retractedAt)
-					+'">[X]</a>';
+					+ '">[X]</a>';
 				} else {
 					value = '<a href="' 
 					+ formatter.urlForTopic(value.game, slugs[Math.floor(Math.random() * slugs.length)], value.post)
 					+ '"><b>'
 					+ value.voter 
-					+ '</b> </a>'
+					+ '</b> </a>';
 				}
 			}
 			return value;
 		});
 		return new Handlebars.SafeString(list.join(', '));
-	}
+	};
 };

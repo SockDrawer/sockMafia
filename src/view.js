@@ -11,12 +11,12 @@ let post = {
 
 let formatter = {
 	urlForPost: () => {
-		return "";
+		return '';
 	},
 	quotePost: (text) => {
 		return text;
 	}
-}
+};
 
 let readFile = require('fs-readfile-promise');
 

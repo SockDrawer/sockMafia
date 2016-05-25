@@ -50,5 +50,5 @@ module.exports = function(formatter) {
 		const b64 = new Buffer(xml).toString('base64');
 		const html = '<img src="data:image/svg+xml;base64,' + b64 + '">';
 		return new Handlebars.SafeString(html);
-	}
+	};
 };
