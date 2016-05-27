@@ -1,7 +1,24 @@
 'use strict';
+/**
+ * sockMafia User class
+ * @module sockmafia.src.dao.MafiaUser
+ * @author Accalia
+ * @license MIT
+ */
+
 const string = require('string');
 
+/**
+ * MafiaUser class
+ *
+ */
 class MafiaUser {
+    /**
+     * Mafia User constructor. Creates a new MafiaUser instance
+     *
+     * @param {object} data Persisted user data
+     * @param {MafiaGame} game MafiaGame this user is a part of
+     */
     constructor(data, game) {
         data.userslug = string(data.username).slugify().s;
         data.isAlive = data.isAlive !== undefined ? data.isAlive : true;
@@ -10,21 +27,64 @@ class MafiaUser {
         this._data = data;
         this._game = game;
     }
+
+    /**
+     * Get the username of the MafiaUser
+     *
+     * @returns {string} Username of the user
+     */
     get username() {
         return this._data.username;
     }
+
+    /**
+     * Get the case normalized userslug of the user, useful for comparing users.
+     *
+     * @returns {string} Userslug of the user
+     *
+     */
     get userslug() {
         return this._data.userslug;
     }
+
+    /**
+     * Is the user a living player?
+     *
+     * @returns {boolean} True if the user is a living player, false otherwise.
+     *
+     */
     get isAlive() {
         return this._data.isAlive;
     }
+
+    /**
+     * set alive status of the User
+     *
+     * TODO: this shouldn't be a setter as it does not save status when mutated.
+     *
+     * @param {boolean} value True to make the player live, false to make the player dead.
+     */
     set isAlive(value) {
         this._data.isAlive = !!value;
     }
+
+    /**
+     * Is the user a moderator?
+     *
+     * @returns {boolean} true if user is a moderator of the game, false otherwise.
+     */
     get isModerator() {
         return this._data.isModerator;
     }
+
+    /**
+     * Get custom properties associated with the user.
+     *
+     * Optionally filter the list to only those properties requested
+     *
+     * @param {array<string>} [filterTo] Array or properties to filter results to.
+     * @returns {array<string>} Custom properties on the user, with any requested filtering applied
+     */
     getProperties(filterTo) {
         if (filterTo) {
             const map = {};
@@ -35,6 +95,14 @@ class MafiaUser {
         }
         return this._data.properties.slice();
     }
+
+    /**
+     * Add a custom property to the user.
+     *
+     * @param {string} property The property to add to the user
+     *
+     * @returns {Promise<boolean>} Resolves true if the property was added, false if it already existed on the user
+     */
     addProperty(property) {
         if (this._data.properties.filter((prop) => prop === property).length > 0) {
             return Promise.resolve(false);
@@ -42,12 +110,26 @@ class MafiaUser {
         this._data.properties.push(property);
         return this._game.save().then(() => true);
     }
+
+    /**
+     * Remove a custom operty from the user
+     *
+     * @param {string} property the property to remove from the user
+     *
+     * @returns {Promise<boolean>} Resolves true if property was removed, false if property was not present to remove
+     */
     removeProperty(property) {
         const props = this._data.properties;
         this._data.properties = this._data.properties.filter((prop) => prop !== property);
         return this._game.save()
             .then(() => props.length !== this._data.properties.length);
     }
+
+    /**
+     * Create a serializeable representation of the DAO object.
+     *
+     * @returns {object} A serializeable clone of this action's internal data store.
+     */
     toJSON() {
         return this._data;
     }
