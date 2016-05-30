@@ -73,6 +73,19 @@ class MafiaPlayerController {
     constructor(d, config) {
         this.dao = d;
     };
+    
+    activate(forum) {
+    	//Register commandss
+        forum.Commands.add('list-players', 'list all players still alive', this.listPlayersHandler.bind(this));
+        forum.Commands.add('list-all-players', 'list all players, dead and alive', this.listAllPlayersHandler.bind(this));
+        forum.Commands.add('join', 'join current mafia game', this.joinHandler.bind(this));
+        forum.Commands.add('for', 'vote for a player to be executed', this.forHandler.bind(this));
+        forum.Commands.add('vote', 'vote for a player to be executed (alt. form)', this.voteHandler.bind(this));
+        forum.Commands.add('list-votes', 'list all votes from the day\'s start', this.listVotesHandler.bind(this));
+        forum.Commands.add('unvote', 'rescind your vote', this.unvoteHandler.bind(this));
+        forum.Commands.add('nolynch', 'vote for noone to be lynched', this.nolynchHandler.bind(this));
+        forum.Commands.add('no-lynch', 'vote for noone to be lynched', this.nolynchHandler.bind(this));
+    }
 
 	/**
 	 * Helper method to lynch a player
@@ -197,10 +210,7 @@ class MafiaPlayerController {
 	  */
 	/* eslint-disable */
 	nolynchHandler (command) {
-		const gameId = command.post.topic_id;
-		const post = command.post.post_number;
-		const actor = command.post.username;
-		let voter, votee, game;
+		let gameId, post, actor, voter, votee, game;
 
 		logDebug('Received noLynch request from ' + voter + ' in game ' + game);
 		
@@ -215,7 +225,17 @@ class MafiaPlayerController {
 		}
 		
 		/*Validation*/
-		return this.dao.getGameByTopicId(gameId)
+		return command.getTopic().then((topic) => {
+			gameId = topic.id;
+			return command.getUser();
+		}).then((user) => {
+			actor = user.username;
+			logDebug('Received unvote request from ' + actor + ' for ' + targetString + ' in game ' + gameId);
+			return command.getPost();
+		}).then((p) => {
+			post = p.id;	
+			return this.dao.getGameByTopicId(gameId);
+		})
 		.catch(() => {
 			logWarning('Ignoring message in nonexistant game thread ' + game);
 			throw(E_NOGAME);
@@ -265,11 +285,7 @@ class MafiaPlayerController {
 	  * @returns {Promise}        A promise that will resolve when the game is ready
 	  */
 	unvoteHandler (command) {
-		const gameId = command.post.topic_id;
-		const post = command.post.post_number;
-		const actor = command.post.username;
-		let target = undefined;
-		let voter, votee, game;
+		let gameId, post, actor, target, voter, votee, game;
 
 		logDebug('Received unvote request from ' + voter + ' in game ' + game);
 
@@ -288,7 +304,18 @@ class MafiaPlayerController {
 		}
 		
 		/*Validation*/
-		return this.dao.getGameByTopicId(gameId)
+		
+		return command.getTopic().then((topic) => {
+			gameId = topic.id;
+			return command.getUser();
+		}).then((user) => {
+			actor = user.username;
+			logDebug('Received unvote request from ' + actor + ' for ' + targetString + ' in game ' + gameId);
+			return command.getPost();
+		}).then((p) => {
+			post = p.id;	
+			return this.dao.getGameByTopicId(gameId);
+		})
 		.catch(() => {
 			logWarning('Ignoring message in nonexistant game thread ' + game);
 			throw(E_NOGAME);
@@ -357,16 +384,24 @@ class MafiaPlayerController {
 	  * @returns {Promise}        A promise that will resolve when the game is ready
 	  */
 	voteHandler (command) {
-		const gameId = command.post.topic_id;
-		const game = this.dao.getGameByTopicId(command.post.topic_id);
-		const post = command.post.post_number;
-		const voter = command.post.username;
+		let gameId, game, voter; 
 		// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
 		// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
 		const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
-
-		logDebug('Received vote request from ' + voter + ' for ' + targetString + ' in game ' + game);
-		return this.doVote(gameId, post, voter, targetString, command.input, 1);
+		
+		return command.getTopic().then((topic) => {
+			gameId = topic.id;
+			return command.getUser();
+		}).then((user) => {
+			voter = user.username;
+			logDebug('Received vote request from ' + voter + ' for ' + targetString + ' in game ' + gameId);
+			return command.getPost();
+		}).then((post) => {
+			return this.doVote(gameId, post.id, voter, targetString, command.line, 1, command);
+		}).catch((err) => {
+			debug(err);
+			throw err
+		});
 
 		//TODO: make doublevoter work
 	/*	let target = game.getPlayer(targetString);
@@ -380,19 +415,25 @@ class MafiaPlayerController {
 	};
 
 	forHandler (command) {
-		const game = command.post.topic_id;
-		const post = command.post.post_number;
-		const voter = command.post.username;
+		let gameId, game, voter; 
 		// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
 		// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
-		const target = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
-		logDebug('Received vote request from ' + voter + ' for ' + target + ' in game ' + game);
+		const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
 		
-		return this.doVote(game, post, voter, target, command.input, 1);
+		return command.getTopic().then((topic) => {
+			gameId = topic.id;
+			return command.getUser();
+		}).then((user) => {
+			voter = user.username;
+			logDebug('Received vote request from ' + voter + ' for ' + targetString + ' in game ' + gameId);
+			return command.getPost();
+		}).then((post) => {
+			return this.doVote(gameId, post.id, voter, targetString, command.line, 1, command);
+		});
 	};
 
 
-	doVote (gameId, post, actor, target, input, voteNum) {
+	doVote (gameId, post, actor, target, input, voteNum, command) {
 		let action, voter, votee, game;
 		/*if (voteNum === 2) {
 			action = dao.action.dblVote;
@@ -438,7 +479,7 @@ class MafiaPlayerController {
 		.then(() => game.registerAction(post, actor, target, 'vote'))
 		.then(() => {
 			const text = getVoteAttemptText(game, true);
-			view.respondInThread(game, text);
+			view.respond(command, text);
 			logDebug('Vote succeeded');
 			return true;
 		})
@@ -456,7 +497,7 @@ class MafiaPlayerController {
 
 				//Log error
 				logRecoveredError('Vote failed: ' + reason);
-				view.respondInThread(game, text);
+				view.respond(command, text);
 			});
 		});
 	}
@@ -475,19 +516,22 @@ class MafiaPlayerController {
 	  * @returns {Promise}        A promise that will resolve when the game is ready
 	  */
 	joinHandler(command) {
-		const gameId = command.post.topic_id;
-		const player = command.post.username;
-		let game;
-
-		logDebug('Received join request from ' + player + ' in game ' + gameId);
-
-		return this.dao.getGameByTopicId(gameId)
+		let game, gameId, player;
+		return command.getTopic().then((topic) => {
+				gameId = topic.id;
+				return this.dao.getGameByTopicId(topic.id);
+			})
 			.catch(() => {
 				logWarning('Ignoring message in nonexistant game thread ' + game);
 				throw(E_NOGAME);
 			})
 			.then((g) => {
 				game = g;
+				return command.getUser();
+			}).then((u) => {
+				player = u.username;
+				logDebug('Received join request from ' + player + ' in game ' + gameId);
+
 				if (game.isActive) {
 					return Promise.reject('Cannot join game in progress.');
 				}
@@ -524,17 +568,18 @@ class MafiaPlayerController {
 	  * @returns {Promise}        A promise that will resolve when the game is ready
 	  */
 	listPlayersHandler (command) {
-		const id = command.post.topic_id;
-		let game;
+		let game, id;
 
-		logDebug('Received list request from ' + command.post.username + ' in game ' + id);
-		console.log(this)
-		return this.dao.getGameByTopicId(id)
+		return command.getTopic().then((topic) => {
+				id = topic.id;
+				return this.dao.getGameByTopicId(topic.id);
+			})
 			.catch(() => {
 				logWarning('Ignoring message in nonexistant game thread ' + game);
 				throw(E_NOGAME);
 			})
 			.then((g) => {
+				logDebug('Received list request in game ' + id);
 				game = g;
 
 				//Store a reference otherwise it'll shuffle every time we dip
@@ -590,17 +635,18 @@ class MafiaPlayerController {
 	  * @returns {Promise}        A promise that will resolve when the game is ready
 	  */
 	listAllPlayersHandler(command) {
-		let game;
-		const id = command.post.topic_id;
-
-		logDebug('Received list all request from ' + command.post.username + ' in game ' + id);
-
-		return this.dao.getGameByTopicId(id)
+		let game, id;
+		
+		return command.getTopic().then((topic) => {
+				id = topic.id;
+				return this.dao.getGameByTopicId(topic.id);
+			})
 			.catch(() => {
 				logWarning('Ignoring message in nonexistant game thread ' + game);
 				throw(E_NOGAME);
 			})
 			.then((g) => {
+				logDebug('Received list request in game ' + id);
 				game = g;
 
 				//Store a reference otherwise it'll shuffle every time we dip
@@ -678,18 +724,22 @@ class MafiaPlayerController {
 			notVoting: [],
 			toExecute: 0
 		};
-		const id = command.post.topic_id;
-		let game;
+		
 
-		logDebug('Received list request from ' + command.post.username + ' in game ' + id);
-
-		return this.dao.getGameByTopicId(id)
+		let game, id, player;
+		return command.getTopic().then((topic) => {
+				id = topic.id;
+				return this.dao.getGameByTopicId(topic.id);
+			})
 			.catch(() => {
 				logWarning('Ignoring message in nonexistant game thread ' + game);
 				throw(E_NOGAME);
 			})
 			.then((g) => {
 				game = g;
+				
+				logDebug('Received list request in game ' + id);
+				
 				data.toExecute = this.getNumVotesRequired(game);
 
 				const actions = game.getActions(); //default settings are fine

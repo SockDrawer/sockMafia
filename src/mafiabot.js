@@ -89,16 +89,6 @@ function handleCallback(err) {
 /*eslint-enable no-console*/
 
 function registerPlayerCommands(events) {
-	events.onCommand('for', 'vote for a player to be executed', playerController.forHandler, handleCallback);
-	events.onCommand('join', 'join current mafia game', playerController.joinHandler, handleCallback);
-	events.onCommand('list-all-players', 'list all players, dead and alive', playerController.listAllPlayersHandler, handleCallback);
-	//events.onCommand('list-all-votes', 'list all votes from the game\'s start', exports.listAllVotesHandler, handleCallback); //TODO: not yet implemented
-	events.onCommand('list-players', 'list all players still alive', playerController.listPlayersHandler, handleCallback);
-	events.onCommand('list-votes', 'list all votes from the day\'s start', playerController.listVotesHandler, handleCallback);
-	events.onCommand('no-lynch', 'vote for noone to be lynched', playerController.nolynchHandler, handleCallback);
-	events.onCommand('nolynch', 'vote for noone to be lynched', playerController.nolynchHandler, handleCallback);
-	events.onCommand('unvote', 'rescind your vote', playerController.unvoteHandler, handleCallback);
-	events.onCommand('vote', 'vote for a player to be executed (alt. form)', playerController.voteHandler, handleCallback);
 }
 
 function registerModCommands(events) {
@@ -231,13 +221,14 @@ exports.activate = function activate() {
 		onCommand: (commandName, help, handler) => {
 			debug(`Registering command: ${commandName}`);
 
-			function translateHandler(command) {
-				debug(`Mafia received command ${command.command}`);
+			return internals.forum.Commands.add(commandName, help, (command) => {
+					debug(`Mafia received command ${command.command}`);
+					debug(this)
 				return Promise.all([
 					command.getPost(),
 					command.getTopic(),
 					command.getUser()
-				]).then(function (data) {
+				]).then( (data) => {
 					debug(`Mafia processing command ${command.command} in topic ${data[1].id} on post ${data[0].id}`);
 					const translated = {
 						input: command.line,
@@ -253,8 +244,7 @@ exports.activate = function activate() {
 					};
 					return handler(translated);
 				});
-			}
-			return internals.forum.Commands.add(commandName, help, translateHandler);
+			});
 		}
 	};
 
@@ -262,6 +252,8 @@ exports.activate = function activate() {
 	modController = new MafiaModController(dao, plugConfig);
 	playerController = new MafiaPlayerController(dao, plugConfig);
 	view.init(internals.forum.Post, internals.forum.Formatter);
+	
+	playerController.activate(internals.forum);
 
 	return exports.createFromDB(plugConfig).then(() => {
 		return registerCommands(fakeEvents);

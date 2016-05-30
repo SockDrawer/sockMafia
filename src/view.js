@@ -13,6 +13,9 @@ let formatter = {
 	urlForPost: () => {
 		return '';
 	},
+	urlForTopic: () => {
+		return '';
+	},
 	quotePost: (text) => {
 		return text;
 	}
@@ -43,27 +46,24 @@ exports.init = function(postObject, forum, rf) {
 };
 
 exports.respond = function(command, output) {
-	debug(`responding to t${command.post.topic_id}p${command.post.post_number}`);
-	return post.reply(command.post.topic_id, command.post.post_number, output);
+	return command.reply(output);
 };
 
 exports.respondInThread = function(thread, output) {
-	debug(`responding to t${thread}`);
 	return post.reply(thread, undefined, output);
 };
 
 exports.respondWithTemplate  = function(templateFile, data, command) {
-	debug(`responding to t${command.post.topic_id}p${command.post.post_number}`);
 	return readFile(__dirname + '/' + templateFile)
 	.then((buffer) => {
 		const source = buffer.toString();
 		const template = Handlebars.compile(source);
 
 		const output = template(data);
-		return post.reply(command.post.topic_id, command.post.post_number, output);
+		return command.reply(output);
 	});
 };
 
 exports.reportError = function(command, preface, error) {
-	return post.reply(command.post.topic_id, command.post.post_number, preface + error);
+	return command.reply(preface + error);
 };
