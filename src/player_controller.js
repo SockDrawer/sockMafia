@@ -528,8 +528,7 @@ class MafiaPlayerController {
 		let game;
 
 		logDebug('Received list request from ' + command.post.username + ' in game ' + id);
-		logDebug('stack:' + new Error().stack)
-
+		console.log(this)
 		return this.dao.getGameByTopicId(id)
 			.catch(() => {
 				logWarning('Ignoring message in nonexistant game thread ' + game);
