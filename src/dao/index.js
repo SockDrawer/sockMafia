@@ -11,9 +11,9 @@ const MafiaGame = require('./mafiaGame');
 
 /**
  * Read a serialized mafia configuration from disk and resolve to deserialized contents
- * 
+ *
  * Assumes an ENOENT error on read is okay and resolves to the empty array in this case.
- * 
+ *
  * @param {string} filename Filename to read
  * @returns {Promise<Array>} Resolves to the deserialized mafia configurations. Rejects on read or parse error.
  */
@@ -37,7 +37,7 @@ function readData(filename) {
 
 /**
  * Save serialized data to disk
- * 
+ *
  * @param {string} filename Filename to write
  * @param {*} data Data to serialize and write
  * @returns {Promise} Resolves when data has been written, rejects on serialization or file access error
@@ -131,7 +131,7 @@ class MafiaDao {
      * Load data from disk, once.
      *
      * Cache read results to remove need to fetch from disk multiple times
-     * 
+     *
      * @returns {Promise<Array>} Resolves to read data, rejects on read error
      */
     load() {
