@@ -75,7 +75,7 @@ Array.prototype.contains = function (element) {
 function patchIn(module) {
 	for (const property in module) {
 		if (typeof module[property] === 'function' && module.hasOwnProperty(property)) {
-			exports[property] = module[property];
+			exports[property] = module[property].bind(module); // Bind to preserve `this` context
 		}
 	}
 }
