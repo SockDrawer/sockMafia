@@ -4,6 +4,7 @@ const dao = require('./dao/index.js');
 const validator = require('./validator');
 const view = require('./view');
 const Promise = require('bluebird');
+const debug = require('debug')('sockbot:mafia:playerController');
 
 const E_NOGAME = 'Error: No game';
 let myName, myOwner, eventLogger;
@@ -62,6 +63,7 @@ function logRecoveredError(error) {
 
 
 function logDebug(statement) {
+	debug(statement);
 	if (eventLogger && eventLogger.emit) {
 		eventLogger.emit('logExtended', 5, statement);
 	}
@@ -526,6 +528,7 @@ class MafiaPlayerController {
 		let game;
 
 		logDebug('Received list request from ' + command.post.username + ' in game ' + id);
+		logDebug('stack:' + new Error().stack)
 
 		return this.dao.getGameByTopicId(id)
 			.catch(() => {

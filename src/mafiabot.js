@@ -18,7 +18,7 @@ const view = require('./view');
 const Promise = require('bluebird');
 const debug = require('debug')('sockbot:mafia');
 
-let dao, modController, playerController;
+let dao, modController,  playerController;
 
 
 // Defaults
@@ -89,28 +89,27 @@ function handleCallback(err) {
 /*eslint-enable no-console*/
 
 function registerPlayerCommands(events) {
-	patchIn(playerController);
-	events.onCommand('for', 'vote for a player to be executed', exports.forHandler, handleCallback);
-	events.onCommand('join', 'join current mafia game', exports.joinHandler, handleCallback);
-	events.onCommand('list-all-players', 'list all players, dead and alive', exports.listAllPlayersHandler, handleCallback);
+	events.onCommand('for', 'vote for a player to be executed', playerController.forHandler, handleCallback);
+	events.onCommand('join', 'join current mafia game', playerController.joinHandler, handleCallback);
+	events.onCommand('list-all-players', 'list all players, dead and alive', playerController.listAllPlayersHandler, handleCallback);
 	//events.onCommand('list-all-votes', 'list all votes from the game\'s start', exports.listAllVotesHandler, handleCallback); //TODO: not yet implemented
-	events.onCommand('list-players', 'list all players still alive', exports.listPlayersHandler, handleCallback);
-	events.onCommand('list-votes', 'list all votes from the day\'s start', exports.listVotesHandler, handleCallback);
-	events.onCommand('no-lynch', 'vote for noone to be lynched', exports.nolynchHandler, handleCallback);
-	events.onCommand('nolynch', 'vote for noone to be lynched', exports.nolynchHandler, handleCallback);
-	events.onCommand('unvote', 'rescind your vote', exports.unvoteHandler, handleCallback);
-	events.onCommand('vote', 'vote for a player to be executed (alt. form)', exports.voteHandler, handleCallback);
+	events.onCommand('list-players', 'list all players still alive', playerController.listPlayersHandler, handleCallback);
+	events.onCommand('list-votes', 'list all votes from the day\'s start', playerController.listVotesHandler, handleCallback);
+	events.onCommand('no-lynch', 'vote for noone to be lynched', playerController.nolynchHandler, handleCallback);
+	events.onCommand('nolynch', 'vote for noone to be lynched', playerController.nolynchHandler, handleCallback);
+	events.onCommand('unvote', 'rescind your vote', playerController.unvoteHandler, handleCallback);
+	events.onCommand('vote', 'vote for a player to be executed (alt. form)', playerController.voteHandler, handleCallback);
 }
 
 function registerModCommands(events) {
 	patchIn(modController);
-	events.onCommand('prepare', 'Start a new game', exports.prepHandler, handleCallback);
-	events.onCommand('start', 'move a game into active play (mod only)', exports.startHandler, handleCallback);
-	events.onCommand('new-day', 'move on to a new day (mod only)', exports.dayHandler, handleCallback);
-	events.onCommand('next-phase', 'move on to the next phase (mod only)', exports.dayHandler, handleCallback);
-	events.onCommand('kill', 'kill a player (mod only)', exports.killHandler, handleCallback);
-	events.onCommand('set', 'Assign a player a role (mod only)', exports.setHandler, handleCallback);
-	events.onCommand('end', 'end the game (mod only)', exports.finishHandler, handleCallback);
+	events.onCommand('prepare', 'Start a new game', modController.prepHandler, handleCallback);
+	events.onCommand('start', 'move a game into active play (mod only)', modController.startHandler, handleCallback);
+	events.onCommand('new-day', 'move on to a new day (mod only)', modController.dayHandler, handleCallback);
+	events.onCommand('next-phase', 'move on to the next phase (mod only)', modController.dayHandler, handleCallback);
+	events.onCommand('kill', 'kill a player (mod only)', modController.killHandler, handleCallback);
+	events.onCommand('set', 'Assign a player a role (mod only)', modController.setHandler, handleCallback);
+	events.onCommand('end', 'end the game (mod only)', modController.finishHandler, handleCallback);
 }
 
 function registerCommands(events) {
@@ -238,7 +237,7 @@ exports.activate = function activate() {
 					command.getPost(),
 					command.getTopic(),
 					command.getUser()
-				]).then((data) => {
+				]).then(function (data) {
 					debug(`Mafia processing command ${command.command} in topic ${data[1].id} on post ${data[0].id}`);
 					const translated = {
 						input: command.line,
