@@ -345,6 +345,7 @@ describe('player controller', () => {
 			it('should remain silent when no game is in session', () => {
 				const command = {
 					getTopic: () => Promise.resolve({id: 12345}),
+					getPost: () => Promise.resolve({id: 2}),
 					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: ['@noLunch'],
 					input: '!for @noLunch'
@@ -360,6 +361,7 @@ describe('player controller', () => {
 			it('should reject unvotes from non-players', () => {
 				const command = {
 					getTopic: () => Promise.resolve({id: 12345}),
+					getPost: () => Promise.resolve({id: 2}),
 					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: [''],
 					input: '!unvote'
@@ -377,6 +379,7 @@ describe('player controller', () => {
 			it('should reject unvotes from the dead', () => {
 				const command = {
 					getTopic: () => Promise.resolve({id: 12345}),
+					getPost: () => Promise.resolve({id: 2}),
 					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: [],
 					input: '!unvote'
@@ -394,6 +397,7 @@ describe('player controller', () => {
 			it('should reject unvotes at night', () => {
 				const command = {
 					getTopic: () => Promise.resolve({id: 12345}),
+					getPost: () => Promise.resolve({id: 2}),
 					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: [],
 					input: '!unvote'
@@ -411,6 +415,7 @@ describe('player controller', () => {
 			it('should rescind your vote', () => {
 				const command = {
 					getTopic: () => Promise.resolve({id: 12345}),
+					getPost: () => Promise.resolve({id: 2}),
 					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: [],
 					input: '!unvote'
@@ -468,6 +473,7 @@ describe('player controller', () => {
 			it ('should remain silent when no game is in session', () => {
 				const command = {
 					getTopic: () => Promise.resolve({id: 12345}),
+					getPost: () => Promise.resolve({id: 2}),
 					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: ['@noLunch'],
 					input: '!for @noLunch'
@@ -476,13 +482,14 @@ describe('player controller', () => {
 				sandbox.stub(mockdao, 'getGameByTopicId').rejects();
 
 				return playerController.nolynchHandler(command).then(() => {
-					view.respondInThread.called.should.be.false;
+					view.respond.called.should.be.false;
 				});
 			});
 
 			it('should reject votes from non-players', () => {
 				const command = {
 					getTopic: () => Promise.resolve({id: 12345}),
+					getPost: () => Promise.resolve({id: 2}),
 					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: [],
 					input: '!unvote'
@@ -500,6 +507,7 @@ describe('player controller', () => {
 			it('should reject votes from the dead', () => {
 				const command = {
 					getTopic: () => Promise.resolve({id: 12345}),
+					getPost: () => Promise.resolve({id: 2}),
 					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: [''],
 					input: '!unvote'
@@ -517,6 +525,7 @@ describe('player controller', () => {
 			it('should reject votes at night', () => {
 				const command = {
 					getTopic: () => Promise.resolve({id: 12345}),
+					getPost: () => Promise.resolve({id: 2}),
 					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: [''],
 					input: '!unvote'
@@ -534,6 +543,7 @@ describe('player controller', () => {
 			it('should register a vote to no-lynch', () => {
 				const command = {
 					getTopic: () => Promise.resolve({id: 12345}),
+					getPost: () => Promise.resolve({id: 98765}),
 					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: [''],
 					input: '!unvote'

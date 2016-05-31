@@ -64,6 +64,7 @@ function logRecoveredError(error) {
 
 function logDebug(statement) {
 	debug(statement);
+	
 	if (eventLogger && eventLogger.emit) {
 		eventLogger.emit('logExtended', 5, statement);
 	}
@@ -212,10 +213,10 @@ class MafiaPlayerController {
 	nolynchHandler (command) {
 		let gameId, post, actor, voter, votee, game;
 
-		logDebug('Received noLynch request from ' + voter + ' in game ' + game);
+		
 		
 		function getVoteAttemptText(success) {
-			let text = '@' + command.post.username + (success ? ' voted to not lynch ' : ' tried to vote to not lynch ');
+			let text = '@' + actor + (success ? ' voted to not lynch ' : ' tried to vote to not lynch ');
 
 			text = text	+ 'in post #<a href="https://what.thedailywtf.com/t/'
 					+ game + '/' + post + '">'
@@ -230,15 +231,14 @@ class MafiaPlayerController {
 			return command.getUser();
 		}).then((user) => {
 			actor = user.username;
-			logDebug('Received unvote request from ' + actor + ' for ' + targetString + ' in game ' + gameId);
+			logDebug('Received noLynch request from ' + voter + ' in game ' + game);
 			return command.getPost();
 		}).then((p) => {
-			post = p.id;	
-			return this.dao.getGameByTopicId(gameId);
-		})
-		.catch(() => {
-			logWarning('Ignoring message in nonexistant game thread ' + game);
-			throw(E_NOGAME);
+			post = p.id;
+			return this.dao.getGameByTopicId(gameId).catch(() => {
+				logWarning('Ignoring message in nonexistant game thread ' + game);
+				throw(E_NOGAME);
+			});
 		})
 		.then((g) => {
 			game = g;
