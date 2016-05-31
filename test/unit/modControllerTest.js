@@ -79,11 +79,8 @@ describe('mod controller', () => {
 
 		it('Should reject non-mods', () => {
 			const command = {
-				post: {
-					username: 'God',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
 					'Margaret'
 				]
@@ -99,11 +96,8 @@ describe('mod controller', () => {
 
 		it('Should not kill dead players', () => {
 			const command = {
-				post: {
-					username: 'God',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
 					'Margaret'
 				]
@@ -121,11 +115,8 @@ describe('mod controller', () => {
 
 		it('Should not kill players not in the game', () => {
 			const command = {
-				post: {
-					username: 'God',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
 					'Margaret'
 				]
@@ -143,11 +134,8 @@ describe('mod controller', () => {
 
 		it('Should report errors', () => {
 			const command = {
-				post: {
-					username: 'God',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
 					'Margaret'
 				]
@@ -165,11 +153,8 @@ describe('mod controller', () => {
 
 		it('Should kill players', () => {
 			const command = {
-				post: {
-					username: 'God',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
 					'Margaret'
 				]
@@ -221,11 +206,8 @@ describe('mod controller', () => {
 
 		it('Should reject non-mods', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				}
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'})
 			};
 			mockUser.isModerator = false;
 			sandbox.spy(mockGame, 'nextPhase');
@@ -243,11 +225,8 @@ describe('mod controller', () => {
 
 		it('Should reject non-existant game', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				}
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'})
 			};
 
 			sandbox.stub(mockdao, 'getGameByTopicId').rejects('No such game');
@@ -265,11 +244,8 @@ describe('mod controller', () => {
 
 		it('Should move to night', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				}
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'})
 			};
 			sandbox.spy(mockGame, 'nextPhase');
 
@@ -340,11 +316,8 @@ describe('mod controller', () => {
 
 		it('Should reject non-mods', () => {
 			const command = {
-				post: {
-					username: 'God',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
 					'Margaret',
 					'loved'
@@ -364,11 +337,8 @@ describe('mod controller', () => {
 
 		it('Should reject non-players', () => {
 			const command = {
-				post: {
-					username: 'God',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
 					'Sanderson',
 					'loved'
@@ -385,11 +355,8 @@ describe('mod controller', () => {
 
 		it('Should allow loved', () => {
 			const command = {
-				post: {
-					username: 'God',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
 					'Margaret',
 					'loved'
@@ -412,11 +379,8 @@ describe('mod controller', () => {
 
 		it('Should allow hated', () => {
 			const command = {
-				post: {
-					username: 'God',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
 					'Margaret',
 					'hated'
@@ -438,11 +402,8 @@ describe('mod controller', () => {
 
 		it('Should allow doublevoter', () => {
 			const command = {
-				post: {
-					username: 'God',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
 					'Margaret',
 					'doublevoter'
@@ -464,11 +425,8 @@ describe('mod controller', () => {
 
 		it('Should reject doodoohead', () => {
 			const command = {
-				post: {
-					username: 'God',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
 					'Margaret',
 					'doodoohead'
@@ -486,11 +444,8 @@ describe('mod controller', () => {
 
 		it('Should bubble up errors', () => {
 			const command = {
-				post: {
-					username: 'God',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
 					'Margaret',
 					'doublevoter'

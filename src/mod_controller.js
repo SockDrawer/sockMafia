@@ -217,15 +217,13 @@ class MafiaModController {
 	* @returns {Promise}        A promise that will resolve when the game is ready
 	*/
 	dayHandler (command) {
-		const gameId = command.post.topic_id;
-		const modName = command.post.username;
 		const data = {
 			numPlayers: 0,
 			toExecute: 0,
 			day: 0,
 			names: []
 		};
-		let currDay, game, mod;
+		let gameId, modName, currDay, game, mod;
 
 			return command.getTopic().then((topic) => {
 				gameId = topic.id;
