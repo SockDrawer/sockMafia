@@ -50,6 +50,13 @@ class MafiaModController {
 	constructor(d, config) {
 		this.dao = d;
 	}
+	
+	activate(forum) {
+		//Register commandss
+        forum.Commands.add('set', 'Assign a player a role (mod only)', this.setHandler.bind(this));
+        forum.Commands.add('kill', 'kill a player (mod only)', this.killHandler.bind(this));
+        forum.Commands.add('new-day', 'move on to a new day (mod only)', this.dayHandler.bind(this));
+    }
 
 	/**
 	* Prepare: A mod function that starts a new game in the Prep phase.
@@ -135,17 +142,22 @@ class MafiaModController {
 	};
 
 	setHandler (command) {
-		const gameId = command.post.topic_id;
-		const modName = command.post.username;
 		// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
 		// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
 		const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
 		const property = command.args[1];
-		let game, mod, target;
+		let gameId, modName, game, mod, target;
 
-		logDebug('Received set property request from ' + modName + 'for ' + target + ' in thread ' + gameId);
+		
 
-		return this.dao.getGameByTopicId(command.post.topic_id)
+		return command.getTopic().then((topic) => {
+				gameId = topic.id;
+				return command.getUser();
+			}).then((user) => {
+				modName = user.username;
+				logDebug('Received set property request from ' + modName + 'for ' + target + ' in thread ' + gameId);
+				return this.dao.getGameByTopicId(gameId);
+			})
 			.then((g) => {
 				game = g;
 				return game.isActive ? Promise.resolve() : Promise.reject('Game not started. Try `!start`.');
@@ -215,8 +227,14 @@ class MafiaModController {
 		};
 		let currDay, game, mod;
 
-		logDebug('Received new day request from ' + mod + ' in thread ' + game);
-		return  this.dao.getGameByTopicId(command.post.topic_id)
+			return command.getTopic().then((topic) => {
+				gameId = topic.id;
+				return command.getUser();
+			}).then((user) => {
+				modName = user.username;
+				logDebug('Received new day request from ' + modName + ' in thread ' + game);
+				return this.dao.getGameByTopicId(gameId);
+			})
 			.then((g) => {
 				game = g;
 				currDay = game.day;
@@ -265,17 +283,19 @@ class MafiaModController {
 	* @returns {Promise}        A promise that will resolve when the game is ready
 	*/
 	killHandler (command) {
-		const gameId = command.post.topic_id;
-		const modName = command.post.username;
 		// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
 		// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
 		const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
-		let game, mod, target;
+		let gameId, modName, game, mod, target;
 
-		logDebug('Received kill request from ' + modName + 'for ' + target + ' in thread ' + gameId);
-
-
-		return this.dao.getGameByTopicId(command.post.topic_id)
+			return command.getTopic().then((topic) => {
+				gameId = topic.id;
+				return command.getUser();
+			}).then((user) => {
+				modName = user.username;
+				logDebug('Received kill request from ' + modName + 'for ' + target + ' in thread ' + gameId);
+				return this.dao.getGameByTopicId(gameId);
+			})
 			.then((g) => {
 				game = g;
 				return game.isActive ? Promise.resolve() : Promise.reject('Game not started. Try `!start`.');

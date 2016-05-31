@@ -92,14 +92,7 @@ function registerPlayerCommands(events) {
 }
 
 function registerModCommands(events) {
-	patchIn(modController);
-	events.onCommand('prepare', 'Start a new game', modController.prepHandler, handleCallback);
-	events.onCommand('start', 'move a game into active play (mod only)', modController.startHandler, handleCallback);
-	events.onCommand('new-day', 'move on to a new day (mod only)', modController.dayHandler, handleCallback);
-	events.onCommand('next-phase', 'move on to the next phase (mod only)', modController.dayHandler, handleCallback);
-	events.onCommand('kill', 'kill a player (mod only)', modController.killHandler, handleCallback);
-	events.onCommand('set', 'Assign a player a role (mod only)', modController.setHandler, handleCallback);
-	events.onCommand('end', 'end the game (mod only)', modController.finishHandler, handleCallback);
+
 }
 
 function registerCommands(events) {
@@ -254,6 +247,7 @@ exports.activate = function activate() {
 	view.init(internals.forum.Post, internals.forum.Formatter);
 	
 	playerController.activate(internals.forum);
+	modController.activate(internals.forum);
 
 	return exports.createFromDB(plugConfig).then(() => {
 		return registerCommands(fakeEvents);
