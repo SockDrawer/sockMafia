@@ -287,14 +287,12 @@ class MafiaPlayerController {
 	unvoteHandler (command) {
 		let gameId, post, actor, target, voter, votee, game;
 
-		logDebug('Received unvote request from ' + voter + ' in game ' + game);
-
 		if (command.args.length > 0) {
 			target = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
 		}
 		
 		function getVoteAttemptText(success) {
-			let text = '@' + command.post.username + (success ? ' unvoted ' : ' tried to unvote ');
+			let text = '@' + actor + (success ? ' unvoted ' : ' tried to unvote ');
 
 			text = text	+ 'in post #<a href="https://what.thedailywtf.com/t/'
 					+ game + '/' + post + '">'
@@ -310,15 +308,14 @@ class MafiaPlayerController {
 			return command.getUser();
 		}).then((user) => {
 			actor = user.username;
-			logDebug('Received unvote request from ' + actor + ' for ' + targetString + ' in game ' + gameId);
+			logDebug('Received unvote request from ' + actor + ' in game ' + gameId);
 			return command.getPost();
 		}).then((p) => {
 			post = p.id;	
-			return this.dao.getGameByTopicId(gameId);
-		})
-		.catch(() => {
-			logWarning('Ignoring message in nonexistant game thread ' + game);
-			throw(E_NOGAME);
+			return this.dao.getGameByTopicId(gameId).catch(() => {
+				logWarning('Ignoring message in nonexistant game thread ' + game);
+				throw(E_NOGAME);
+			});
 		})
 		.then((g) => {
 			game = g;
@@ -365,24 +362,24 @@ class MafiaPlayerController {
 	/*eslint-enable*/
 
 	/**
-	  * Vote: Vote to lynch a player
-	  * Must be used in the game thread. Expects one argument
-	  *
-	  * Game rules:
-	  *  - A vote can only be registered by a player in the game
-	  *  - A vote can only be registered by a living player
-	  *  - A vote can only be registered for a player in the game
-	  *  - A vote cna only be registered for a living player
-	  *  - If a simple majority of players vote for a single player:
-	  *    - The game enters the night phase
-	  *    - That player's information is revealed
-	  *
-	  * @example !vote playerName
-	  * @example !for playerName
-	  *
-	  * @param  {commands.command} command The command that was passed in.
-	  * @returns {Promise}        A promise that will resolve when the game is ready
-	  */
+	* Vote: Vote to lynch a player
+	* Must be used in the game thread. Expects one argument
+	*
+	* Game rules:
+	*  - A vote can only be registered by a player in the game
+	*  - A vote can only be registered by a living player
+	*  - A vote can only be registered for a player in the game
+	*  - A vote cna only be registered for a living player
+	*  - If a simple majority of players vote for a single player:
+	*    - The game enters the night phase
+	*    - That player's information is revealed
+	*
+	* @example !vote playerName
+	* @example !for playerName
+	*
+	* @param  {commands.command} command The command that was passed in.
+	* @returns {Promise}        A promise that will resolve when the game is ready
+	*/
 	voteHandler (command) {
 		let gameId, game, voter; 
 		// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
@@ -503,27 +500,27 @@ class MafiaPlayerController {
 	}
 
 	/**
-	  * Join: Join a game
-	  * Must be used in the game thread.
-	  *
-	  * Game rules:
-	  *  - A player can only join a game that is in the Prep phase
-	  *  - A player can only join a game they are not already playing
-	  *
-	  * @example !join
-	  *
-	  * @param  {commands.command} command The command that was passed in.
-	  * @returns {Promise}        A promise that will resolve when the game is ready
-	  */
+	* Join: Join a game
+	* Must be used in the game thread.
+	*
+	* Game rules:
+	*  - A player can only join a game that is in the Prep phase
+	*  - A player can only join a game they are not already playing
+	*
+	* @example !join
+	*
+	* @param  {commands.command} command The command that was passed in.
+	* @returns {Promise}        A promise that will resolve when the game is ready
+	*/
 	joinHandler(command) {
 		let game, gameId, player;
+		
 		return command.getTopic().then((topic) => {
 				gameId = topic.id;
-				return this.dao.getGameByTopicId(topic.id);
-			})
-			.catch(() => {
-				logWarning('Ignoring message in nonexistant game thread ' + game);
-				throw(E_NOGAME);
+				return this.dao.getGameByTopicId(gameId).catch(() => {
+					logWarning('Ignoring message in nonexistant game thread ' + game);
+					throw(E_NOGAME);
+				});
 			})
 			.then((g) => {
 				game = g;
@@ -572,11 +569,10 @@ class MafiaPlayerController {
 
 		return command.getTopic().then((topic) => {
 				id = topic.id;
-				return this.dao.getGameByTopicId(topic.id);
-			})
-			.catch(() => {
-				logWarning('Ignoring message in nonexistant game thread ' + game);
-				throw(E_NOGAME);
+				return this.dao.getGameByTopicId(id).catch(() => {
+					logWarning('Ignoring message in nonexistant game thread ' + game);
+					throw(E_NOGAME);
+				});
 			})
 			.then((g) => {
 				logDebug('Received list request in game ' + id);
@@ -639,11 +635,10 @@ class MafiaPlayerController {
 		
 		return command.getTopic().then((topic) => {
 				id = topic.id;
-				return this.dao.getGameByTopicId(topic.id);
-			})
-			.catch(() => {
-				logWarning('Ignoring message in nonexistant game thread ' + game);
-				throw(E_NOGAME);
+				return this.dao.getGameByTopicId(id).catch(() => {
+					logWarning('Ignoring message in nonexistant game thread ' + game);
+					throw(E_NOGAME);
+				});
 			})
 			.then((g) => {
 				logDebug('Received list request in game ' + id);
@@ -729,11 +724,10 @@ class MafiaPlayerController {
 		let game, id, player;
 		return command.getTopic().then((topic) => {
 				id = topic.id;
-				return this.dao.getGameByTopicId(topic.id);
-			})
-			.catch(() => {
-				logWarning('Ignoring message in nonexistant game thread ' + game);
-				throw(E_NOGAME);
+				return this.dao.getGameByTopicId(id).catch(() => {
+					logWarning('Ignoring message in nonexistant game thread ' + game);
+					throw(E_NOGAME);
+				});
 			})
 			.then((g) => {
 				game = g;

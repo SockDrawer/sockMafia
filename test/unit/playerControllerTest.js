@@ -415,7 +415,7 @@ describe('player controller', () => {
 			it('should rescind your vote', () => {
 				const command = {
 					getTopic: () => Promise.resolve({id: 12345}),
-					getPost: () => Promise.resolve({id: 2}),
+					getPost: () => Promise.resolve({id: 98765}),
 					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: [],
 					input: '!unvote'
