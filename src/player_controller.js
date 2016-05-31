@@ -75,7 +75,7 @@ class MafiaPlayerController {
     };
     
     activate(forum) {
-    	//Register commandss
+		//Register commandss
         forum.Commands.add('list-players', 'list all players still alive', this.listPlayersHandler.bind(this));
         forum.Commands.add('list-all-players', 'list all players, dead and alive', this.listAllPlayersHandler.bind(this));
         forum.Commands.add('join', 'join current mafia game', this.joinHandler.bind(this));
@@ -400,7 +400,7 @@ class MafiaPlayerController {
 			return this.doVote(gameId, post.id, voter, targetString, command.line, 1, command);
 		}).catch((err) => {
 			debug(err);
-			throw err
+			throw err;
 		});
 
 		//TODO: make doublevoter work
@@ -781,9 +781,9 @@ class MafiaPlayerController {
 					data.votes[votee].votes.push(row);
 				});
 
-				game.livePlayers.forEach((player) => {
-					if (currentlyVoting.indexOf(player.username) === -1) {
-						data.notVoting.push(player.username);
+				game.livePlayers.forEach((p) => {
+					if (currentlyVoting.indexOf(p.username) === -1) {
+						data.notVoting.push(p.username);
 						data.numNotVoting++;
 					}
 				});

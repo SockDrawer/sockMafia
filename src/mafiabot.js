@@ -216,7 +216,6 @@ exports.activate = function activate() {
 
 			return internals.forum.Commands.add(commandName, help, (command) => {
 					debug(`Mafia received command ${command.command}`);
-					debug(this)
 				return Promise.all([
 					command.getPost(),
 					command.getTopic(),
