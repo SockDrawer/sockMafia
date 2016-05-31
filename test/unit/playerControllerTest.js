@@ -344,11 +344,8 @@ describe('player controller', () => {
 
 			it('should remain silent when no game is in session', () => {
 				const command = {
-					post: {
-						username: 'tehNinja',
-						'topic_id': 12345,
-						'post_number': 98765
-					},
+					getTopic: () => Promise.resolve({id: 12345}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: ['@noLunch'],
 					input: '!for @noLunch'
 				};
@@ -362,11 +359,8 @@ describe('player controller', () => {
 
 			it('should reject unvotes from non-players', () => {
 				const command = {
-					post: {
-						username: 'tehNinja',
-						'topic_id': 12345,
-						'post_number': 98765
-					},
+					getTopic: () => Promise.resolve({id: 12345}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: [''],
 					input: '!unvote'
 				};
@@ -382,11 +376,8 @@ describe('player controller', () => {
 
 			it('should reject unvotes from the dead', () => {
 				const command = {
-					post: {
-						username: 'tehNinja',
-						'topic_id': 12345,
-						'post_number': 98765
-					},
+					getTopic: () => Promise.resolve({id: 12345}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: [],
 					input: '!unvote'
 				};
@@ -402,11 +393,8 @@ describe('player controller', () => {
 
 			it('should reject unvotes at night', () => {
 				const command = {
-					post: {
-						username: 'tehNinja',
-						'topic_id': 12345,
-						'post_number': 98765
-					},
+					getTopic: () => Promise.resolve({id: 12345}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: [],
 					input: '!unvote'
 				};
@@ -422,11 +410,8 @@ describe('player controller', () => {
 
 			it('should rescind your vote', () => {
 				const command = {
-					post: {
-						username: 'tehNinja',
-						'topic_id': 12345,
-						'post_number': 98765
-					},
+					getTopic: () => Promise.resolve({id: 12345}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: [],
 					input: '!unvote'
 				};
@@ -482,11 +467,8 @@ describe('player controller', () => {
 
 			it ('should remain silent when no game is in session', () => {
 				const command = {
-					post: {
-						username: 'tehNinja',
-						'topic_id': 12345,
-						'post_number': 98765
-					},
+					getTopic: () => Promise.resolve({id: 12345}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: ['@noLunch'],
 					input: '!for @noLunch'
 				};
@@ -500,11 +482,8 @@ describe('player controller', () => {
 
 			it('should reject votes from non-players', () => {
 				const command = {
-					post: {
-						username: 'tehNinja',
-						'topic_id': 12345,
-						'post_number': 98765
-					},
+					getTopic: () => Promise.resolve({id: 12345}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: [],
 					input: '!unvote'
 				};
@@ -520,11 +499,8 @@ describe('player controller', () => {
 
 			it('should reject votes from the dead', () => {
 				const command = {
-					post: {
-						username: 'tehNinja',
-						'topic_id': 12345,
-						'post_number': 98765
-					},
+					getTopic: () => Promise.resolve({id: 12345}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: [''],
 					input: '!unvote'
 				};
@@ -540,11 +516,8 @@ describe('player controller', () => {
 
 			it('should reject votes at night', () => {
 				const command = {
-					post: {
-						username: 'tehNinja',
-						'topic_id': 12345,
-						'post_number': 98765
-					},
+					getTopic: () => Promise.resolve({id: 12345}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: [''],
 					input: '!unvote'
 				};
@@ -560,11 +533,8 @@ describe('player controller', () => {
 
 			it('should register a vote to no-lynch', () => {
 				const command = {
-					post: {
-						username: 'tehNinja',
-						'topic_id': 12345,
-						'post_number': 98765
-					},
+					getTopic: () => Promise.resolve({id: 12345}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: [''],
 					input: '!unvote'
 				};
@@ -622,11 +592,8 @@ describe('player controller', () => {
 
 		it ('should remain silent when no game is in session', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
 				args: [''],
 				input: '!join'
 			};
@@ -642,11 +609,8 @@ describe('player controller', () => {
 
 		it('should not allow duplicates', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				}
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
 			};
 
 			mockGame.allPlayers = [mockUser];
@@ -663,11 +627,8 @@ describe('player controller', () => {
 
 		it('should report errors', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				}
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
 			};
 
 			sandbox.stub(mockGame, 'addPlayer').rejects('Error!');
@@ -683,11 +644,8 @@ describe('player controller', () => {
 
 		it('should not allow joining a game already in progress', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				}
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
 			};
 			mockGame.isActive = true;
 			sandbox.spy(mockGame, 'addPlayer');
@@ -703,11 +661,8 @@ describe('player controller', () => {
 
 		it('should facilitate joining', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				}
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
 			};
 
 			return playerController.joinHandler(command).then( () => {
@@ -777,11 +732,8 @@ describe('player controller', () => {
 
 			it ('should remain silent when no game is in session', () => {
 				const command = {
-					post: {
-						username: 'tehNinja',
-						'topic_id': 12345,
-						'post_number': 98765
-					},
+					getTopic: () => Promise.resolve({id: 12345}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: ['@noLunch'],
 					input: '!for @noLunch'
 				};
@@ -796,11 +748,8 @@ describe('player controller', () => {
 
 			it('should report players', () => {
 				const command = {
-					post: {
-						username: 'tehNinja',
-						'topic_id': 12345,
-						'post_number': 98765
-					}
+					getTopic: () => Promise.resolve({id: 12345}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
 				};
 
 				return playerController.listAllPlayersHandler(command).then(() => {
@@ -816,11 +765,8 @@ describe('player controller', () => {
 			it('should report when no living players exist', () => {
 				//TODO: Probably a 'game over' message?
 				const command = {
-					post: {
-						username: 'tehNinja',
-						'topic_id': 12345,
-						'post_number': 98765
-					}
+					getTopic: () => Promise.resolve({id: 12345}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
 				};
 
 				mockGame.livePlayers = [];
@@ -835,11 +781,8 @@ describe('player controller', () => {
 
 			it('should report when no dead players exist', () => {
 				const command = {
-					post: {
-						username: 'tehNinja',
-						'topic_id': 12345,
-						'post_number': 98765
-					}
+					getTopic: () => Promise.resolve({id: 12345}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
 				};
 
 				mockGame.deadPlayers = [];
@@ -854,11 +797,8 @@ describe('player controller', () => {
 
 			it('should report when there are no mods', () => {
 				const command = {
-					post: {
-						username: 'tehNinja',
-						'topic_id': 12345,
-						'post_number': 98765
-					}
+					getTopic: () => Promise.resolve({id: 12345}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
 				};
 
 				mockGame.moderators = [];
@@ -875,11 +815,8 @@ describe('player controller', () => {
 		describe('list-players()', () => {
 			it ('should remain silent when no game is in session', () => {
 				const command = {
-					post: {
-						username: 'tehNinja',
-						'topic_id': 12345,
-						'post_number': 98765
-					},
+					getTopic: () => Promise.resolve({id: 12345}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
 					args: ['@noLunch'],
 					input: '!for @noLunch'
 				};
@@ -895,11 +832,8 @@ describe('player controller', () => {
 
 			it('should report only living players and mods', () => {
 				const command = {
-					post: {
-						username: 'tehNinja',
-						'topic_id': 12345,
-						'post_number': 98765
-					}
+					getTopic: () => Promise.resolve({id: 12345}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
 				};
 
 				return playerController.listPlayersHandler(command).then(() => {
@@ -914,11 +848,8 @@ describe('player controller', () => {
 
 			it('should report lack of living players', () => {
 				const command = {
-					post: {
-						username: 'tehNinja',
-						'topic_id': 12345,
-						'post_number': 98765
-					}
+					getTopic: () => Promise.resolve({id: 12345}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
 				};
 
 				mockGame.livePlayers = [];
@@ -1041,11 +972,8 @@ describe('player controller', () => {
 
 		it ('should remain silent when no game is in session', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
 				args: ['@noLunch'],
 				input: '!for @noLunch'
 			};
@@ -1060,11 +988,8 @@ describe('player controller', () => {
 
 		it('should extract who is not voting', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				}
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
 			};
 
 			return playerController.listVotesHandler(command).then(() => {
@@ -1081,11 +1006,8 @@ describe('player controller', () => {
 
 		it('should output votes and only votes', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				}
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
 			};
 
 			return playerController.listVotesHandler(command).then(() => {
@@ -1101,11 +1023,8 @@ describe('player controller', () => {
 
 		it('should output mod of 0 for vanilla', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				}
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
 			};
 
 			return playerController.listVotesHandler(command).then(() => {
@@ -1117,11 +1036,8 @@ describe('player controller', () => {
 
 		it('should output mod of +1 for loved', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				}
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
 			};
 
 			sandbox.stub(mockUsers.dreikin, 'getProperties').returns(['loved']);
@@ -1135,11 +1051,8 @@ describe('player controller', () => {
 
 		it('should output mod of -1 for hated', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				}
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
 			};
 
 			sandbox.stub(mockUsers.dreikin, 'getProperties').returns(['hated']);
