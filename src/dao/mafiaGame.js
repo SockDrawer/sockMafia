@@ -291,6 +291,21 @@ class MafiaGame {
         }
         return getUser(this, this._data.deadPlayers, user);
     }
+    
+    /**
+     * Get a game moderator
+     *
+     *
+     * @param {string|MafiaUser} mod Moderator to fetch
+     * @returns {MafiaUser} Requested MafiaUser, null if no matching user found
+     */
+    getModertator(mod) {
+        const moderator = getUser(this, this._data.moderators, mod);
+        if (!moderator) {
+            throw new Error('E_MODERATOR_NOT_EXIST');
+        }
+        return moderator;
+    }
 
     /**
      * Get a player
