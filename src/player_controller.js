@@ -749,6 +749,7 @@ class MafiaPlayerController {
 				logDebug('Received list request in game ' + id);
 				
 				data.toExecute = this.getNumVotesRequired(game);
+				data.day = game.day;
 
 				const actions = game.getActions(); //default settings are fine
 				const currentlyVoting = [];

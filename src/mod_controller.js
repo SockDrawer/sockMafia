@@ -59,6 +59,7 @@ class MafiaModController {
         forum.Commands.add('set', 'Assign a player a role (mod only)', this.setHandler.bind(this));
         forum.Commands.add('kill', 'kill a player (mod only)', this.killHandler.bind(this));
         forum.Commands.add('new-day', 'move on to a new day (mod only)', this.dayHandler.bind(this));
+        forum.Commands.add('next-phase', 'move on to the next phase (mod only)', this.dayHandler.bind(this));
     }
 
 	/**
@@ -250,19 +251,20 @@ class MafiaModController {
 				return game.nextPhase();
 			})
 			.then(() => {
+				debug('Went from ' + currDay + ' to ' + game.day);
 				if (game.day > currDay) {
 					const numPlayers = game.livePlayers.length;
+					data.day = game.day;
 					data.toExecute = Math.ceil(numPlayers / 2);
 					data.numPlayers = game.livePlayers.length;
-					data.names = game.live.map((player) => {
-						return player.properName;
+					data.names = game.livePlayers.map((player) => {
+						return player.username;
 					});
 
-					logDebug('Moved to new day in  ' + game);
-					view.respondWithTemplate('/templates/newDayTemplate.handlebars', data, command);
+					logDebug('Moved to new day in  ' + game.name);
+					return view.respondWithTemplate('/templates/newDayTemplate.handlebars', data, command);
 				}
-				view.respond(command, 'Incremented stage for ' + game.name);
-				return Promise.Resolve();	
+				return view.respond(command, 'Incremented stage for ' + game.name);
 			})
 			.catch((err) => {
 				logRecoveredError('Error incrementing day: ' + err);
