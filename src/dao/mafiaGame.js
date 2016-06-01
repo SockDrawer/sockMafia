@@ -299,7 +299,7 @@ class MafiaGame {
      * @param {string|MafiaUser} mod Moderator to fetch
      * @returns {MafiaUser} Requested MafiaUser, null if no matching user found
      */
-    getModertator(mod) {
+    getModerator(mod) {
         const moderator = getUser(this, this._data.moderators, mod);
         if (!moderator) {
             throw new Error('E_MODERATOR_NOT_EXIST');
