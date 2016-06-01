@@ -27,13 +27,6 @@ Array.prototype.contains = function(element){
 };
 /*eslint-enable no-extend-native*/
 
-function logUnhandledError(error) {
-	if (eventLogger && eventLogger.emit) {
-		eventLogger.emit('error', 'Unrecoverable error! ' + error.toString());
-		eventLogger.emit('error', error.stack);
-	}
-}
-
 function logRecoveredError(error) {
 	if (eventLogger && eventLogger.emit) {
 		eventLogger.emit('logExtended', 3, error);
@@ -98,19 +91,19 @@ class MafiaModController {
 	}
 
 	/**
-	 * Start: A mod function that starts day 1 of a game
-	 * Must be used in the game thread.
-	 *
-	 * Game rules:
-	 *  - A game can only be started if it is in the prep phase
-	 *  - A game can only be started by the mod
-	 *  - When the game starts, it starts on Daytime of Day 1
-	 *
-	 * @example !start
-	 *
-	 * @param  {commands.command} command The command that was passed in.
-	 * @returns {Promise}        A promise that will resolve when the game is ready
-	 */
+	* Start: A mod function that starts day 1 of a game
+	* Must be used in the game thread.
+	*
+	* Game rules:
+	*  - A game can only be started if it is in the prep phase
+	*  - A game can only be started by the mod
+	*  - When the game starts, it starts on Daytime of Day 1
+	*
+	* @example !start
+	*
+	* @param  {commands.command} command The command that was passed in.
+	* @returns {Promise}        A promise that will resolve when the game is ready
+	*/
 	startHandler (command) {
 		const game = command.post.topic_id;
 		const mod = command.post.username;
@@ -143,7 +136,7 @@ class MafiaModController {
 				logRecoveredError('Error when starting game: ' + err);
 				view.reportError(command, 'Error when starting game: ', err);
 			});
-	};
+	}
 
 	setHandler (command) {
 		// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
@@ -291,7 +284,7 @@ class MafiaModController {
 				logRecoveredError('Error incrementing day: ' + err);
 				view.reportError(command, 'Error incrementing day: ', err);
 			});
-	};
+	}
 
 	/**
 	* Kill: A mod function that modkills or nightkills a player.
@@ -394,7 +387,7 @@ class MafiaModController {
 				logRecoveredError('Error finalizing game: ' + err);
 				view.reportError(command, 'Error finalizing game: ', err);
 			});
-	};
-};
+	}
+}
 
 module.exports = MafiaModController;
