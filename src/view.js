@@ -46,7 +46,8 @@ exports.init = function(postObject, forum, rf) {
 };
 
 exports.respond = function(command, output) {
-	return command.reply(output);
+	command.reply(output);
+	return Promise.resolve();
 };
 
 exports.respondInThread = function(thread, output) {
@@ -65,5 +66,6 @@ exports.respondWithTemplate  = function(templateFile, data, command) {
 };
 
 exports.reportError = function(command, preface, error) {
-	return command.reply(preface + error);
+	command.reply(preface + error);
+	return Promise.resolve();
 };

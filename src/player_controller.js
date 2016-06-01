@@ -473,16 +473,16 @@ class MafiaPlayerController {
 			if (!votee) {
 				throw new Error('No target specified');
 			}
-
 			return this.verifyVotePreconditions(game, voter, votee);
 			
 		})
-		.then(() => game.registerAction(post, actor, target, 'vote'))
 		.then(() => {
-			const text = getVoteAttemptText(game, true);
-			view.respond(command, text);
+			return game.registerAction(post, actor, target, 'vote');
+			})
+		.then(() => {
+			const text = getVoteAttemptText(true);
 			logDebug('Vote succeeded');
-			return true;
+			return view.respond(command, text);
 		})
 		.then(() => this.checkForAutoLynch(game, votee))
 		.catch((reason) => {
@@ -501,7 +501,7 @@ class MafiaPlayerController {
 				//Log error
 				logRecoveredError('Vote failed: ' + reason);
 
-				view.respond(command, text);
+				return view.reportError(command, 'Vote failed: ' , text);
 			});
 		});
 	}
@@ -560,17 +560,17 @@ class MafiaPlayerController {
 	};
 
 	/**
-	  * List-players: List living players in the game
-	  * Must be used in the game thread.
-	  *
-	  * Game rules:
-	  *  - Only living players are included in this list
-	  *
-	  * @example !list-players
-	  *
-	  * @param  {commands.command} command The command that was passed in.
-	  * @returns {Promise}        A promise that will resolve when the game is ready
-	  */
+	* List-players: List living players in the game
+	* Must be used in the game thread.
+	*
+	* Game rules:
+	*  - Only living players are included in this list
+	*
+	* @example !list-players
+	*
+	* @param  {commands.command} command The command that was passed in.
+	* @returns {Promise}        A promise that will resolve when the game is ready
+	*/
 	listPlayersHandler (command) {
 		let game, id;
 
@@ -625,18 +625,18 @@ class MafiaPlayerController {
 	};
 
 	/**
-	  * List-all-players: List all players in the game
-	  * Must be used in the game thread.
-	  *
-	  * Game rules:
-	  *  - All players are included in this list
-	  *  - Player status must be indicated
-	  *
-	  * @example !list-all-players
-	  *
-	  * @param  {commands.command} command The command that was passed in.
-	  * @returns {Promise}        A promise that will resolve when the game is ready
-	  */
+	* List-all-players: List all players in the game
+	* Must be used in the game thread.
+	*
+	* Game rules:
+	*  - All players are included in this list
+	*  - Player status must be indicated
+	*
+	* @example !list-all-players
+	*
+	* @param  {commands.command} command The command that was passed in.
+	* @returns {Promise}        A promise that will resolve when the game is ready
+	*/
 	listAllPlayersHandler(command) {
 		let game, id;
 		
