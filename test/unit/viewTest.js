@@ -292,12 +292,18 @@ describe('View helpers', () => {
 
 describe('View', () => {
 
-	let sandbox, postShim, readFileShim;
+	let sandbox, postShim, readFileShim, fakeCommand;
+
 	beforeEach(() => {
 		sandbox = sinon.sandbox.create();
 		postShim = {
 			reply: sandbox.stub().resolves()
 		};
+		
+		fakeCommand = {
+			reply: sandbox.stub().resolves()
+		};
+		
 		readFileShim = sandbox.stub().resolves(new Buffer('read file'));
 
 		view.init(postShim, undefined, readFileShim);
@@ -307,31 +313,21 @@ describe('View', () => {
 		sandbox.restore();
 	});
 
-	it('should wrap post.reply as respond', () => {
-		return view.respond({
-			post: {
-				'topic_id': 123,
-				'post_number': 345
-			}
-		}, 'This is a reply').then(() => {
-			postShim.reply.calledWith(123, 345, 'This is a reply').should.equal(true);
+	it('should wrap command.reply as respond', () => {
+		return view.respond(fakeCommand, 'This is a reply').then(() => {
+			fakeCommand.reply.calledWith('This is a reply').should.be.true;
 		});
 	});
 
 	it('should wrap post.reply as respondInThread', () => {
 		return view.respondInThread(123, 'This is a reply').then(() => {
-			postShim.reply.calledWith(123, undefined, 'This is a reply').should.equal(true);
+			postShim.reply.calledWith(123, undefined, 'This is a reply').should.be.true;
 		});
 	});
 
-	it('should wrap post.reply as reportError', () => {
-		return view.reportError({
-			post: {
-				'topic_id': 123,
-				'post_number': 345
-			}
-		}, 'ERR: ', 'This is an error').then(() => {
-			postShim.reply.calledWith(123, 345, 'ERR: This is an error').should.equal(true);
+	it('should wrap command.reply as reportError', () => {
+		return view.reportError(fakeCommand, 'ERR: ', 'This is an error').then(() => {
+			fakeCommand.reply.calledWith('ERR: This is an error').should.be.true;
 		});
 	});
 
@@ -340,15 +336,10 @@ describe('View', () => {
 		const fakeTemplate = sandbox.stub().returns('a compiled string');
 
 		sandbox.stub(Handlebars, 'compile').returns(fakeTemplate);
-		return view.respondWithTemplate('foo.hbrs', data, {
-			post: {
-				'topic_id': 123,
-				'post_number': 345
-			}
-		}).then(() => {
+		return view.respondWithTemplate('foo.hbrs', data, fakeCommand).then(() => {
 			Handlebars.compile.calledWith('read file').should.equal(true);
 			fakeTemplate.calledWith(data).should.equal(true);
-			postShim.reply.calledWith(123, 345, 'a compiled string').should.equal(true);
+			fakeCommand.reply.calledWith('a compiled string').should.equal(true);
 		});
 	});
 });

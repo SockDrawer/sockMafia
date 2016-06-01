@@ -171,7 +171,7 @@ describe('player controller', () => {
 
 	describe('Voting functions', () => {
 		describe('doVote()', () => {
-			let mockGame, mockVoter, mockTarget, mockdao, playerController;
+			let mockGame, mockVoter, mockTarget, mockdao, playerController, command;
 				beforeEach(() => {
 
 					mockVoter = {
@@ -209,16 +209,21 @@ describe('player controller', () => {
 					mockdao = {
 						getGameByTopicId: () => Promise.resolve(mockGame)
 					};
+					
+					command = {
+						reply: () => 1
+					};
 
 					playerController = new PlayerController(mockdao, null);
 					sandbox.stub(view, 'respondInThread');
+					sandbox.stub(view, 'respond');
 				});
 
 
 			it('should remain silent when no game is in session', () => {
 				sandbox.stub(mockdao, 'getGameByTopicId').rejects('No such game');
 
-				return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
+				return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1, command).then(() => {
 					view.respondInThread.called.should.be.false;
 				});
 			});
@@ -227,10 +232,10 @@ describe('player controller', () => {
 				mockGame.getPlayer = () => 1;
 				sandbox.stub(mockGame, 'getPlayer').throws('No such player');
 
-				return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
-					view.respondInThread.called.should.be.true;
+				return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1, command).then(() => {
+					view.respond.called.should.be.true;
 
-					const output = view.respondInThread.getCall(0).args[1];
+					const output = view.respond.getCall(0).args[1];
 					output.should.include('You are not yet a player');
 				});
 			});
@@ -238,10 +243,10 @@ describe('player controller', () => {
 			it('should reject votes for non-players', () => {
 				sandbox.stub(mockGame, 'getPlayer').withArgs('Sadie').throws('No such player');
 
-				return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
-					view.respondInThread.called.should.be.true;
+				return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1, command).then(() => {
+					view.respond.called.should.be.true;
 
-					const output = view.respondInThread.getCall(0).args[1];
+					const output = view.respond.getCall(0).args[1];
 					output.should.include('your princess is in another castle');
 				});
 			});
@@ -249,10 +254,10 @@ describe('player controller', () => {
 			it('should reject votes for the dead', () => {
 				mockTarget.isAlive = false;
 
-				return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
-					view.respondInThread.called.should.be.true;
+				return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1, command).then(() => {
+					view.respond.called.should.be.true;
 
-					const output = view.respondInThread.getCall(0).args[1];
+					const output = view.respond.getCall(0).args[1];
 					output.should.include('You would be wise to not speak ill of the dead.');
 				});
 			});
@@ -260,10 +265,10 @@ describe('player controller', () => {
 			it('should reject votes from the dead', () => {
 				mockVoter.isAlive = false;
 
-				return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
-					view.respondInThread.called.should.be.true;
+				return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1, command).then(() => {
+					view.respond.called.should.be.true;
 
-					const output = view.respondInThread.getCall(0).args[1];
+					const output = view.respond.getCall(0).args[1];
 					output.should.include('Aaagh! Ghosts!');
 				});
 			});
@@ -271,10 +276,10 @@ describe('player controller', () => {
 			it('should reject votes at night', () => {
 				mockGame.isDay = false;
 
-				return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
-					view.respondInThread.called.should.be.true;
+				return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1, command).then(() => {
+					view.respond.called.should.be.true;
 
-					const output = view.respondInThread.getCall(0).args[1];
+					const output = view.respond.getCall(0).args[1];
 					output.should.include('It is not day');
 				});
 			});
@@ -283,17 +288,17 @@ describe('player controller', () => {
 				//TODO
 				sandbox.stub(mockGame, 'registerAction').rejects('Unknown failure');
 
-				return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
-					view.respondInThread.called.should.be.true;
+				return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1, command).then(() => {
+					view.respond.called.should.be.true;
 
-					const output = view.respondInThread.getCall(0).args[1];
+					const output = view.respond.getCall(0).args[1];
 					output.should.include(':wtf:');
 				});
 			});
 
 			it('should register your vote', () => {
 				sandbox.spy(mockGame, 'registerAction');
-				return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
+				return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1, command).then(() => {
 					//Args: (postId, actor, target, type, actionToken)
 					const expectedArgs = [43, 'Lars', 'Sadie', 'vote'];
 					mockGame.registerAction.called.should.equal(true);
@@ -302,10 +307,10 @@ describe('player controller', () => {
 			});
 
 			it('should echo your vote when successful', () => {
-				return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1).then(() => {
-					view.respondInThread.called.should.be.true;
+				return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1, command).then(() => {
+					view.respond.called.should.be.true;
 
-					const output = view.respondInThread.getCall(0).args[1];
+					const output = view.respond.getCall(0).args[1];
 					output.should.include('@Lars voted for @Sadie');
 				});
 			});

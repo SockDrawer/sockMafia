@@ -440,11 +440,11 @@ class MafiaPlayerController {
 
 		function getVoteAttemptText(success) {
 			let text = '@' + actor + (success ? ' voted for ' : ' tried to vote for ') + '@' + target;
-
 			text = text	+ ' in post #<a href="https://what.thedailywtf.com/t/'
-					+ game.name + '/' + post + '">'
+					+ gameId + '/' + post + '">'
 					+ post + '</a>.\n\n'
 					+ 'Vote text:\n[quote]\n' + input + '\n[/quote]';
+					
 			return text;
 		}
 
@@ -455,6 +455,7 @@ class MafiaPlayerController {
 		})
 		.then((g) => {
 			game = g;
+			
 			try {
 				voter = game.getPlayer(actor);
 			} catch (_) {
@@ -472,6 +473,7 @@ class MafiaPlayerController {
 			}
 
 			return this.verifyVotePreconditions(game, voter, votee);
+			
 		})
 		.then(() => game.registerAction(post, actor, target, 'vote'))
 		.then(() => {
@@ -486,14 +488,17 @@ class MafiaPlayerController {
 				return Promise.resolve();
 			}
 
+
 			/*Error handling*/
 			return this.getVotingErrorText(reason, voter, votee)
 			.then((text) => {
+				
 				text += '\n<hr />\n';
 				text += getVoteAttemptText(false);
 
 				//Log error
 				logRecoveredError('Vote failed: ' + reason);
+
 				view.respond(command, text);
 			});
 		});
