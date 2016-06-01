@@ -1,7 +1,5 @@
 'use strict';
 
-const dao = require('./dao/index.js');
-const validator = require('./validator');
 const view = require('./view');
 const Promise = require('bluebird');
 const debug = require('debug')('sockbot:mafia:playerController');
@@ -9,45 +7,7 @@ const debug = require('debug')('sockbot:mafia:playerController');
 const E_NOGAME = 'Error: No game';
 let myName, myOwner, eventLogger;
 
-/*exports.init = function(forum) {
-	myName = forum.username;
-	myOwner = forum.owner.username;
-	eventLogger = forum;
-};*/
 
-
-/**
- * Shuffle function using Fisher-Yates algorithm, from SO
- *
- * @param {string[]} array Array of strings
- * @returns {string[]} Shuffled array of strings
- */
-function shuffle(array) {
-	let currentIndex = array.length, temporaryValue, randomIndex;
-
-	// While there remain elements to shuffle...
-	while (0 !== currentIndex) {
-
-		// Pick a remaining element...
-		randomIndex = Math.floor(Math.random() * currentIndex);
-		currentIndex -= 1;
-
-		// And swap it with the current element.
-		temporaryValue = array[currentIndex];
-		array[currentIndex] = array[randomIndex];
-		array[randomIndex] = temporaryValue;
-	}
-
-	return array;
-}
-
-
-function logUnhandledError(error) {
-	if (eventLogger && eventLogger.emit) {
-		eventLogger.emit('logError', 'Unrecoverable error! ' + error.toString());
-		eventLogger.emit('logError', error.stack);
-	}
-}
 
 function logWarning(error) {
 	if (eventLogger && eventLogger.emit) {
@@ -73,7 +33,7 @@ function logDebug(statement) {
 class MafiaPlayerController {
     constructor(d, config) {
         this.dao = d;
-    };
+    }
     
     activate(forum) {
 		//Set name
@@ -418,7 +378,7 @@ class MafiaPlayerController {
 		} else {
 			return doVote(game, post, voter, target, command.input, 1);
 		}*/
-	};
+	}
 
 	forHandler (command) {
 		let gameId, game, voter; 
@@ -564,7 +524,7 @@ class MafiaPlayerController {
 				view.reportError(command, 'Error when adding to game: ', err);
 				logRecoveredError('Join failed ' + err);
 			});
-	};
+	}
 
 	/**
 	* List-players: List living players in the game
@@ -629,7 +589,7 @@ class MafiaPlayerController {
 				view.reportError(command, 'Error resolving list: ', err);
 				logRecoveredError('List failed ' + err);
 			});
-	};
+	}
 
 	/**
 	* List-all-players: List all players in the game
@@ -706,7 +666,7 @@ class MafiaPlayerController {
 				view.reportError(command, 'Error resolving list: ', err);
 				logRecoveredError('List failed ' + err);
 			});
-	};
+	}
 
 	/**
 	* List-votes: List votes for the current day
@@ -735,7 +695,7 @@ class MafiaPlayerController {
 		};
 		
 
-		let game, id, player;
+		let game, id;
 		return command.getTopic().then((topic) => {
 				id = topic.id;
 				return this.dao.getGameByTopicId(id).catch(() => {
@@ -819,30 +779,30 @@ class MafiaPlayerController {
 				view.reportError(command, 'Error resolving list: ', err);
 				logRecoveredError('List failed ' + err);
 			});
-	};
+	}
 
 	/**
-	  * List-all-votes: List votes since the beginning of the thread
-	  * Must be used in the game thread.
-	  *
-	  * Game rules:
-	  *  - All votes must be included in this list, including rescinded votes
-	  *  - Rescinded votes must be indicated as such with a strikethrough
-	  *  - The post in which a vote was registered must be linked
-	  *  - The post in which a rescinded vote was rescinded must be linked
-	  *  - Votes must include the name of the voter
-	  *  - Votes must be segregated by day
-	  *
-	  * @example !list-all-votes
-	  *
-	  * @param  {commands.command} command The command that was passed in.
-	  * @returns {Promise}        A promise that will resolve when the game is ready
-	  */
+	* List-all-votes: List votes since the beginning of the thread
+	* Must be used in the game thread.
+	*
+	* Game rules:
+	*  - All votes must be included in this list, including rescinded votes
+	*  - Rescinded votes must be indicated as such with a strikethrough
+	*  - The post in which a vote was registered must be linked
+	*  - The post in which a rescinded vote was rescinded must be linked
+	*  - Votes must include the name of the voter
+	*  - Votes must be segregated by day
+	*
+	* @example !list-all-votes
+	*
+	* @param  {commands.command} command The command that was passed in.
+	* @returns {Promise}        A promise that will resolve when the game is ready
+	*/
 	listAllVotesHandler (command) {
 		logDebug('Received list all votes request from ' + command.post.username + ' in game ' + command.post.topic_id);
 		logDebug('List all votes is not yet implemented.');
 		return Promise.resolve();
-	};
-};
+	}
+}
 
 module.exports = MafiaPlayerController;
