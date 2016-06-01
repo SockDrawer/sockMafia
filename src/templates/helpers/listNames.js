@@ -27,18 +27,18 @@ module.exports = function(formatter) {
 			if (typeof value === 'object') {
 				if (value.isCurrent) {
 					return '<a href="' 
-					+ formatter.urlForTopic(value.game, slugs[Math.floor(Math.random() * slugs.length)], value.post)
+					+ formatter.urlForPost(value.postId)
 					+ '"><b>'
 					+ value.actor.username
 					+ '</b> </a>';
 				} else {
 					return '<a href="' 
-					+ formatter.urlForTopic(value.game, slugs[Math.floor(Math.random() * slugs.length)], value.post)
+					+ formatter.urlForPost(value.postId)
 					+ '"><s>'
 					+ value.actor.username
 					+ '</s> </a>'
 					+ '<a href="'
-					+ formatter.urlForTopic(value.game, slugs[Math.floor(Math.random() * slugs.length)], value.retractedAt)
+					+ formatter.urlForPost(value.revokedId)
 					+ '">[X]</a>';
 				}
 			}

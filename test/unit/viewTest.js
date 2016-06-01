@@ -28,8 +28,12 @@ describe('View helpers', () => {
 		fakeFormatter = {
 			urlForTopic: (topicId, slug, postId) => {
 				return '/t/' + slug + '/' + topicId + '/' + postId;
+			},
+			urlForPost: (postId) => {
+				return '/p/' + postId;
 			}
 		};
+		
 	});
 	
 	afterEach(() => {
@@ -47,7 +51,7 @@ describe('View helpers', () => {
 		it('Should one player without a comma', () => {
 			const input = [{
 				game: 123,
-				post: 43,
+				postId: 43,
 				actor: {
 					username: 'yamikuronue'
 				}
@@ -60,25 +64,24 @@ describe('View helpers', () => {
 		it('Should link to the post', () => {
 			const input = [{
 				game: 123,
-				post: 43,
+				postId: 43,
 				actor: {
 					username: 'yamikuronue'
 				}
 			}];
 
-			sandbox.spy(fakeFormatter, 'urlForTopic');
-			listNamesHelper(input).toString().should.contain('/t/slug/123/43');
+			sandbox.spy(fakeFormatter, 'urlForPost');
+			listNamesHelper(input).toString().should.contain('/p/43');
 			
-			fakeFormatter.urlForTopic.called.should.be.true;
-			const args = fakeFormatter.urlForTopic.getCall(0).args;
-			args[0].should.equal(123);
-			args[2].should.equal(43);
+			fakeFormatter.urlForPost.called.should.be.true;
+			const args = fakeFormatter.urlForPost.getCall(0).args;
+			args[0].should.equal(43);
 		});
 		
 		it('Should bold current posts', () => {
 			const input = [{
 				game: 123,
-				post: 43,
+				postId: 43,
 				actor: {
 					username: 'yamikuronue'
 				},
@@ -91,12 +94,12 @@ describe('View helpers', () => {
 		it('Should strikeout retracted posts', () => {
 			const input = [{
 				game: 123,
-				post: 43,
+				postId: 43,
 				actor: {
 					username: 'yamikuronue'
 				},
 				isCurrent: false,
-				retractedAt: 44
+				revokedId: 44
 			}];
 			const output = listNamesHelper(input).toString();
 			output.should.contain('<s>');
@@ -108,40 +111,41 @@ describe('View helpers', () => {
 		it('Should link to the retraction', () => {
 			const input = [{
 				game: 123,
-				post: 43,
+				postId: 43,
 				actor: {
 					username: 'yamikuronue'
 				},
 				isCurrent: false,
-				retractedAt: 44
+				revokedId: 44
 			}];
 
-			sandbox.spy(fakeFormatter, 'urlForTopic');
-			listNamesHelper(input).toString().should.contain('/t/slug/123/44');
+			sandbox.spy(fakeFormatter, 'urlForPost');
+			listNamesHelper(input).toString().should.contain('/p/44');
 
-			fakeFormatter.urlForTopic.calledTwice.should.be.true;
-			const args = fakeFormatter.urlForTopic.getCall(1).args;
-			args[0].should.equal(123);
-			args[2].should.equal(44);
+			fakeFormatter.urlForPost.calledTwice.should.be.true;
+			const args = fakeFormatter.urlForPost.getCall(1).args;
+			args[0].should.equal(44);
 		});
 
 		it('Should list two votes with a comma', () => {
 			const input = [{
 				game: 123,
-				post: 43,
+				postId: 43,
 				actor: {
 					username: 'yamikuronue'
-				}
+				},
+				isCurrent: true
 			},
 			{
 				game: 123,
-				post: 47,
+				postId: 47,
 				actor: {
 					username: 'accalia'
-				}
+				},
+				isCurrent: true
 			}];
-			listNamesHelper(input).toString().should.contain('/t/slug/123/43');
-			listNamesHelper(input).toString().should.contain('/t/slug/123/47');
+			listNamesHelper(input).toString().should.contain('/p/43');
+			listNamesHelper(input).toString().should.contain('/p/47');
 			listNamesHelper(input).toString().should.contain(',');
 			listNamesHelper(input).toString().should.contain('yamikuronue');
 			listNamesHelper(input).toString().should.contain('accalia');

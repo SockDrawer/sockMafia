@@ -262,7 +262,7 @@ class MafiaPlayerController {
 			view.respond(command, text);
 			logDebug('Nolynch vote succeeded');
 			return true;
-		})
+		}) /*TODO: check for successufl no-lynch*/
 		.catch((reason) => {
 			if (reason === E_NOGAME) {
 				return Promise.resolve();
