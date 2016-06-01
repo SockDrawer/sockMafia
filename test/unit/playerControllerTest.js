@@ -791,7 +791,7 @@ describe('player controller', () => {
 					view.respond.called.should.be.true;
 
 					const output = view.respond.getCall(0).args[1];
-					output.should.include('###Living:\nNobody! Aren\'t you special?\n');
+					output.should.include('### Living:\nNobody! Aren\'t you special?\n');
 				});
 			});
 
@@ -807,7 +807,7 @@ describe('player controller', () => {
 					view.respond.called.should.be.true;
 
 					const output = view.respond.getCall(0).args[1];
-					output.should.include('###Dead:\nNobody! Aren\'t you special?\n');
+					output.should.include('### Dead:\nNobody! Aren\'t you special?\n');
 				});
 			});
 
@@ -823,7 +823,7 @@ describe('player controller', () => {
 					view.respond.called.should.be.true;
 
 					const output = view.respond.getCall(0).args[1];
-					output.should.include('###Mod(s):\nNone. Weird.');
+					output.should.include('### Mod(s):\nNone. Weird.');
 				});
 			});
 		});

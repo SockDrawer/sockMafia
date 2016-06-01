@@ -4,6 +4,8 @@ const dao = require('./dao/index.js');
 const validator = require('./validator');
 const view = require('./view');
 const Promise = require('bluebird');
+const debug = require('debug')('sockbot:mafia:modController');
+
 
 exports.internals = {};
 let eventLogger;
@@ -40,6 +42,7 @@ function logRecoveredError(error) {
 
 
 function logDebug(statement) {
+	debug(statement);
 	if (eventLogger && eventLogger.emit) {
 		eventLogger.emit('logExtended', 5, statement);
 	}
@@ -155,7 +158,7 @@ class MafiaModController {
 				return command.getUser();
 			}).then((user) => {
 				modName = user.username;
-				logDebug('Received set property request from ' + modName + 'for ' + target + ' in thread ' + gameId);
+				logDebug('Received set property request from ' + modName + ' for ' + targetString + ' in thread ' + gameId);
 				return this.dao.getGameByTopicId(gameId);
 			})
 			.then((g) => {
@@ -163,9 +166,10 @@ class MafiaModController {
 				return game.isActive ? Promise.resolve() : Promise.reject('Game not started. Try `!start`.');
 			})
 			.then(() => {
-				mod = game.getPlayer(modName);
-				if (!mod) {
-					throw new Error('You are not in the game!');
+				try {
+					mod = game.getModerator(modName);
+				} catch (_) {
+					throw new Error('You are not a moderator!');
 				}
 				return mod.isModerator ? Promise.resolve() : Promise.reject('You are not a moderator');
 			})
@@ -239,7 +243,7 @@ class MafiaModController {
 				return game.isActive ? Promise.resolve() : Promise.reject('Game not started. Try `!start`.');
 			})
 			.then(() => {
-				mod = game.getPlayer(modName);
+				mod = game.getModerator(modName);
 				return mod.isModerator ? Promise.resolve() : Promise.reject('You are not a moderator');
 			})
 			.then(() => {
@@ -299,7 +303,7 @@ class MafiaModController {
 				return game.isActive ? Promise.resolve() : Promise.reject('Game not started. Try `!start`.');
 			})
 			.then(() => {
-				mod = game.getPlayer(modName);
+				mod = game.getModerator(modName);
 				return mod.isModerator ? Promise.resolve() : Promise.reject('You are not a moderator');
 			})
 			.then(() => {

@@ -64,6 +64,28 @@ describe('MafiaBot', function () {
 		after(() => {
 			dao.getGameByTopicId.restore();
 		});
+		
+		it('Should listing players', () => {
+			const command = {
+				args: [''],
+				input: '!list-players',
+				reply: sandbox.stub(),
+				getTopic: () => Promise.resolve({id: 1}),
+				getPost: () => Promise.resolve({id: 4}),
+				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+			};
+
+			//Spies
+			sandbox.spy(game, 'registerAction');
+			return playerController.listPlayersHandler(command).then(() => {
+
+				command.reply.called.should.equal(true);
+				command.reply.firstCall.args[0].should.include('accalia');
+				command.reply.firstCall.args[0].should.include('dreikin');
+				command.reply.firstCall.args[0].should.include('yamikuronue');
+				command.reply.firstCall.args[0].should.include('tehninja');
+			});
+		});
 
 		it('Should allow one player to vote for another', () => {
 			const command = {

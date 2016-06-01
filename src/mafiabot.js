@@ -135,7 +135,7 @@ function registerPlayers(game, players) {
 			players,
 			function (player) {
 				console.log('Mafia: Adding player: ' + player);
-				return game.addPlayer(game, player)
+				return game.addPlayer(player)
 					.catch((err) => {
 						console.log('Mafia: Adding player: failed to add player: ' + player + '\n\tReason: ' + err);
 						return Promise.resolve();

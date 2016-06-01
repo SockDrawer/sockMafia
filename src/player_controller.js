@@ -592,8 +592,8 @@ class MafiaPlayerController {
 				const numLiving = alive.length;
 				const numMods = mods.length;
 
-				let output = '##Player List\n';
-				output += '###Living:\n';
+				let output = '## Player List\n';
+				output += '### Living:\n';
 				if (numLiving <= 0) {
 					output += 'Nobody! Aren\'t you special?\n';
 				} else {
@@ -602,7 +602,7 @@ class MafiaPlayerController {
 					}
 				}
 
-				output += '###Mod(s):\n';
+				output += '### Mod(s):\n';
 				if (numMods <= 0) {
 					output += 'None. Weird.';
 				} else {
@@ -660,8 +660,8 @@ class MafiaPlayerController {
 				const numDead = dead.length;
 				const numMods = mods.length;
 
-				let output = '##Player List\n';
-				output += '###Living:\n';
+				let output = '## Player List\n';
+				output += '### Living:\n';
 				if (numLiving <= 0) {
 					output += 'Nobody! Aren\'t you special?\n';
 				} else {
@@ -670,7 +670,7 @@ class MafiaPlayerController {
 					}
 				}
 
-				output += '\n###Dead:\n';
+				output += '\n### Dead:\n';
 				if (numDead <= 0) {
 					output += 'Nobody! Aren\'t you special?\n';
 				} else {
@@ -679,7 +679,7 @@ class MafiaPlayerController {
 					}
 				}
 
-				output += '###Mod(s):\n';
+				output += '### Mod(s):\n';
 				if (numMods <= 0) {
 					output += 'None. Weird.';
 				} else {
@@ -702,22 +702,22 @@ class MafiaPlayerController {
 	};
 
 	/**
-	  * List-votes: List votes for the current day
-	  * Must be used in the game thread.
-	  *
-	  * Game rules:
-	  *  - All votes must be included in this list, including rescinded votes
-	  *  - Rescinded votes must be indicated as such with a strikethrough
-	  *  - The post in which a vote was registered must be linked
-	  *  - The post in which a rescinded vote was rescinded must be linked
-	  *  - Votes must include the name of the voter
-	  *  - Only votes for the current day number shall be listed
-	  *
-	  * @example !list-votes
-	  *
-	  * @param  {commands.command} command The command that was passed in.
-	  * @returns {Promise}        A promise that will resolve when the game is ready
-	  */
+	* List-votes: List votes for the current day
+	* Must be used in the game thread.
+	*
+	* Game rules:
+	*  - All votes must be included in this list, including rescinded votes
+	*  - Rescinded votes must be indicated as such with a strikethrough
+	*  - The post in which a vote was registered must be linked
+	*  - The post in which a rescinded vote was rescinded must be linked
+	*  - Votes must include the name of the voter
+	*  - Only votes for the current day number shall be listed
+	*
+	* @example !list-votes
+	*
+	* @param  {commands.command} command The command that was passed in.
+	* @returns {Promise}        A promise that will resolve when the game is ready
+	*/
 	listVotesHandler(command) {
 		const data = {
 			day: 0,

@@ -44,16 +44,8 @@ describe('mod controller', () => {
 				killPlayer: () => Promise.resolve(),
 				nextPhase: () => 1,
 				getActions: () => 1,
-				getPlayer: (player) => {
-					if (player === 'God') {
-						return mockUser;
-					}
-
-					if (player === 'Margaret') {
-						return mockTarget;
-					}
-					throw new Error('No such player: ' + player);
-				},
+				getPlayer: (player) => mockTarget,
+				getModerator: () => mockUser,
 				topicId: 12
 			};
 
@@ -187,6 +179,7 @@ describe('mod controller', () => {
 				nextPhase: () => 1,
 				getActions: () => 1,
 				getPlayer: () => mockUser,
+				getModerator: () => mockUser,
 				topicId: 12,
 				day: 1
 			};
@@ -211,6 +204,7 @@ describe('mod controller', () => {
 			};
 			mockUser.isModerator = false;
 			sandbox.spy(mockGame, 'nextPhase');
+			sandbox.stub(mockGame, 'getModerator').rejects();
 
 			return modController.dayHandler(command).then( () => {
 				//Game actions
@@ -291,16 +285,8 @@ describe('mod controller', () => {
 				killPlayer: () => Promise.resolve(),
 				nextPhase: () => 1,
 				getActions: () => 1,
-				getPlayer: (player) => {
-						if (player === 'God') {
-							return mockUser;
-						}
-
-						if (player === 'Margaret') {
-							return mockTarget;
-						}
-						throw new Error('E_USER_NOT_EXIST');
-					},
+				getPlayer: (player) => mockTarget,
+				getModerator: () => mockUser,
 				topicId: 12,
 				day: 1
 			};
@@ -325,6 +311,7 @@ describe('mod controller', () => {
 			};
 
 			mockUser.isModerator = false;
+			sandbox.stub(mockGame, 'getModerator').rejects();
 
 
 			return modController.setHandler(command).then( () => {
@@ -345,6 +332,8 @@ describe('mod controller', () => {
 				]
 			};
 
+			sandbox.stub(mockGame, 'getPlayer').throws();
+			
 			return modController.setHandler(command).then( () => {
 				view.reportError.calledWith(command).should.be.true;
 				const output = view.reportError.getCall(0).args[2].toString();
