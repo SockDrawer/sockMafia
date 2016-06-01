@@ -225,7 +225,6 @@ describe('MafiaBot', function () {
 			//Spies
 			sandbox.spy(game, 'registerAction');
 			return playerController.voteHandler(command).then(() => {
-				console.log('done')
 				view.reportError.called.should.equal(false);
 				game.registerAction.called.should.equal(true);
 				command.reply.called.should.be.true;

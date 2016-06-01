@@ -501,7 +501,7 @@ class MafiaPlayerController {
 				//Log error
 				logRecoveredError('Vote failed: ' + reason);
 
-				return view.reportError(command, 'Vote failed: ' , text);
+				return view.reportError(command, '', text);
 			});
 		});
 	}
