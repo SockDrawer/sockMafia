@@ -382,6 +382,7 @@ class MafiaPlayerController {
 	*/
 	voteHandler (command) {
 		let gameId, game, voter; 
+		
 		// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
 		// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
 		const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
@@ -391,6 +392,7 @@ class MafiaPlayerController {
 			return command.getUser();
 		}).then((user) => {
 			voter = user.username;
+			
 			logDebug('Received vote request from ' + voter + ' for ' + targetString + ' in game ' + gameId);
 			return command.getPost();
 		}).then((post) => {
@@ -449,10 +451,10 @@ class MafiaPlayerController {
 		}
 
 		return this.dao.getGameByTopicId(gameId)
-		.catch(() => {
-			logWarning('Ignoring message in nonexistant game thread ' + game);
-			throw(E_NOGAME);
-		})
+			.catch(() => {
+				logWarning('Ignoring message in nonexistant game thread ' + gameId);
+				throw(E_NOGAME);
+			})
 		.then((g) => {
 			game = g;
 			

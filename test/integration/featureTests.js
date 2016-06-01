@@ -40,7 +40,7 @@ describe('MafiaBot', function () {
 		sandbox.restore();
 	});
 
-	describe.only('Voting', function () {
+	describe('Voting', function () {
 		let dao, playerController, game;
 
 		before(() => {
@@ -67,13 +67,12 @@ describe('MafiaBot', function () {
 
 		it('Should allow one player to vote for another', () => {
 			const command = {
-				post: {
-					username: 'yamikuronue',
-					'topic_id': 1,
-					'post_number': 5
-				},
 				args: ['@accalia'],
-				input: '!vote @accalia'
+				input: '!vote @accalia',
+				reply: sandbox.stub(),
+				getTopic: () => Promise.resolve({id: 1}),
+				getPost: () => Promise.resolve({id: 5}),
+				getUser: () => Promise.resolve({username: 'yamikuronue'}),
 			};
 
 			//Spies
@@ -81,20 +80,19 @@ describe('MafiaBot', function () {
 			return playerController.voteHandler(command).then(() => {
 				game.registerAction.called.should.equal(true);
 
-				view.respondInThread.called.should.equal(true);
-				view.respondInThread.firstCall.args[1].should.include('@yamikuronue voted for @accalia');
+				command.reply.called.should.equal(true);
+				command.reply.firstCall.args[0].should.include('@yamikuronue voted for @accalia');
 			});
 		});
 
 		it('Should prevent invalid voters', () => {
 			const command = {
-				post: {
-					username: 'banana',
-					'topic_id': 1,
-					'post_number': 6
-				},
 				args: ['@accalia'],
-				input: '!vote @accalia'
+				input: '!vote @accalia',
+				reply: sandbox.stub(),
+				getTopic: () => Promise.resolve({id: 1}),
+				getPost: () => Promise.resolve({id: 6}),
+				getUser: () => Promise.resolve({username: 'banana'}),
 			};
 
 			//Spies
@@ -106,13 +104,12 @@ describe('MafiaBot', function () {
 
 		it('Should prevent invalid targets', () => {
 			const command = {
-				post: {
-					username: 'yamikuronue',
-					'topic_id': 1,
-					'post_number': 7
-				},
 				args: ['@banana'],
-				input: '!vote @banana'
+				input: '!vote @banana',
+				reply: sandbox.stub(),
+				getTopic: () => Promise.resolve({id: 1}),
+				getPost: () => Promise.resolve({id: 7}),
+				getUser: () => Promise.resolve({username: 'yamikuronue'}),
 			};
 
 			//Spies
@@ -126,13 +123,12 @@ describe('MafiaBot', function () {
 
 		it('Should allow changing targets', () => {
 			const command = {
-				post: {
-					username: 'yamikuronue',
-					'topic_id': 1,
-					'post_number': 8
-				},
 				args: ['@dreikin'],
-				input: '!vote @dreikin'
+				input: '!vote @dreikin',
+				reply: sandbox.stub(),
+				getTopic: () => Promise.resolve({id: 1}),
+				getPost: () => Promise.resolve({id: 8}),
+				getUser: () => Promise.resolve({username: 'yamikuronue'}),
 			};
 
 			//Spies
@@ -146,13 +142,12 @@ describe('MafiaBot', function () {
 
 		it('Should allow unvoting', () => {
 			const command = {
-				post: {
-					username: 'yamikuronue',
-					'topic_id': 1,
-					'post_number': 9
-				},
 				args: [],
-				input: '!unvote'
+				input: '!unvote',
+				reply: sandbox.stub(),
+				getTopic: () => Promise.resolve({id: 1}),
+				getPost: () => Promise.resolve({id: 9}),
+				getUser: () => Promise.resolve({username: 'yamikuronue'}),
 			};
 
 			//Spies
@@ -166,13 +161,12 @@ describe('MafiaBot', function () {
 
 		it('Should allow revoting', () => {
 			const command = {
-				post: {
-					username: 'yamikuronue',
-					'topic_id': 1,
-					'post_number': 10
-				},
 				args: ['@dreikin'],
-				input: '!vote @dreikin'
+				input: '!vote @dreikin',
+				reply: sandbox.stub(),
+				getTopic: () => Promise.resolve({id: 1}),
+				getPost: () => Promise.resolve({id: 10}),
+				getUser: () => Promise.resolve({username: 'yamikuronue'}),
 			};
 
 			//Spies
@@ -180,7 +174,7 @@ describe('MafiaBot', function () {
 			return playerController.voteHandler(command).then(() => {
 				view.reportError.called.should.equal(false);
 				game.registerAction.called.should.equal(true);
-				view.respondInThread.firstCall.args[1].should.include('@yamikuronue voted for @dreikin');
+				command.reply.firstCall.args[0].should.include('@yamikuronue voted for @dreikin');
 
 				//Verify that the unvote reduced the vote count so Dreikin is still alive
 				game.getPlayer('dreikin').isAlive.should.equal(true);
@@ -195,7 +189,11 @@ describe('MafiaBot', function () {
 					'post_number': 11
 				},
 				args: [''],
-				input: '!noLynch'
+				input: '!noLynch',
+				reply: sandbox.stub(),
+				getTopic: () => Promise.resolve({id: 1}),
+				getPost: () => Promise.resolve({id: 11}),
+				getUser: () => Promise.resolve({username: 'tehninja'}),
 			};
 
 			//Spies
@@ -204,11 +202,12 @@ describe('MafiaBot', function () {
 				game.registerAction.called.should.equal(true);
 
 				view.respond.called.should.equal(true);
-				view.respond.firstCall.args[1].should.include('@tehninja voted to not lynch');
+				command.reply.called.should.be.true;
+				command.reply.firstCall.args[0].should.include('@tehninja voted to not lynch');
 			});
 		});
 
-		it('Should allow un-nolynching', () => {
+		it.only('Should allow un-nolynching', () => {
 			const command = {
 				post: {
 					username: 'tehninja',
@@ -216,15 +215,21 @@ describe('MafiaBot', function () {
 					'post_number': 12
 				},
 				args: ['@dreikin'],
-				input: '!vote @dreikin'
+				input: '!vote @dreikin',
+				reply: sandbox.stub(),
+				getTopic: () => Promise.resolve({id: 1}),
+				getPost: () => Promise.resolve({id: 12}),
+				getUser: () => Promise.resolve({username: 'tehninja'}),
 			};
+			
 
 			//Spies
 			sandbox.spy(game, 'registerAction');
 			return playerController.voteHandler(command).then(() => {
 				view.reportError.called.should.equal(false);
 				game.registerAction.called.should.equal(true);
-				view.respondInThread.firstCall.args[1].should.include('@tehninja voted for @dreikin');
+				command.reply.called.should.be.true;
+				command.reply.firstCall.args[0].should.include('@tehninja voted for @dreikin');
 			});
 		});
 
@@ -232,20 +237,20 @@ describe('MafiaBot', function () {
 
 		it('Should auto-lynch', () => {
 			const command = {
-				post: {
-					username: 'accalia',
-					'topic_id': 1,
-					'post_number': 11
-				},
 				args: ['@dreikin'],
-				input: '!vote @dreikin'
+				input: '!vote @dreikin',
+				reply: sandbox.stub(),
+				getTopic: () => Promise.resolve({id: 1}),
+				getPost: () => Promise.resolve({id: 13}),
+				getUser: () => Promise.resolve({username: 'accalia'}),
 			};
 			//Spies
 			sandbox.spy(game, 'registerAction');
 			return playerController.voteHandler(command).then(() => {
 				view.reportError.called.should.equal(false);
 				game.registerAction.called.should.equal(true);
-				view.respondInThread.firstCall.args[1].should.include('@accalia voted for @dreikin');
+				command.reply.called.should.be.true;
+				command.reply.firstCall.args[0].should.include('@accalia voted for @dreikin');
 				game.getPlayer('dreikin').isAlive.should.equal(false);
 			});
 		});
