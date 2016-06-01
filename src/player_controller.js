@@ -76,6 +76,9 @@ class MafiaPlayerController {
     };
     
     activate(forum) {
+		//Set name
+		myName = forum.username;
+		
 		//Register commandss
         forum.Commands.add('list-players', 'list all players still alive', this.listPlayersHandler.bind(this));
         forum.Commands.add('list-all-players', 'list all players, dead and alive', this.listAllPlayersHandler.bind(this));
@@ -89,11 +92,11 @@ class MafiaPlayerController {
     }
 
 	/**
-	 * Helper method to lynch a player
-	 * @param  {Number} game   The ID of the game
-	 * @param  {String} target The player's name
-	 * @returns {Promise}        A promise to complete the lynch
-	 */
+	* Helper method to lynch a player
+	* @param  {Number} game   The ID of the game
+	* @param  {String} target The player's name
+	* @returns {Promise}        A promise to complete the lynch
+	*/
 	lynchPlayer(game, target) {
 		logDebug('Lynching target ' + target);
 
@@ -124,6 +127,10 @@ class MafiaPlayerController {
 	}
 
 	getVoteModifierForTarget(game, target) {
+		if (!target) {
+			return 0;
+		}
+		
 		const properties = target.getProperties();
 		if (properties.indexOf('loved') > -1) {
 			return 1;
@@ -262,7 +269,7 @@ class MafiaPlayerController {
 			}
 
 			/*Error handling*/
-			return this.getVotingErrorText(reason, voter)
+			return this.getVotingErrorText(reason, actor)
 			.then((text) => {
 				text += '\n<hr />\n';
 				text += getVoteAttemptText(false);
@@ -350,7 +357,7 @@ class MafiaPlayerController {
 			}
 
 			/*Error handling*/
-			return this.getVotingErrorText(reason, voter)
+			return this.getVotingErrorText(reason, actor)
 			.then((text) => {
 				text += '\n<hr />\n';
 				text += getVoteAttemptText(false);
@@ -492,7 +499,7 @@ class MafiaPlayerController {
 
 
 			/*Error handling*/
-			return this.getVotingErrorText(reason, voter, votee)
+			return this.getVotingErrorText(reason, actor, target)
 			.then((text) => {
 				
 				text += '\n<hr />\n';
@@ -750,11 +757,15 @@ class MafiaPlayerController {
 					if (row.action !== 'vote') {
 						return;
 					}
-					const votee = row.target.username;
+					
+					let votee = row.target ? row.target.username : undefined;
 					const voter = row.actor.username;
 
 					const mod = this.getVoteModifierForTarget(game, row.target);
 
+					if (!votee) {
+						votee = 'No lynch';
+					}
 					if (!data.votes.hasOwnProperty(votee)) {
 						data.votes[votee] = {
 							target: votee,
@@ -771,7 +782,7 @@ class MafiaPlayerController {
 						currentlyVoting.push(voter);
 					}
 
-					/*data.votes[votee].names.push({
+					/*data.votes[votee].votes.push({
 						voter: voter,
 						retracted: !row.isCurrent,
 						retractedAt: row.revokedId,

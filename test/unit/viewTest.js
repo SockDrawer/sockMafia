@@ -48,7 +48,9 @@ describe('View helpers', () => {
 			const input = [{
 				game: 123,
 				post: 43,
-				voter: 'yamikuronue'
+				actor: {
+					username: 'yamikuronue'
+				}
 			}];
 			const output = listNamesHelper(input).toString();
 			output.should.contain('yamikuronue');
@@ -59,7 +61,9 @@ describe('View helpers', () => {
 			const input = [{
 				game: 123,
 				post: 43,
-				voter: 'yamikuronue'
+				actor: {
+					username: 'yamikuronue'
+				}
 			}];
 
 			sandbox.spy(fakeFormatter, 'urlForTopic');
@@ -75,7 +79,10 @@ describe('View helpers', () => {
 			const input = [{
 				game: 123,
 				post: 43,
-				voter: 'yamikuronue'
+				actor: {
+					username: 'yamikuronue'
+				},
+				isCurrent: true
 			}];
 			listNamesHelper(input).toString().should.contain('<b>');
 			listNamesHelper(input).toString().should.contain('</b>');
@@ -85,8 +92,10 @@ describe('View helpers', () => {
 			const input = [{
 				game: 123,
 				post: 43,
-				voter: 'yamikuronue',
-				retracted: true,
+				actor: {
+					username: 'yamikuronue'
+				},
+				isCurrent: false,
 				retractedAt: 44
 			}];
 			const output = listNamesHelper(input).toString();
@@ -100,8 +109,10 @@ describe('View helpers', () => {
 			const input = [{
 				game: 123,
 				post: 43,
-				voter: 'yamikuronue',
-				retracted: true,
+				actor: {
+					username: 'yamikuronue'
+				},
+				isCurrent: false,
 				retractedAt: 44
 			}];
 
@@ -118,12 +129,16 @@ describe('View helpers', () => {
 			const input = [{
 				game: 123,
 				post: 43,
-				voter: 'yamikuronue'
+				actor: {
+					username: 'yamikuronue'
+				}
 			},
 			{
 				game: 123,
 				post: 47,
-				voter: 'accalia'
+				actor: {
+					username: 'accalia'
+				}
 			}];
 			listNamesHelper(input).toString().should.contain('/t/slug/123/43');
 			listNamesHelper(input).toString().should.contain('/t/slug/123/47');

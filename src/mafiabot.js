@@ -95,10 +95,8 @@ function registerModCommands(events) {
 
 }
 
-function registerCommands(events) {
-	events.onCommand('echo', 'echo a bunch of post info (for diagnostic purposes)', exports.echoHandler, handleCallback);
-	registerPlayerCommands(events);
-	registerModCommands(events);
+function registerCommands(forum) {
+	forum.Commands.add('echo', 'echo a bunch of post info (for diagnostic purposes)', exports.echoHandler, handleCallback);
 }
 
 /**
@@ -210,35 +208,6 @@ exports.createFromDB = function (plugConfig) {
 exports.activate = function activate() {
 	debug('activating mafiabot');
 	const plugConfig = internals.configuration;
-	const fakeEvents = {
-		onCommand: (commandName, help, handler) => {
-			debug(`Registering command: ${commandName}`);
-
-			return internals.forum.Commands.add(commandName, help, (command) => {
-					debug(`Mafia received command ${command.command}`);
-				return Promise.all([
-					command.getPost(),
-					command.getTopic(),
-					command.getUser()
-				]).then( (data) => {
-					debug(`Mafia processing command ${command.command} in topic ${data[1].id} on post ${data[0].id}`);
-					const translated = {
-						input: command.line,
-						command: command.command,
-						args: command.args,
-						mention: command.mention,
-						post: {
-							username: data[2].username,
-							'topic_id': data[1].id,
-							'post_number': data[0].id,
-							cleaned: data[0].content
-						}
-					};
-					return handler(translated);
-				});
-			});
-		}
-	};
 
 	dao = new MafiaDao(plugConfig.db);
 	modController = new MafiaModController(dao, plugConfig);
@@ -249,7 +218,7 @@ exports.activate = function activate() {
 	modController.activate(internals.forum);
 
 	return exports.createFromDB(plugConfig).then(() => {
-		return registerCommands(fakeEvents);
+		return registerCommands(internals.forum);
 	});
 };
 
