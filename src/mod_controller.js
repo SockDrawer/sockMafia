@@ -228,7 +228,7 @@ class MafiaModController {
 			day: 0,
 			names: []
 		};
-		let gameId, modName, currDay, game, mod;
+		let gameId, modName, currDay, currPhase, game, mod;
 
 			return command.getTopic().then((topic) => {
 				gameId = topic.id;
@@ -241,6 +241,7 @@ class MafiaModController {
 			.then((g) => {
 				game = g;
 				currDay = game.day;
+				currPhase = game.phase;
 				return game.isActive ? Promise.resolve() : Promise.reject('Game not started. Try `!start`.');
 			})
 			.then(() => {
@@ -251,7 +252,21 @@ class MafiaModController {
 				return game.nextPhase();
 			})
 			.then(() => {
-				debug('Went from ' + currDay + ' to ' + game.day);
+				debug('Went from ' + currDay + ' ' + currPhase + ' to ' + game.day + ' ' + game.phase);
+				
+				if (command.args[0] === 'ends' && command.args[1]) {
+					command.args.shift();
+					data.phaseEnd = command.args.join(' ');
+					data.showPhaseEnd = true;
+					
+					return game.setValue('phaseEnd', data.phaseEnd);
+				} else {
+					data.showPhaseEnd = false;
+					return Promise.resolve();
+				}
+			})
+			.then(() => {
+				
 				if (game.day > currDay) {
 					const numPlayers = game.livePlayers.length;
 					data.day = game.day;
@@ -263,8 +278,14 @@ class MafiaModController {
 
 					logDebug('Moved to new day in  ' + game.name);
 					return view.respondWithTemplate('/templates/newDayTemplate.handlebars', data, command);
+				} else {
+					let text = 'It is now ' + game.phase;
+					if (data.showPhaseEnd) {
+						text += '. The phase will end ' + data.phaseEnd;
+					}
+					return view.respond(command, text);
 				}
-				return view.respond(command, 'Incremented stage for ' + game.name);
+				
 			})
 			.catch((err) => {
 				logRecoveredError('Error incrementing day: ' + err);

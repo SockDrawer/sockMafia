@@ -967,6 +967,7 @@ describe('player controller', () => {
 						},
 				addPlayer: () => Promise.resolve(),
 				getActions: () => mockActions,
+				getValue: () => undefined,
 				topicId: 12,
 				isActive: true,
 				isDay: true
@@ -1077,6 +1078,42 @@ describe('player controller', () => {
 				const dataSent = view.respondWithTemplate.getCall(0).args[1];
 
 				dataSent.votes.Dreikin.mod.should.equal(-1);
+			});
+		});
+		
+		it('should output lack of end time', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+			};
+
+			sandbox.spy(mockGame, 'getValue');
+			return playerController.listVotesHandler(command).then(() => {
+				mockGame.getValue.calledWith('phaseEnd').should.be.true;
+				
+				view.respondWithTemplate.called.should.be.true;
+				const dataSent = view.respondWithTemplate.getCall(0).args[1];
+				
+				chai.expect(dataSent.endTime).to.be.undefined;
+				dataSent.showEndTime.should.be.false;
+			});
+		});
+		
+		it('should output an end time', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+			};
+
+			sandbox.stub(mockGame, 'getValue').returns('today');
+			return playerController.listVotesHandler(command).then(() => {
+				mockGame.getValue.calledWith('phaseEnd').should.be.true;
+
+				view.respondWithTemplate.called.should.be.true;
+				const dataSent = view.respondWithTemplate.getCall(0).args[1];
+				
+				chai.expect(dataSent.endTime).to.equal('today');
+				dataSent.showEndTime.should.be.true;
 			});
 		});
 	});

@@ -750,6 +750,14 @@ class MafiaPlayerController {
 				
 				data.toExecute = this.getNumVotesRequired(game);
 				data.day = game.day;
+				
+				const phaseEnd = game.getValue('phaseEnd');
+				if (phaseEnd) {
+					data.endTime = phaseEnd;
+					data.showEndTime = true;
+				} else {
+					data.showEndTime = false;
+				}
 
 				const actions = game.getActions(); //default settings are fine
 				const currentlyVoting = [];

@@ -181,7 +181,9 @@ describe('mod controller', () => {
 				getPlayer: () => mockUser,
 				getModerator: () => mockUser,
 				topicId: 12,
-				day: 1
+				day: 1,
+				setValue: () => Promise.resolve(),
+				phase: 'night'
 			};
 
 			mockUser = {
@@ -239,9 +241,10 @@ describe('mod controller', () => {
 		it('Should move to night', () => {
 			const command = {
 				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'tehNinja'})
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: []
 			};
-			sandbox.spy(mockGame, 'nextPhase');
+			sandbox.stub(mockGame, 'nextPhase');
 
 			return modController.dayHandler(command).then( () => {
 				//Game actions
@@ -250,11 +253,89 @@ describe('mod controller', () => {
 				//Output back to mod
 				view.respond.calledWith(command).should.be.true;
 				const modOutput = view.respond.getCall(0).args[1];
-				modOutput.should.include('Incremented stage for testMafia');
+				modOutput.should.include('It is now night');
 
 				//Output to game
 				view.respondWithTemplate.called.should.not.be.true;
 
+			});
+		});
+		
+		it('Should optionally add an end time', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: ['ends', 'today']
+			};
+			sandbox.spy(mockGame, 'setValue');
+
+			return modController.dayHandler(command).then( () => {
+				//Set the flag
+				mockGame.setValue.called.should.be.true;
+				mockGame.setValue.calledWith('phaseEnd', 'today').should.be.true;
+				
+				view.respond.calledWith(command).should.be.true;
+				const modOutput = view.respond.getCall(0).args[1];
+				modOutput.should.include('The phase will end today');
+
+			});
+		});
+		
+		it('Should optionally add an end time with spaces', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: ['ends', 'on', 'march', 'second']
+			};
+			sandbox.spy(mockGame, 'setValue');
+
+			return modController.dayHandler(command).then( () => {
+				//Set the flag
+				mockGame.setValue.called.should.be.true;
+				mockGame.setValue.calledWith('phaseEnd', 'on march second').should.be.true;
+
+			});
+		});
+		
+		it('Should not require an end time', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: []
+			};
+			sandbox.spy(mockGame, 'setValue');
+
+			return modController.dayHandler(command).then( () => {
+				//Set the flag
+				mockGame.setValue.called.should.be.false;
+			});
+		});
+		
+		it('Should handle malformed end time', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: ['ends']
+			};
+			sandbox.spy(mockGame, 'setValue');
+
+			return modController.dayHandler(command).then( () => {
+				//Set the flag
+				mockGame.setValue.called.should.be.false;
+			});
+		});
+		
+		it('Should ignore other args', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: ['banana', 'today']
+			};
+			sandbox.spy(mockGame, 'setValue');
+
+			return modController.dayHandler(command).then( () => {
+				//Set the flag
+				mockGame.setValue.called.should.be.false;
 			});
 		});
 	});
