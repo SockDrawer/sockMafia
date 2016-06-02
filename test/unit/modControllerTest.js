@@ -79,7 +79,8 @@ describe('mod controller', () => {
 			};
 
 			mockUser.isModerator = false;
-
+			sandbox.stub(mockGame, 'getModerator').throws();
+			
 			return modController.killHandler(command).then( () => {
 				const output = view.reportError.getCall(0).args[2];
 				output.should.include('You are not a moderator');
@@ -206,7 +207,7 @@ describe('mod controller', () => {
 			};
 			mockUser.isModerator = false;
 			sandbox.spy(mockGame, 'nextPhase');
-			sandbox.stub(mockGame, 'getModerator').rejects();
+			sandbox.stub(mockGame, 'getModerator').throws();
 
 			return modController.dayHandler(command).then( () => {
 				//Game actions
@@ -393,12 +394,12 @@ describe('mod controller', () => {
 			};
 
 			mockUser.isModerator = false;
-			sandbox.stub(mockGame, 'getModerator').rejects();
+			sandbox.stub(mockGame, 'getModerator').throws('E_NOMOD');
 
 
 			return modController.setHandler(command).then( () => {
 				view.reportError.calledWith(command).should.be.true;
-				const output = view.reportError.getCall(0).args[2];
+				const output = view.reportError.getCall(0).args[2].toString();
 
 				output.should.include('You are not a moderator');
 			});

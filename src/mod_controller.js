@@ -167,7 +167,11 @@ class MafiaModController {
 				return game.isActive ? Promise.resolve() : Promise.reject('Game not started. Try `!start`.');
 			})
 			.then(() => {
-				mod = game.getModerator(modName);
+				try {
+					mod = game.getModerator(modName);
+				} catch (_) {
+					return Promise.reject('You are not a moderator');
+				}
 				return mod.isModerator ? Promise.resolve() : Promise.reject('You are not a moderator');
 			})
 			.then(() => {
@@ -248,7 +252,11 @@ class MafiaModController {
 				return game.isActive ? Promise.resolve() : Promise.reject('Game not started. Try `!start`.');
 			})
 			.then(() => {
-				mod = game.getModerator(modName);
+				try {
+					mod = game.getModerator(modName);
+				} catch (_) {
+					return Promise.reject('You are not a moderator');
+				}
 				return mod.isModerator ? Promise.resolve() : Promise.reject('You are not a moderator');
 			})
 			.then(() => {
