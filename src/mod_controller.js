@@ -1,5 +1,12 @@
 'use strict';
 
+/**
+ * sockMafia Mod controller
+ * @module sockmafia.MafiaModController
+ * @author Yamikuronue
+ * @license MIT
+ */
+
 const view = require('./view');
 const Promise = require('bluebird');
 const debug = require('debug')('sockbot:mafia:modController');
@@ -12,20 +19,30 @@ exports.init = function(forum) {
 	eventLogger = forum;
 };
 
-
+/**
+ * Valid properties for a player to hold
+ * @type {Array}
+ */
 const validProperties = [
 	'loved',
 	'hated',
 	'doublevoter'
 ];
 
+/**
+ * Log an error that was recovered from
+ * @param  {Error} error The error to log
+ */
 function logRecoveredError(error) {
 	if (eventLogger && eventLogger.emit) {
 		eventLogger.emit('logExtended', 3, error);
 	}
 }
 
-
+/**
+ * Log a debug statement
+ * @param  {String} statement The statement to log
+ */
 function logDebug(statement) {
 	debug(statement);
 	if (eventLogger && eventLogger.emit) {
@@ -33,19 +50,37 @@ function logDebug(statement) {
 	}
 }
 
-
+/**
+ * The controller class for Mafiabot
+ */
 class MafiaModController {
+
+	/**
+	 * The constructor
+	 * @param  {sockmafia.src.dao.MafiaDao} d      The dao to use to persist the data
+	 * @param  {Object} config The parsed configuration file pertaining to this instance of the plugin
+	 */
 	constructor(d, config) {
 		this.dao = d;
 	}
 	
+	/**
+	 * Activate the controller
+	 * @param  {Forum} forum The forum to activate for
+	 */
 	activate(forum) {
 		//Register commandss
         forum.Commands.add('set', 'Assign a player a role (mod only)', this.setHandler.bind(this));
         forum.Commands.add('kill', 'kill a player (mod only)', this.killHandler.bind(this));
         forum.Commands.add('new-day', 'move on to a new day (mod only)', this.dayHandler.bind(this));
-        forum.Commands.add('next-phase', 'move on to the next phase (mod only)', this.dayHandler.bind(this));
+        forum.Commands.add('next-phase', 'move on to the next phase (mod only)', this.daHandler.bind(this));
     }
+
+    /**
+     * Set: et a prperty fr. 
+     * No game rules; this sets up rules f * 
+     * @param {Sockbot.commands.command} command The command object
+     */
 	setHandler (command) {
 		// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
 		// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
@@ -274,7 +309,7 @@ class MafiaModController {
 				logRecoveredError('Error killing player: ' + err);
 				view.reportError(command, 'Error killing player: ', err);
 			});
-	};
+	}
 }
 
 module.exports = MafiaModController;

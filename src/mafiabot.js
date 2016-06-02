@@ -4,10 +4,16 @@
  *
  * Helps run mafia games, providing features such as vote tracking and listing.
  *
- * @module mafiabot
+ * @module sockmafia
  * @author Accalia, Dreikin, Yamikuronue
  * @license MIT
  */
+
+/**
+ * @external Forum
+ * @see {@link https://github.com/SockDrawer/SockBot/blob/master/docs/api/providers/nodebb/index.md#sockbot.providers.module_nodebb..Forum}
+ */
+
 
 // Requisites
 
@@ -64,11 +70,56 @@ const internals = {
 };
 exports.internals = internals;
 
-// Local extensions
+/*eslint-disable no-console*/
+/**
+ * Sockbot 3.0 Activation function
+ * @returns {Promise} A promise that will resolve when the activation is complete
+ */
+exports.activate = function activate() {
+	debug('activating mafiabot');
+	const plugConfig = internals.configuration;
 
-function registerCommands(forum) {
-	forum.Commands.add('echo', 'echo a bunch of post info (for diagnostic purposes)', exports.echoHandler);
-}
+	dao = new MafiaDao(plugConfig.db);
+	modController = new MafiaModController(dao, plugConfig);
+	playerController = new MafiaPlayerController(dao, plugConfig);
+	view.init(internals.forum.Post, internals.forum.Formatter);
+	internals.forum.Commands.add('echo', 'echo a bunch of post info (for diagnostic purposes)', exports.echoHandler);
+
+	playerController.activate(internals.forum);
+	modController.activate(internals.forum);
+
+	return exports.createFromFile(plugConfig);
+};
+
+/**
+ * Sockbot 3.0 Plugin function
+ * @param  {Forum} forum  The forum provider's Forum class
+ * @param  {Object} config The plugin-specific configuration
+ * @returns {Object}        A temporary object representing this instance of the forum
+ */
+exports.plugin = function plugin(forum, config) {
+	debug('creating plugin object');
+	if (Array.isArray(config)) {
+		config = {
+			messages: config
+		};
+	}
+	if (config === null || typeof config !== 'object') {
+		config = {};
+	}
+	Object.keys(exports.defaultConfig).forEach((key) => {
+		if (!config[key]) {
+			config[key] = exports.defaultConfig[key];
+		}
+	});
+	internals.configuration = config;
+	internals.forum = forum;
+
+	return {
+		activate: exports.activate,
+		deactivate: () => Promise.resolve()
+	};
+};
 
 /**
  * Register the mods listed in the configuration.
@@ -76,7 +127,6 @@ function registerCommands(forum) {
  * @param {Number} game Thread number for the game.
  * @param {string[]} mods Array of mod names to add to the game.
  */
-/*eslint-disable no-console*/
 function registerMods(game, mods) {
 	return Promise.mapSeries(
 			mods,
@@ -90,7 +140,6 @@ function registerMods(game, mods) {
 			}
 		);
 }
-/*eslint-enable no-console*/
 
 /**
  * Register the players listed in the configuration.
@@ -98,7 +147,6 @@ function registerMods(game, mods) {
  * @param {Number} game Thread number for the game.
  * @param {string[]} players Array of player names to add to the game.
  */
-/*eslint-disable no-console*/
 function registerPlayers(game, players) {
 	return Promise.mapSeries(
 			players,
@@ -134,7 +182,12 @@ exports.echoHandler = function (command) {
 	return Promise.resolve();
 };
 
-exports.createFromDB = function (plugConfig) {
+/**
+ * Create the game from the configuration file
+ * @param  {Object} plugConfig The configuration file
+ * @returns {Promise}           A promise that resolves when the creation is complete
+ */
+exports.createFromFile = function (plugConfig) {
 	let game;
 
 	return dao.createGame(plugConfig.thread, plugConfig.name)
@@ -172,49 +225,3 @@ exports.createFromDB = function (plugConfig) {
 			throw err; // rethrow error to fail bot startup
 		});
 };
-
-
-/*eslint-disable no-console*/
-// Sockbot 3.0 activation function
-exports.activate = function activate() {
-	debug('activating mafiabot');
-	const plugConfig = internals.configuration;
-
-	dao = new MafiaDao(plugConfig.db);
-	modController = new MafiaModController(dao, plugConfig);
-	playerController = new MafiaPlayerController(dao, plugConfig);
-	view.init(internals.forum.Post, internals.forum.Formatter);
-	
-	playerController.activate(internals.forum);
-	modController.activate(internals.forum);
-
-	return exports.createFromDB(plugConfig).then(() => {
-		return registerCommands(internals.forum);
-	});
-};
-
-// Sockbot 3.0 Plugin function
-exports.plugin = function plugin(forum, config) {
-	debug('creating plugin object');
-	if (Array.isArray(config)) {
-		config = {
-			messages: config
-		};
-	}
-	if (config === null || typeof config !== 'object') {
-		config = {};
-	}
-	Object.keys(exports.defaultConfig).forEach((key) => {
-		if (!config[key]) {
-			config[key] = exports.defaultConfig[key];
-		}
-	});
-	internals.configuration = config;
-	internals.forum = forum;
-
-	return {
-		activate: exports.activate,
-		deactivate: () => Promise.resolve()
-	};
-};
-/*eslint-enable no-console*/

@@ -41,6 +41,7 @@
     "space-infix-ops": 2,
     "space-unary-ops": 2,
     "valid-jsdoc": [2, {
+      "requireReturnDescription": false,
       "prefer": {
         "arg": "param",
         "argument": "param",

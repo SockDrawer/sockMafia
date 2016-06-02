@@ -1,5 +1,12 @@
 'use strict';
 
+/**
+ * sockMafia Player controller
+ * @module sockmafia.MafiaPlayerController
+ * @author Yamikuronue
+ * @license MIT
+ */
+
 const view = require('./view');
 const Promise = require('bluebird');
 const debug = require('debug')('sockbot:mafia:playerController');
@@ -31,10 +38,19 @@ function logDebug(statement) {
 }
 
 class MafiaPlayerController {
+	/**
+	 * The constructor
+	 * @param  {sockmafia.src.dao.MafiaDao} d      The dao to use to persist the data
+	 * @param  {Object} config The parsed configuration file pertaining to this instance of the plugin
+	 */
     constructor(d, config) {
         this.dao = d;
     }
     
+    /**
+     * Activation function for the plugin
+     * @param   {Forum} forum The forum object to activate for
+     */
     activate(forum) {
 		//Set name
 		myName = forum.username;
@@ -75,6 +91,17 @@ class MafiaPlayerController {
 
 	/*Voting helpers*/
 
+	/**
+	 * Get the number of votes required to lynch a player
+	 *
+	 * Game rules:
+	 * - A single player must obtain a simple majority of votes in order to be lynched
+	 * - Loved and Hated players are exceptions to this rule. 
+	 * 
+	 * @param   {sockmafia.src.dao.MafiaGame} game   The game in which the votes are being tabulated
+	 * @param   {sockmafia.src.dao.MafiaUser} target The target's name
+	 * @returns {number}        The number needed to lynch
+	 */
 	getNumVotesRequired(game, target) {
 		const numPlayers = game.livePlayers.length;
 		let numToLynch = Math.ceil((numPlayers + 1) / 2);
@@ -86,6 +113,16 @@ class MafiaPlayerController {
 		return numToLynch;
 	}
 
+	/**
+	 * Get the vote modifier for a given target.
+	 *
+	 * Game rules:
+	 * - A loved player requires one extra vote to lynch
+	 * - A hated player requires one fewer vote to lynch
+	 * @param   {sockmafia.src.dao.MafiaGame} game   The game in which the votes are being tabulated
+	 * @param   {sockmafia.src.dao.MafiaUser} target The user to tabulate for
+	 * @returns {Number}        A modifier. +1 means that the user is loved, -1 means they are hated
+	 */
 	getVoteModifierForTarget(game, target) {
 		if (!target) {
 			return 0;
@@ -365,7 +402,7 @@ class MafiaPlayerController {
 		}).then((post) => {
 			return this.doVote(gameId, post.id, voter, targetString, command.line, 1, command);
 		}).catch((err) => {
-			debug(err);
+		debug(err);
 			throw err;
 		});
 
@@ -378,8 +415,7 @@ class MafiaPlayerController {
 		} else {
 			return doVote(game, post, voter, target, command.input, 1);
 		}*/
-	}
-
+	
 	forHandler (command) {
 		let gameId, game, voter; 
 		// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
@@ -396,7 +432,7 @@ class MafiaPlayerController {
 		}).then((post) => {
 			return this.doVote(gameId, post.id, voter, targetString, command.line, 1, command);
 		});
-	};
+	}
 
 
 	doVote (gameId, post, actor, target, input, voteNum, command) {

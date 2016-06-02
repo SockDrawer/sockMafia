@@ -29,8 +29,8 @@ exports.init = function(postObject, forum, rf) {
 	//because by the time the controller is done, we've lost Post context.
 	//When the controller is updated, it should reply using the Post passed in the Command
 	
-	// Actually, just use the `reply()` function on the new command object. pass it your content and 
-	// sockbot takes care of the rest. 
+	// Actually, just use the `reply()` function on the new commandobject. pass it your content and 
+	/ sockbot takes care of the rest. 
 	debug('init of mafiaview');
 	post = postObject;
 	readFile = rf || require('fs-readfile-promise');
