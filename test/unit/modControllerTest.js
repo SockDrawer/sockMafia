@@ -374,7 +374,8 @@ describe('mod controller', () => {
 
 
 			mockdao = {
-				getGameByTopicId: () => Promise.resolve(mockGame)
+				getGameByTopicId: () => Promise.resolve(mockGame),
+				getGameByName: () => Promise.resolve(mockGame)
 			};
 
 			modController = new ModController(mockdao);
@@ -530,6 +531,69 @@ describe('mod controller', () => {
 				output.should.be.an('Error');
 
 				output.toString().should.include('An error occurred');
+			});
+		});
+		
+		it('Should read "in" command with numeric arg', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: [
+					'Margaret',
+					'hated',
+					'in',
+					'527'
+				]
+			};
+			
+			sandbox.spy(mockdao, 'getGameByTopicId');
+
+			return modController.setHandler(command).then( () => {
+				mockdao.getGameByTopicId.calledWith('527').should.be.true;
+			});
+		});
+		
+		it('Should read "in" command with string arg', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: [
+					'Margaret',
+					'hated',
+					'in',
+					'Bushido',
+					'Mafia'
+				]
+			};
+			
+			sandbox.spy(mockdao, 'getGameByName');
+			sandbox.spy(mockdao, 'getGameByTopicId');
+
+			return modController.setHandler(command).then( () => {
+				mockdao.getGameByName.calledWith('Bushido Mafia').should.be.true;
+				mockdao.getGameByTopicId.called.should.be.false;
+			});
+		});
+		
+		it('Should not confuse string and numeric args', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: [
+					'Margaret',
+					'hated',
+					'in',
+					'21_Jump',
+					'Street'
+				]
+			};
+			
+			sandbox.spy(mockdao, 'getGameByName');
+			sandbox.spy(mockdao, 'getGameByTopicId');
+
+			return modController.setHandler(command).then( () => {
+				mockdao.getGameByName.calledWith('21_Jump Street').should.be.true;
+				mockdao.getGameByTopicId.called.should.be.false;
 			});
 		});
 	});

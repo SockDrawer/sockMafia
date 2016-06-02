@@ -588,6 +588,7 @@ class MafiaPlayerController {
 
 				view.reportError(command, 'Error resolving list: ', err);
 				logRecoveredError('List failed ' + err);
+				return Promise.resolve();
 			});
 	}
 

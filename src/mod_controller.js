@@ -145,7 +145,21 @@ class MafiaModController {
 		const property = command.args[1];
 		let gameId, modName, game, mod, target;
 
+		const isNumeric = (input) => {
+			return /^\d+$/.test(input);
+		};
 		
+		const processArgs = () => {
+			if (command.args[2] === 'in' && command.args[3]) {
+				if (!isNumeric(command.args[3])) {
+					return this.dao.getGameByName(command.args.slice(3).join(' '));
+				} else {
+					gameId = command.args[3];
+				}
+			}
+			
+			return this.dao.getGameByTopicId(gameId);
+		};
 
 		return command.getTopic().then((topic) => {
 				gameId = topic.id;
@@ -153,7 +167,7 @@ class MafiaModController {
 			}).then((user) => {
 				modName = user.username;
 				logDebug('Received set property request from ' + modName + ' for ' + targetString + ' in thread ' + gameId);
-				return this.dao.getGameByTopicId(gameId);
+				return processArgs();
 			})
 			.then((g) => {
 				game = g;
@@ -171,8 +185,7 @@ class MafiaModController {
 				if (!validProperties.contains(property.toLowerCase())) {
 					return Promise.reject('Property not valid.\n Valid properties: ' + validProperties.join(', '));
 				}
-			})
-			.then(() => {
+				
 				try {
 					target = game.getPlayer(targetString);
 				} catch (_) {
