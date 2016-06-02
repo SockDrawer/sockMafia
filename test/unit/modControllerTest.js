@@ -172,10 +172,19 @@ describe('mod controller', () => {
 		let mockGame, mockUser, mockdao, modController;
 
 		beforeEach(() => {
+			
+			mockUser = {
+				username: 'God',
+				getPlayerProperty: () => [],
+				isModerator: true
+			};
+
+
 			mockGame = {
 				isActive: true,
 				name: 'testMafia',
-				getAllPlayers: () => 1,
+				getAllPlayers: () => ['Rachel', 'Ross', 'Joey', 'Chandler', 'Phoebe', 'Monica'],
+				livePlayers: [mockUser, mockUser, mockUser],
 				killPlayer: () => Promise.resolve(),
 				nextPhase: () => 1,
 				getActions: () => 1,
@@ -185,12 +194,6 @@ describe('mod controller', () => {
 				day: 1,
 				setValue: () => Promise.resolve(),
 				phase: 'night'
-			};
-
-			mockUser = {
-				username: 'God',
-				getPlayerProperty: () => [],
-				isModerator: true
 			};
 
 			mockdao = {
@@ -251,13 +254,39 @@ describe('mod controller', () => {
 				//Game actions
 				mockGame.nextPhase.called.should.be.true;
 
-				//Output back to mod
+				//Output to game
 				view.respond.calledWith(command).should.be.true;
 				const modOutput = view.respond.getCall(0).args[1];
 				modOutput.should.include('It is now night');
 
-				//Output to game
+				
 				view.respondWithTemplate.called.should.not.be.true;
+
+			});
+		});
+		
+		it('Should advance days', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: []
+			};
+			sandbox.stub(mockGame, 'nextPhase', () => {
+				mockGame.day++;
+			});
+
+			return modController.dayHandler(command).then( () => {
+				//Game actions
+				mockGame.nextPhase.called.should.be.true;
+
+				//Output back to mod
+				view.respondWithTemplate.called.should.be.true;
+				const actualData = view.respondWithTemplate.getCall(0).args[1];
+				
+				actualData.day.should.equal(mockGame.day);
+				actualData.numPlayers.should.equal(3);
+				actualData.toExecute.should.equal(2);
+				actualData.names.should.deep.equal(['God', 'God', 'God']);
 
 			});
 		});

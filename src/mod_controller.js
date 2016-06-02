@@ -192,12 +192,14 @@ class MafiaModController {
 				}
 			})
 			.then(() => {
-				
 				if (game.day > currDay) {
+					
 					const numPlayers = game.livePlayers.length;
 					data.day = game.day;
 					data.toExecute = Math.ceil(numPlayers / 2);
+					
 					data.numPlayers = game.livePlayers.length;
+					
 					data.names = game.livePlayers.map((player) => {
 						return player.username;
 					});
