@@ -1,5 +1,5 @@
 'use strict';
-/*globals describe, it*/
+/*globals describe, it, beforeEach, afterEach*/
 
 const chai = require('chai'),
 	sinon = require('sinon');
@@ -10,10 +10,7 @@ require('chai-as-promised');
 
 chai.should();
 
-const mafia = require('../../src/mod_controller');
 const ModController = require('../../src/mod_controller');
-const mafiaDAO = require('../../src/dao');
-const Handlebars = require('handlebars');
 const view = require('../../src/view.js');
 
 

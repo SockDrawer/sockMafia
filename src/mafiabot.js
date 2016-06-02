@@ -17,6 +17,7 @@ const MafiaPlayerController = require('./player_controller');
 const view = require('./view');
 const Promise = require('bluebird');
 const debug = require('debug')('sockbot:mafia');
+require('./utils');
 
 let dao, modController,  playerController;
 
@@ -28,27 +29,27 @@ let dao, modController,  playerController;
  */
 exports.defaultConfig = {
 	/**
-	 * Required delay before posting another reply in the same topic.
-	 *
-	 * @default
-	 * @type {Number}
-	 */
+	* Required delay before posting another reply in the same topic.
+	*
+	* @default
+	* @type {Number}
+	*/
 	cooldown: 0 * 1000,
 	/**
-	 * Messages to select reply from.
-	 *
-	 * @default
-	 * @type {string[]}
-	 */
+	* Messages to select reply from.
+	*
+	* @default
+	* @type {string[]}
+	*/
 	messages: [
 		'Command invalid or no command issued. Try the `help` command.'
 	],
 	/**
-	 * File location for database.
-	 *
-	 * @default
-	 * @type {string}
-	 */
+	* File location for database.
+	*
+	* @default
+	* @type {string}
+	*/
 	db: './mafiadb',
 
 	voteBars: 'bastard'
@@ -64,39 +65,9 @@ const internals = {
 exports.internals = internals;
 
 // Local extensions
-/*eslint-disable no-extend-native*/
-Array.prototype.contains = function (element) {
-	return this.indexOf(element) > -1;
-};
-/*eslint-enable no-extend-native*/
-
-// Helper functions
-
-function patchIn(module) {
-	for (const property in module) {
-		if (typeof module[property] === 'function' && module.hasOwnProperty(property)) {
-			exports[property] = module[property].bind(module); // Bind to preserve `this` context
-		}
-	}
-}
-
-/*eslint-disable no-console*/
-function handleCallback(err) {
-	if (err) {
-		console.log('ERROR: ' + err.toString() + '\n' + err.stack);
-	}
-}
-/*eslint-enable no-console*/
-
-function registerPlayerCommands(events) {
-}
-
-function registerModCommands(events) {
-
-}
 
 function registerCommands(forum) {
-	forum.Commands.add('echo', 'echo a bunch of post info (for diagnostic purposes)', exports.echoHandler, handleCallback);
+	forum.Commands.add('echo', 'echo a bunch of post info (for diagnostic purposes)', exports.echoHandler);
 }
 
 /**

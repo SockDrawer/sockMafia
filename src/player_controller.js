@@ -348,7 +348,7 @@ class MafiaPlayerController {
 	* @returns {Promise}        A promise that will resolve when the game is ready
 	*/
 	voteHandler (command) {
-		let gameId, game, voter; 
+		let gameId, voter;
 		
 		// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
 		// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
@@ -420,7 +420,7 @@ class MafiaPlayerController {
 		return this.dao.getGameByTopicId(gameId)
 			.catch(() => {
 				logWarning('Ignoring message in nonexistant game thread ' + gameId);
-				throw(E_NOGAME);
+				throw (E_NOGAME);
 			})
 		.then((g) => {
 			game = g;
@@ -493,7 +493,7 @@ class MafiaPlayerController {
 				gameId = topic.id;
 				return this.dao.getGameByTopicId(gameId).catch(() => {
 					logWarning('Ignoring message in nonexistant game thread ' + game);
-					throw(E_NOGAME);
+					throw (E_NOGAME);
 				});
 			})
 			.then((g) => {
@@ -545,7 +545,7 @@ class MafiaPlayerController {
 				id = topic.id;
 				return this.dao.getGameByTopicId(id).catch(() => {
 					logWarning('Ignoring message in nonexistant game thread ' + game);
-					throw(E_NOGAME);
+					throw (E_NOGAME);
 				});
 			})
 			.then((g) => {
@@ -612,7 +612,7 @@ class MafiaPlayerController {
 				id = topic.id;
 				return this.dao.getGameByTopicId(id).catch(() => {
 					logWarning('Ignoring message in nonexistant game thread ' + game);
-					throw(E_NOGAME);
+					throw (E_NOGAME);
 				});
 			})
 			.then((g) => {
@@ -701,7 +701,7 @@ class MafiaPlayerController {
 				id = topic.id;
 				return this.dao.getGameByTopicId(id).catch(() => {
 					logWarning('Ignoring message in nonexistant game thread ' + game);
-					throw(E_NOGAME);
+					throw (E_NOGAME);
 				});
 			})
 			.then((g) => {

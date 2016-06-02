@@ -1,7 +1,5 @@
 'use strict';
 
-const dao = require('./dao/index.js');
-const validator = require('./validator');
 const view = require('./view');
 const Promise = require('bluebird');
 const debug = require('debug')('sockbot:mafia:modController');
@@ -20,12 +18,6 @@ const validProperties = [
 	'hated',
 	'doublevoter'
 ];
-
-/*eslint-disable no-extend-native*/
-Array.prototype.contains = function(element){
-	return this.indexOf(element) > -1;
-};
-/*eslint-enable no-extend-native*/
 
 function logRecoveredError(error) {
 	if (eventLogger && eventLogger.emit) {
