@@ -402,7 +402,7 @@ class MafiaPlayerController {
 		}).then((post) => {
 			return this.doVote(gameId, post.id, voter, targetString, command.line, 1, command);
 		}).catch((err) => {
-		debug(err);
+			debug(err);
 			throw err;
 		});
 
@@ -415,6 +415,7 @@ class MafiaPlayerController {
 		} else {
 			return doVote(game, post, voter, target, command.input, 1);
 		}*/
+	}
 	
 	forHandler (command) {
 		let gameId, game, voter; 

@@ -18,7 +18,7 @@ module.exports = function(formatter) {
 		if (mafia.internals.configuration.voteBars.toLowerCase() === 'hidden') {
 			percent = votes / toExecute * 100;
 		} else {
-			percent = votes / (toExecut + modifier) * 100;
+			percent = votes / (toExecute + modifier) * 100;
 		}
 
 		//Hammer color either when it would be hammer, or it's really hammer

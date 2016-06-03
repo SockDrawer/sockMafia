@@ -20,19 +20,19 @@ const slugs = [
 	'spaceInfixOperators'
 ];
 
-module.exports =function(formatter) { 
+module.exports = function(formatter) {
 
 	return function(list) {
 		list = list.map((value) => {
 			if (typeof value === 'object') {
-				if (value.isCurrent {
-					return '<a href="' 
+				if (value.isCurrent) {
+					return '<a href="'
 					+ formatter.urlForPost(value.postId)
 					+ '"><b>'
 					+ value.actor.username
 					+ '</b> </a>';
-			} else {
-					return '<a href="' 
+				} else {
+					return '<a href="'
 					+ formatter.urlForPost(value.postId)
 					+ '"><s>'
 					+ value.actor.username
