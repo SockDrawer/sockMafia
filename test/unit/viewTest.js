@@ -15,6 +15,8 @@ const view = require('../../src/view');
 const NameHelperGenerator = require('../../src/templates/helpers/listNames');
 const VoteChartGenerator = require('../../src/templates/helpers/voteChart');
 const mafia = require('../../src/mafiabot');
+const MafiaAction = require('../../src/dao/mafiaAction');
+const MafiaUser = require('../../src/dao/mafiaUser');
 
 const Handlebars = require('handlebars');
 
@@ -149,6 +151,57 @@ describe('View helpers', () => {
 			listNamesHelper(input).toString().should.contain(',');
 			listNamesHelper(input).toString().should.contain('yamikuronue');
 			listNamesHelper(input).toString().should.contain('accalia');
+		});
+		
+		it('Should handle real actions', () => {
+			const yami = new MafiaUser({
+				username: 'yamikuronue'
+			});
+			
+			const accalia = new MafiaUser({
+				username: 'accalia'
+			});
+			
+			const dreikin = new MafiaUser({
+				username: 'dreikin'
+			});
+			
+			const fakeGame = {
+				_getPlayer: (name) => {
+					if (name === 'yamikuronue') {
+						return yami;
+					}
+					
+					if (name === 'dreikin') {
+						return dreikin;
+					}
+					
+					return accalia;
+				}
+			};
+			
+			const voteOne = new MafiaAction({
+				postId: 1,
+				actor: 'yamikuronue',
+				target: 'accalia',
+				isCurrent: true,
+				day: 1
+				
+			}, fakeGame);
+			
+			const voteTwo = new MafiaAction({
+				postId: 2,
+				actor: 'dreikin',
+				target: 'accalia',
+				isCurrent: false,
+				revokedId: 3,
+				day: 1
+				
+			}, fakeGame);
+			
+			const output = listNamesHelper([voteOne, voteTwo]).toString();
+			output.should.contain('<a href="/p/1"><b>yamikuronue</b></a> ');
+			output.should.contain('<a href="/p/2"><s>dreikin</s></a> <a href="/p/3">[X]</a>');
 		});
 	});
 	

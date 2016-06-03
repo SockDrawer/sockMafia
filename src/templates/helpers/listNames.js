@@ -30,13 +30,13 @@ module.exports = function(formatter) {
 					+ formatter.urlForPost(value.postId)
 					+ '"><b>'
 					+ value.actor.username
-					+ '</b> </a>';
+					+ '</b></a> ';
 				} else {
 					return '<a href="'
 					+ formatter.urlForPost(value.postId)
 					+ '"><s>'
 					+ value.actor.username
-					+ '</s> </a>'
+					+ '</s></a> '
 					+ '<a href="'
 					+ formatter.urlForPost(value.revokedId)
 					+ '">[X]</a>';
