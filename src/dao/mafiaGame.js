@@ -503,7 +503,7 @@ class MafiaGame {
         if (!actor) {
             return Promise.reject('E_ACTOR_NOT_ALIVE');
         }
-        const action = this.getAction(actor, target, type, actionToken, this.day);
+        const action = this.getAction(actor, target, type, actionToken, this.day, false);
         let rescind = null;
         if (action && action.isCurrent) {
             rescind = action.revoke(postId);
