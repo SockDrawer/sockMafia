@@ -378,7 +378,7 @@ describe('View', () => {
 		
 		readFileShim = sandbox.stub().resolves(new Buffer('read file'));
 
-		view.init(postShim, undefined, readFileShim);
+		view.activate({Post: postShim, Format: undefined}, readFileShim);
 	});
 	
 	afterEach(() => {

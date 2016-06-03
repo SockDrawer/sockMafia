@@ -436,7 +436,7 @@ describe('MafiaBot', function () {
 				}
 			};
 			
-			view.init(undefined, {Format: fakeFormatter});
+			view.activate({Format: fakeFormatter});
 
 			return dao.createGame(2, 'Game 2')
 				.then((g) => {

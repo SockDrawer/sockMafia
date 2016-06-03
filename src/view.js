@@ -23,26 +23,17 @@ let formatter = {
 
 let readFile = require('fs-readfile-promise');
 
-exports.init = function(postObject, forum, rf) {
-	//TODO:
-	//This currently always replies in a static way
-	//because by the time the controller is done, we've lost Post context.
-	//When the controller is updated, it should reply using the Post passed in the Command
-	
-	// Actually, just use the `reply()` function on the new commandobject. pass it your content and
-	// sockbot takes care of the rest.
-	debug('init of mafiaview');
-	post = postObject;
-	readFile = rf || require('fs-readfile-promise');
+exports.activate = function(forum, rf) {
+	debug('activating view');
+	post = forum ? forum.Post : post;
 	formatter = forum ? forum.Format : formatter;
+	readFile = rf || require('fs-readfile-promise');
 
 	//Template helpers
 	Handlebars.unregisterHelper('voteChart');
 	Handlebars.unregisterHelper('listNames');
 	Handlebars.registerHelper('voteChart', require('./templates/helpers/voteChart')(formatter));
 	Handlebars.registerHelper('listNames', require('./templates/helpers/listNames')(formatter));
-
-
 };
 
 exports.respond = function(command, output) {

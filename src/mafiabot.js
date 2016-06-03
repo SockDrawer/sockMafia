@@ -82,9 +82,9 @@ exports.activate = function activate() {
 	dao = new MafiaDao(plugConfig.db);
 	modController = new MafiaModController(dao, plugConfig);
 	playerController = new MafiaPlayerController(dao, plugConfig);
-	view.init(internals.forum.Post, internals.forum.Formatter);
 	internals.forum.Commands.add('echo', 'echo a bunch of post info (for diagnostic purposes)', exports.echoHandler);
 
+	view.activate(internals.forum);
 	playerController.activate(internals.forum);
 	modController.activate(internals.forum);
 
