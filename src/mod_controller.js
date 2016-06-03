@@ -56,29 +56,29 @@ function logDebug(statement) {
 class MafiaModController {
 
 	/**
-	 * The constructor
-	 * @param  {sockmafia.src.dao.MafiaDao} d      The dao to use to persist the data
-	 * @param  {Object} config The parsed configuration file pertaining to this instance of the plugin
-	 */
+	* The constructor
+	* @param  {sockmafia.src.dao.MafiaDao} d      The dao to use to persist the data
+	* @param  {Object} config The parsed configuration file pertaining to this instance of the plugin
+	*/
 	constructor(d, config) {
 		this.dao = d;
 	}
 	
 	/**
-	 * Activate the controller
-	 * @param  {Forum} forum The forum to activate for
-	 */
+	* Activate the controller
+	* @param  {Forum} forum The forum to activate for
+	*/
 	activate(forum) {
 		//Register commandss
         forum.Commands.add('set', 'Assign a player a role (mod only)', this.setHandler.bind(this));
         forum.Commands.add('kill', 'kill a player (mod only)', this.killHandler.bind(this));
         forum.Commands.add('new-day', 'move on to a new day (mod only)', this.dayHandler.bind(this));
-        forum.Commands.add('next-phase', 'move on to the next phase (mod only)', this.daHandler.bind(this));
+        forum.Commands.add('next-phase', 'move on to the next phase (mod only)', this.dayHandler.bind(this));
     }
 
     /**
-     * Set: et a prperty fr. 
-     * No game rules; this sets up rules f * 
+     * Set: set a prperty for a player.
+     * No game rules; this sets up rules for voting
      * @param {Sockbot.commands.command} command The command object
      */
 	setHandler (command) {

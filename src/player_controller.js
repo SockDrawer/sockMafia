@@ -39,12 +39,13 @@ function logDebug(statement) {
 
 class MafiaPlayerController {
 	/**
-	 * The constructor
-	 * @param  {sockmafia.src.dao.MafiaDao} d      The dao to use to persist the data
-	 * @param  {Object} config The parsed configuration file pertaining to this instance of the plugin
-	 */
+	* The constructor
+	* @param  {sockmafia.src.dao.MafiaDao} d      The dao to use to persist the data
+	* @param  {Object} config The parsed configuration file pertaining to this instance of the plugin
+	*/
     constructor(d, config) {
         this.dao = d;
+        this.formatter = undefined;
     }
     
     /**
@@ -54,6 +55,7 @@ class MafiaPlayerController {
     activate(forum) {
 		//Set name
 		myName = forum.username;
+		this.formatter = forum.Format;
 		
 		//Register commandss
         forum.Commands.add('list-players', 'list all players still alive', this.listPlayersHandler.bind(this));
@@ -137,6 +139,15 @@ class MafiaPlayerController {
 		}
 		return 0;
 	}
+	
+	getVoteAttemptText(actor, action, thread, post, input) {
+		const url = this.formatter.urlForPost(post);
+	
+		const text = `@${actor} ${action} in post <a href="${url}">${post}</a>`
+				+ '\n\n'
+				+ `Original input:\n ${this.formatter.quoteText(input, actor, url)}\n`;
+		return text;
+	}
 
 	getVotingErrorText(reason, voter, target) {
 		let text = ':wtf:';
@@ -218,17 +229,6 @@ class MafiaPlayerController {
 		let gameId, post, actor, voter, votee, game;
 
 		
-		
-		function getVoteAttemptText(success) {
-			let text = '@' + actor + (success ? ' voted to not lynch ' : ' tried to vote to not lynch ');
-
-			text = text	+ 'in post #<a href="https://what.thedailywtf.com/t/'
-					+ game + '/' + post + '">'
-					+ post + '</a>.\n\n'
-					+ 'Vote text:\n[quote]\n' + command.input + '\n[/quote]';
-			return text;
-		}
-		
 		/*Validation*/
 		return command.getTopic().then((topic) => {
 			gameId = topic.id;
@@ -255,7 +255,7 @@ class MafiaPlayerController {
 		})
 		.then(() => game.registerAction(post, actor, undefined, 'vote'))
 		.then(() => {
-			const text = getVoteAttemptText(true);
+			const text = this.getVoteAttemptText(actor, 'voted to not lynch', gameId, post, command.line);
 			view.respond(command, text);
 			logDebug('Nolynch vote succeeded');
 			return true;
@@ -269,7 +269,7 @@ class MafiaPlayerController {
 			return this.getVotingErrorText(reason, actor)
 			.then((text) => {
 				text += '\n<hr />\n';
-				text += getVoteAttemptText(false);
+				text += this.getVoteAttemptText(actor, 'tried to vote to not lynch', gameId, post, command.line);
 				view.respond(command, text);
 				logDebug('Nolynch failed: ' + reason);
 			});
@@ -294,17 +294,7 @@ class MafiaPlayerController {
 		if (command.args.length > 0) {
 			target = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
 		}
-		
-		function getVoteAttemptText(success) {
-			let text = '@' + actor + (success ? ' unvoted ' : ' tried to unvote ');
 
-			text = text	+ 'in post #<a href="https://what.thedailywtf.com/t/'
-					+ game + '/' + post + '">'
-					+ post + '</a>.\n\n'
-					+ 'Vote text:\n[quote]\n' + command.input + '\n[/quote]';
-			return text;
-		}
-		
 		/*Validation*/
 		
 		return command.getTopic().then((topic) => {
@@ -343,7 +333,7 @@ class MafiaPlayerController {
 		})
 		.then(() =>	game.revokeAction(post, actor, target, 'vote'))
 		.then(() => {
-			const text = getVoteAttemptText(true);
+			const text = this.getVoteAttemptText(actor, 'unvoted', gameId, post, command.line);
 			view.respond(command, text);
 			logDebug('Unvote succeeded');
 			return true;
@@ -357,7 +347,7 @@ class MafiaPlayerController {
 			return this.getVotingErrorText(reason, actor)
 			.then((text) => {
 				text += '\n<hr />\n';
-				text += getVoteAttemptText(false);
+				text += this.getVoteAttemptText(actor, 'tried to unvote', gameId, post, command.line);
 				view.respond(command, text);
 				logDebug('Unvote failed: ' + reason);
 			});
@@ -444,16 +434,6 @@ class MafiaPlayerController {
 			action = dao.action.vote;
 		}*/
 
-		function getVoteAttemptText(success) {
-			let text = '@' + actor + (success ? ' voted for ' : ' tried to vote for ') + '@' + target;
-			text = text	+ ' in post #<a href="https://what.thedailywtf.com/t/'
-					+ gameId + '/' + post + '">'
-					+ post + '</a>.\n\n'
-					+ 'Vote text:\n[quote]\n' + input + '\n[/quote]';
-					
-			return text;
-		}
-
 		return this.dao.getGameByTopicId(gameId)
 			.catch(() => {
 				logWarning('Ignoring message in nonexistant game thread ' + gameId);
@@ -484,7 +464,7 @@ class MafiaPlayerController {
 			return game.registerAction(post, actor, target, 'vote');
 			})
 		.then(() => {
-			const text = getVoteAttemptText(true);
+			const text = this.getVoteAttemptText(actor, 'voted for @' + target, gameId, post, input);
 			logDebug('Vote succeeded');
 			return view.respond(command, text);
 		})
@@ -500,7 +480,7 @@ class MafiaPlayerController {
 			.then((text) => {
 				
 				text += '\n<hr />\n';
-				text += getVoteAttemptText(false);
+				text += this.getVoteAttemptText(actor, 'tried to vote for @' + target, gameId, post, input);
 
 				//Log error
 				logRecoveredError('Vote failed: ' + reason);

@@ -61,6 +61,10 @@ describe('player controller', () => {
 			};
 
 			playerController = new PlayerController(null);
+			playerController.formatter = {
+				urlForPost: () => '',
+				quoteText: (input) => input
+			};
 		});
 
 		describe('Votes to lynch', () => {
@@ -215,6 +219,11 @@ describe('player controller', () => {
 					};
 
 					playerController = new PlayerController(mockdao, null);
+					playerController.formatter = {
+						urlForPost: () => '',
+						quoteText: (input) => input
+					};
+			
 					sandbox.spy(view, 'respondInThread');
 					sandbox.spy(view, 'respond');
 					sandbox.spy(view, 'reportError');
@@ -344,6 +353,10 @@ describe('player controller', () => {
 				};
 
 				playerController = new PlayerController(mockdao, null);
+				playerController.formatter = {
+					urlForPost: () => '',
+					quoteText: (input) => input
+				};
 				sandbox.stub(view, 'respondInThread');
 				sandbox.stub(view, 'respond');
 			});
@@ -471,6 +484,10 @@ describe('player controller', () => {
 				};
 
 				playerController = new PlayerController(mockdao, null);
+				playerController.formatter = {
+					urlForPost: () => '',
+					quoteText: (input) => input
+				};
 				sandbox.stub(view, 'respondInThread');
 				sandbox.stub(view, 'respond');
 			});
@@ -600,6 +617,10 @@ describe('player controller', () => {
 			};
 
 			playerController = new PlayerController(mockdao, null);
+			playerController.formatter = {
+				urlForPost: () => '',
+				quoteText: (input) => input
+			};
 			sandbox.stub(view, 'respondInThread');
 			sandbox.stub(view, 'respond');
 			sandbox.stub(view, 'reportError');

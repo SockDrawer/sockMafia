@@ -47,6 +47,10 @@ describe('MafiaBot', function () {
 			//Set up the database
 			dao = new DAO(':memory:');
 			playerController = new PlayerController(dao, testConfig);
+			playerController.formatter = {
+				urlForPost: () => '',
+				quoteText: (input) => input
+			};
 
 			return dao.createGame(1, 'Game 1')
 				.then((g) => {
