@@ -377,19 +377,33 @@ class MafiaPlayerController {
 	voteHandler (command) {
 		let gameId, voter;
 		
-		// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
-		// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
-		const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
-		
 		return command.getTopic().then((topic) => {
 			gameId = topic.id;
 			return command.getUser();
 		}).then((user) => {
 			voter = user.username;
-			
-			logDebug('Received vote request from ' + voter + ' for ' + targetString + ' in game ' + gameId);
 			return command.getPost();
 		}).then((post) => {
+			
+			if (command.args.length <= 0) {
+				return this.getVotingErrorText('No target specified', voter, '')
+				.then((text) => {
+					
+					text += '\n<hr />\n';
+					text += this.getVoteAttemptText(voter, 'tried to vote', gameId, post.id, command.line);
+		
+					//Log error
+					logRecoveredError('Vote failed: No target specified');
+		
+					return view.reportError(command, '', text);
+				});
+			}
+			
+			// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
+			// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
+			const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
+			logDebug('Received vote request from ' + voter + ' for ' + targetString + ' in game ' + gameId);
+			
 			return this.doVote(gameId, post.id, voter, targetString, command.line, 1, command);
 		}).catch((err) => {
 			debug(err);
@@ -408,19 +422,35 @@ class MafiaPlayerController {
 	}
 	
 	forHandler (command) {
-		let gameId, game, voter; 
-		// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
-		// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
-		const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
-		
+		let gameId, voter;
+
 		return command.getTopic().then((topic) => {
 			gameId = topic.id;
 			return command.getUser();
 		}).then((user) => {
 			voter = user.username;
-			logDebug('Received vote request from ' + voter + ' for ' + targetString + ' in game ' + gameId);
 			return command.getPost();
 		}).then((post) => {
+			
+			if (command.args.length <= 0) {
+				return this.getVotingErrorText('No target specified', voter, '')
+				.then((text) => {
+					
+					text += '\n<hr />\n';
+					text += this.getVoteAttemptText(voter, 'tried to vote', gameId, post.id, command.line);
+		
+					//Log error
+					logRecoveredError('Vote failed: No target specified');
+		
+					return view.reportError(command, '', text);
+				});
+			}
+			
+			// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
+			// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
+			const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
+			logDebug('Received vote request from ' + voter + ' for ' + targetString + ' in game ' + gameId);
+		
 			return this.doVote(gameId, post.id, voter, targetString, command.line, 1, command);
 		});
 	}
