@@ -7,7 +7,7 @@
 
 #SockBot Mafia
 
-Mafia plugin for [SockBot](https://sockbot.rtfd.org/en/latest/) version 2.10.0 or later.
+Mafia plugin for [SockBot](https://sockbot.rtfd.org/en/latest/) version 3.1.1 or later.
 
 ##Usage
 
