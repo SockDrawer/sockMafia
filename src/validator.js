@@ -1,4 +1,4 @@
-const dao = require('./dao.js');
+const dao = require('./dao/index.js');
 const Promise = require('bluebird');
 
 function mustBeTrue(check, args, error) {

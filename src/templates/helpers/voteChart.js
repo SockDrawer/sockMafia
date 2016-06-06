@@ -12,41 +12,43 @@ const colors = {
 	WHITE: '#FFFFFF'
 };
 
-module.exports = function(votes, modifier, toExecute) {
-	let fillColor, bgColor, percent;
-	if (mafia.internals.configuration.voteBars.toLowerCase() === 'hidden') {
-		percent = votes / toExecute * 100;
-	} else {
-		percent = votes / (toExecute + modifier) * 100;		
-	}
+module.exports = function(formatter) {
+	return function(votes, modifier, toExecute) {
+		let fillColor, bgColor, percent;
+		if (mafia.internals.configuration.voteBars.toLowerCase() === 'hidden') {
+			percent = votes / toExecute * 100;
+		} else {
+			percent = votes / (toExecute + modifier) * 100;
+		}
 
-	//Hammer color either when it would be hammer, or it's really hammer
-	const hammer = (toExecute + modifier - votes  === 1) || (toExecute - votes  === 1);
+		//Hammer color either when it would be hammer, or it's really hammer
+		const hammer = (toExecute + modifier - votes  === 1) || (toExecute - votes  === 1);
 
-	//Dead when they are dead, full stop
-	const dead = toExecute + modifier - votes  <= 0;
-	
-	
-	if (dead) {
-		fillColor = colors.DARK_RED;
-		bgColor = colors.RED;
-	} else if (hammer) {
-		//Hammer warning
-		fillColor = colors.GREEN;
-		bgColor = colors.LIGHT_GREEN;
-	} else {
-		fillColor = colors.DARK_GREEN;
-		bgColor = colors.WHITE;
-	}
-	let xml = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="12">';
-	xml += `<rect width="100%" height="100%" fill="${bgColor}"/>`;
-	xml += `<rect x="${(100.0 - percent)}%" width="${percent}" height="100%" fill="${fillColor}"/>`;
-	if (mafia.internals.configuration.voteBars.toLowerCase() === 'open') {
-		xml += `<text x="${(100.0 - percent)}%" font-size="10" fill="${bgColor}">${votes}/${toExecute + modifier}</text>`;
-	}
-	xml += '</svg>';
-	
-	const b64 = new Buffer(xml).toString('base64');
-	const html = '<img src="data:image/svg+xml;base64,' + b64 + '">';
-	return new Handlebars.SafeString(html);
+		//Dead when they are dead, full stop
+		const dead = toExecute + modifier - votes  <= 0;
+		
+		
+		if (dead) {
+			fillColor = colors.DARK_RED;
+			bgColor = colors.RED;
+		} else if (hammer) {
+			//Hammer warning
+			fillColor = colors.GREEN;
+			bgColor = colors.LIGHT_GREEN;
+		} else {
+			fillColor = colors.DARK_GREEN;
+			bgColor = colors.WHITE;
+		}
+		let xml = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="12">';
+		xml += `<rect width="100%" height="100%" fill="${bgColor}"/>`;
+		xml += `<rect x="${(100.0 - percent)}%" width="${percent}" height="100%" fill="${fillColor}"/>`;
+		if (mafia.internals.configuration.voteBars.toLowerCase() === 'open') {
+			xml += `<text x="${(100.0 - percent)}%" font-size="10" fill="${bgColor}">${votes}/${toExecute + modifier}</text>`;
+		}
+		xml += '</svg>';
+		
+		const b64 = new Buffer(xml).toString('base64');
+		const html = '<img src="data:image/svg+xml;base64,' + b64 + '">';
+		return new Handlebars.SafeString(html);
+	};
 };

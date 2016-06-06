@@ -13,8 +13,6 @@ chai.should();
 
 const validator = require('../../src/validator');
 
-const Handlebars = require('handlebars');
-
 describe('Validation helpers', () => {
 
 	let sandbox;

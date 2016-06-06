@@ -20,28 +20,31 @@ const slugs = [
 	'spaceInfixOperators'
 ];
 
-module.exports = function(list) {
-	list = list.map((value) => {
-		if (typeof value === 'object') {
-			if (value.retracted) {
-				value = '<a href="/topic/'
-				+ value.game + '/'
-				+ slugs[Math.floor(Math.random() * slugs.length)] + '/'
-				+ value.post + '"><s>'
-				+ value.voter + ' </s></a>'
-				+ '<a href="/topic/'
-				+ value.game + '/'
-				+ slugs[Math.floor(Math.random() * slugs.length)] + '/'
-				+ value.retractedAt + '">[X]</a>';
-			} else {
-				value = '<a href="/topic/'
-				+ value.game + '/'
-				+ slugs[Math.floor(Math.random() * slugs.length)] + '/'
-				+ value.post + '"><b>'
-				+ value.voter + '</b></a>';
+module.exports = function(formatter) {
+
+	return function(list) {
+		list = list.map((value) => {
+			if (typeof value === 'object') {
+				if (value.isCurrent) {
+					return '<a href="'
+					+ formatter.urlForPost(value.postId)
+					+ '"><b>'
+					+ value.actor.username
+					+ '</b></a> ';
+				} else {
+					return '<a href="'
+					+ formatter.urlForPost(value.postId)
+					+ '"><s>'
+					+ value.actor.username
+					+ '</s></a> '
+					+ '<a href="'
+					+ formatter.urlForPost(value.revokedId)
+					+ '">[X]</a>';
+				}
+
 			}
-		}
-		return value;
-	});
-	return new Handlebars.SafeString(list.join(', '));
+			return value;
+		});
+		return new Handlebars.SafeString(list.join(', '));
+	};
 };

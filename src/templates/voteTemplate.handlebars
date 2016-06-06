@@ -4,7 +4,7 @@
   <tr>
   <td>{{voteChart num mod ../toExecute}}</td>
   <td><b>{{target}} ({{num}})</b>:</td>
-  <td>{{listNames names}}</td>
+  <td>{{listNames votes}}</td>
   </tr>
   {{/each}}
   <tr>
@@ -14,4 +14,4 @@
   </tr>
   </table>
   
-  With {{numPlayers}} playing, it's <b>{{toExecute}} to lynch!</b>
+  With {{numPlayers}} playing, it's <b>{{toExecute}} to lynch!</b> {{#if showEndTime}}The phase will end {{endTime}}. {{/if}}
