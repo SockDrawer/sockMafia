@@ -71,7 +71,6 @@ describe('View helpers', () => {
 					username: 'yamikuronue'
 				}
 			}];
-
 			sandbox.spy(fakeFormatter, 'urlForPost');
 			listNamesHelper(input).toString().should.contain('/p/43');
 			
@@ -120,13 +119,13 @@ describe('View helpers', () => {
 				isCurrent: false,
 				revokedId: 44
 			}];
-
 			sandbox.spy(fakeFormatter, 'urlForPost');
 			listNamesHelper(input).toString().should.contain('/p/44');
 
 			fakeFormatter.urlForPost.calledTwice.should.be.true;
 			const args = fakeFormatter.urlForPost.getCall(1).args;
 			args[0].should.equal(44);
+
 		});
 
 		it('Should list two votes with a comma', () => {

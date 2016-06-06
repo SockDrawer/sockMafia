@@ -41,6 +41,7 @@ module.exports = function(formatter) {
 					+ formatter.urlForPost(value.revokedId)
 					+ '">[X]</a>';
 				}
+
 			}
 			return value;
 		});
