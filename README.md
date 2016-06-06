@@ -2,8 +2,8 @@
 [![Dependency Status](https://david-dm.org/sockDrawer/sockMafia/master.svg)](https://david-dm.org/SockDrawer/sockMafia/master)
 [![devDependency Status](https://david-dm.org/sockDrawer/sockMafia/master/dev-status.svg)](https://david-dm.org/SockDrawer/sockMafia/master#info=devDependencies)
 [![optionalDependency Status](https://david-dm.org/sockDrawer/sockMafia/master/optional-status.svg)](https://david-dm.org/SockDrawer/sockMafia/master#info=optionalDependencies)
-[![Build Status](https://travis-ci.org/sockDrawer/sockMafia.svg?branch=master)](https://travis-ci.org/SockDrawer/sockMafia)
-[![Coverage Status](https://coveralls.io/repos/github/sockDrawer/sockMafia/badge.svg?branch=master)](https://coveralls.io/github/SockDrawer/sockMafia?branch=master)
+[![Build Status](https://travis-ci.org/SockDrawer/sockMafia.svg?branch=master)](https://travis-ci.org/SockDrawer/sockMafia)
+[![Coverage Status](https://coveralls.io/repos/github/SockDrawer/sockMafia/badge.svg?branch=master)](https://coveralls.io/github/SockDrawer/sockMafia?branch=master)
 
 #SockBot Mafia
 
