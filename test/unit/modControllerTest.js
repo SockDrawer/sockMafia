@@ -1,594 +1,537 @@
 'use strict';
-/*globals describe, it*/
+/*globals describe, it, beforeEach, afterEach*/
 
 const chai = require('chai'),
 	sinon = require('sinon');
-	
+
 //promise library plugins
 require('sinon-as-promised');
 require('chai-as-promised');
 
 chai.should();
 
-const mafia = require('../../src/mod_controller');
-const mafiaDAO = require('../../src/dao.js');
-const Handlebars = require('handlebars');
+const ModController = require('../../src/mod_controller');
 const view = require('../../src/view.js');
+
 
 describe('mod controller', () => {
 
 	let sandbox;
 	beforeEach(() => {
 		sandbox = sinon.sandbox.create();
-		mafia.createDB = sandbox.stub();
 
 		sandbox.stub(view, 'respond').resolves();
 		sandbox.stub(view, 'respondInThread').resolves();
 		sandbox.stub(view, 'respondWithTemplate').resolves();
 		sandbox.stub(view, 'reportError').resolves();
+
 	});
 	afterEach(() => {
 		sandbox.restore();
 	});
 
 	describe('kill()', () => {
+		let mockGame, mockUser, mockTarget, mockdao, modController;
+
+		beforeEach(() => {
+			mockGame = {
+				isActive: true,
+				name: 'testMafia',
+				getAllPlayers: () => 1,
+				killPlayer: () => Promise.resolve(),
+				nextPhase: () => 1,
+				getActions: () => 1,
+				getPlayer: (player) => mockTarget,
+				getModerator: () => mockUser,
+				topicId: 12
+			};
+
+			mockUser = {
+				username: 'God',
+				getPlayerProperty: () => [],
+				isModerator: true
+			};
+
+			mockTarget = {
+				username: 'Margaret',
+				getPlayerProperty: () => [],
+				isAlive: true
+			};
+
+			mockdao = {
+				getGameByTopicId: () => Promise.resolve(mockGame)
+			};
+
+			modController = new ModController(mockdao);
+		});
+
+
 		it('Should reject non-mods', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
-					'yamikuronue'
+					'Margaret'
 				]
 			};
 
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerMod').resolves(false);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(true);
-			sandbox.stub(mafiaDAO, 'killPlayer').resolves();
-			sandbox.stub(mafiaDAO, 'getGameById').resolves({
-				name: 'testMafia'
-			});
-
-			mafia.internals.configuration = {
-				mods: ['dreikin'],
-				name: 'testMafia'
-			};
+			mockUser.isModerator = false;
+			sandbox.stub(mockGame, 'getModerator').throws();
 			
-			return mafia.killHandler(command).then( () => {
+			return modController.killHandler(command).then( () => {
 				const output = view.reportError.getCall(0).args[2];
-				output.should.include('Poster is not mod');
+				output.should.include('You are not a moderator');
 			});
 		});
-		
+
 		it('Should not kill dead players', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
-					'accalia'
+					'Margaret'
 				]
 			};
 
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerMod').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(false);
-			sandbox.stub(mafiaDAO, 'killPlayer').resolves();
-			sandbox.stub(mafiaDAO, 'getGameById').resolves({
-				name: 'testMafia'
-			});
-			
-			mafia.internals.configuration = {
-				mods: ['dreikin'],
-				name: 'testMafia'
-			};
-			
-			return mafia.killHandler(command).then( () => {
-				mafiaDAO.killPlayer.called.should.be.false;
+			mockTarget.isAlive = false;
+			sandbox.spy(mockGame, 'killPlayer');
+
+			return modController.killHandler(command).then( () => {
+				mockGame.killPlayer.called.should.be.false;
 				const output = view.reportError.getCall(0).args[2];
 				output.should.include('Target not alive');
 			});
 		});
-		
+
 		it('Should not kill players not in the game', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
-					'RaceProUK'
+					'Margaret'
 				]
 			};
 
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerMod').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(false);
-			sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(true);
-			sandbox.stub(mafiaDAO, 'killPlayer').resolves();
-			sandbox.stub(mafiaDAO, 'getGameById').resolves({
-				name: 'testMafia'
-			});
+			sandbox.stub(mockGame, 'getPlayer').returns(mockUser).withArgs('Margaret').throws('NoSuchPlayer');
+			sandbox.spy(mockGame, 'killPlayer');
 
-			mafia.internals.configuration = {
-				mods: ['dreikin'],
-				name: 'testMafia'
-			};
-			
-			return mafia.killHandler(command).then( () => {
-				mafiaDAO.killPlayer.called.should.be.false;
+			return modController.killHandler(command).then( () => {
+				mockGame.killPlayer.called.should.be.false;
 				const output = view.reportError.getCall(0).args[2];
-				output.should.include('Target not in game');
+				output.toString().should.include('Target not in game');
 			});
 		});
-		
+
 		it('Should report errors', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
-					'yamikuronue'
+					'Margaret'
 				]
 			};
 
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerMod').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(true);
-			sandbox.stub(mafiaDAO, 'killPlayer').rejects('an error occurred');
-			sandbox.stub(mafiaDAO, 'getGameById').resolves({
-				name: 'testMafia'
-			});
-			
+			sandbox.stub(mockGame, 'killPlayer').rejects('an error occurred');
 
-			mafia.internals.configuration = {
-				mods: ['dreikin'],
-				name: 'testMafia'
-			};
-			
-			return mafia.killHandler(command).then( () => {
-				mafiaDAO.killPlayer.called.should.be.true;
+			return modController.killHandler(command).then( () => {
+				mockGame.killPlayer.called.should.be.true;
 				const output = view.reportError.getCall(0).args[2];
 				output.should.be.an('Error');
 				output.toString().should.include('an error occurred');
 			});
 		});
-		
+
 		it('Should kill players', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
-					'yamikuronue'
+					'Margaret'
 				]
 			};
 
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerMod').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerAlive').resolves(true);
-			sandbox.stub(mafiaDAO, 'killPlayer').resolves();
-			sandbox.stub(mafiaDAO, 'getGameById').resolves({
-				name: 'testMafia'
-			});
-
-			mafia.internals.configuration = {
-				mods: ['dreikin'],
-				name: 'testMafia'
-			};
-
-			const expected = {
+			sandbox.spy(mockGame, 'killPlayer');
+			const expectedOutput = {
 				command: 'Kill',
-				results: 'Killed @yamikuronue',
-				game: 12345
-			};
-			
-			return mafia.killHandler(command).then( () => {
-				mafiaDAO.killPlayer.called.should.be.true;
+				results: 'Killed @Margaret',
+				game: 'testMafia'
+			} ;
+
+			return modController.killHandler(command).then( () => {
+				mockGame.killPlayer.calledWith('Margaret').should.be.true;
 				const output = view.respondWithTemplate.getCall(0).args[1];
-				output.should.deep.equal(expected);
+				output.should.deep.equal(expectedOutput);
 			});
 		});
 	});
-	
+
 	describe('new-day()', () => {
+		let mockGame, mockUser, mockdao, modController;
+
+		beforeEach(() => {
+			
+			mockUser = {
+				username: 'God',
+				getPlayerProperty: () => [],
+				isModerator: true
+			};
+
+
+			mockGame = {
+				isActive: true,
+				name: 'testMafia',
+				getAllPlayers: () => ['Rachel', 'Ross', 'Joey', 'Chandler', 'Phoebe', 'Monica'],
+				livePlayers: [mockUser, mockUser, mockUser],
+				killPlayer: () => Promise.resolve(),
+				nextPhase: () => 1,
+				getActions: () => 1,
+				getPlayer: () => mockUser,
+				getModerator: () => mockUser,
+				topicId: 12,
+				day: 1,
+				setValue: () => Promise.resolve(),
+				phase: 'night'
+			};
+
+			mockdao = {
+				getGameByTopicId: () => Promise.resolve(mockGame)
+			};
+
+			modController = new ModController(mockdao);
+		});
+
 		it('Should reject non-mods', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				}
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'})
 			};
-			const players = [
-				{player: {'name': 'yamikuronue'}, 'playerStatus': 'alive'},
-				{player: {'name': 'accalia'}, 'playerStatus': 'alive'}
-			];
+			mockUser.isModerator = false;
+			sandbox.spy(mockGame, 'nextPhase');
+			sandbox.stub(mockGame, 'getModerator').throws();
 
-
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'getCurrentTime').resolves(mafiaDAO.gameTime.night);
-			sandbox.stub(mafiaDAO, 'getGameId').resolves(1);
-			sandbox.stub(mafiaDAO, 'isPlayerMod').resolves(false);
-			sandbox.stub(mafiaDAO, 'incrementDay').resolves(2);
-			sandbox.stub(mafiaDAO, 'setCurrentTime').resolves();
-			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(54);
-			sandbox.stub(mafiaDAO, 'getLivingPlayers').resolves(players);
-			
-			mafia.internals.configuration = {
-				mods: ['dreikin'],
-				name: 'testMafia'
-			};
-			
-			return mafia.dayHandler(command).then( () => {
+			return modController.dayHandler(command).then( () => {
 				//Game actions
-				mafiaDAO.incrementDay.called.should.not.be.true;
-				mafiaDAO.setCurrentTime.called.should.not.be.true;
-				
+				mockGame.nextPhase.called.should.equal(false);
+
 				//Output back to mod
 				view.reportError.calledWith(command).should.be.true;
-				const modOutput = view.reportError.getCall(0).args[2];
-				modOutput.should.include('Poster is not mod');
+				const modOutput = view.reportError.getCall(0).args[2].toString();
+				modOutput.should.include('You are not a moderator');
 			});
 		});
-		
+
 		it('Should reject non-existant game', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				}
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'})
 			};
-			const players = [
-				{player: {'name': 'yamikuronue'}, 'playerStatus': 'alive'},
-				{player: {'name': 'accalia'}, 'playerStatus': 'alive'}
-			];
 
+			sandbox.stub(mockdao, 'getGameByTopicId').rejects('No such game');
+			sandbox.spy(mockGame, 'nextPhase');
 
-			sandbox.stub(mafiaDAO, 'getGameStatus').rejects('Game does not exist');
-			sandbox.stub(mafiaDAO, 'getCurrentTime').resolves(mafiaDAO.gameTime.night);
-			sandbox.stub(mafiaDAO, 'getGameId').rejects('No such game');
-			sandbox.stub(mafiaDAO, 'isPlayerMod').resolves(true);
-			sandbox.stub(mafiaDAO, 'incrementDay').resolves(2);
-			sandbox.stub(mafiaDAO, 'setCurrentTime').resolves();
-			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(54);
-			sandbox.stub(mafiaDAO, 'getLivingPlayers').resolves(players);
-			
-			mafia.internals.configuration = {
-				mods: ['dreikin'],
-				name: 'testMafia'
-			};
-			
-			return mafia.dayHandler(command).then( () => {
-				//Game actions
-				mafiaDAO.incrementDay.called.should.not.be.true;
-				mafiaDAO.setCurrentTime.called.should.not.be.true;
-				
+			return modController.dayHandler(command).then( () => {
 				//Output back to mod
 				view.reportError.calledWith(command).should.be.true;
 				const modOutput = view.reportError.getCall(0).args[2];
 				modOutput.should.be.an('Error');
-				modOutput.toString().should.include('Game does not exist');
+				modOutput.toString().should.include('Error: No such game');
 
 			});
 		});
 
 		it('Should move to night', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				}
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: []
 			};
-			const players = [
-				{player: {'name': 'yamikuronue'}, 'playerStatus': 'alive'},
-				{player: {'name': 'accalia'}, 'playerStatus': 'alive'}
-			];
-			const game = {
-				day: 2,
-				name: 'testMafia',
-				time: mafiaDAO.gameTime.day
-			};
+			sandbox.stub(mockGame, 'nextPhase');
 
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'getCurrentTime').resolves(mafiaDAO.gameTime.day);
-			sandbox.stub(mafiaDAO, 'getGameById').resolves(game);
-			sandbox.stub(mafiaDAO, 'isPlayerMod').resolves(true);
-			sandbox.stub(mafiaDAO, 'incrementDay').resolves(2);
-			sandbox.stub(mafiaDAO, 'setCurrentTime').resolves();
-			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(54);
-			sandbox.stub(mafiaDAO, 'getLivingPlayers').resolves(players);
-			
-			mafia.internals.configuration = {
-				mods: ['dreikin'],
-				name: 'testMafia'
-			};
-			
-			return mafia.dayHandler(command).then( () => {
+			return modController.dayHandler(command).then( () => {
 				//Game actions
-				mafiaDAO.incrementDay.called.should.not.be.true;
-				mafiaDAO.setCurrentTime.called.should.be.true;
-				
-				//Output back to mod
+				mockGame.nextPhase.called.should.be.true;
+
+				//Output to game
 				view.respond.calledWith(command).should.be.true;
 				const modOutput = view.respond.getCall(0).args[1];
-				modOutput.should.include('Incremented stage for testMafia');
+				modOutput.should.include('It is now night');
+
 				
-				//Output to game
 				view.respondWithTemplate.called.should.not.be.true;
 
 			});
 		});
 		
-		it('Should move to a new day', () => {
+		it('Should advance days', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				}
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: []
 			};
-			const players = [
-				{player: {'name': 'yamikuronue', properName: 'yamikuronue'}, 'playerStatus': 'alive'},
-				{player: {'name': 'accalia', properName: 'accalia'}, 'playerStatus': 'alive'}
-			];
+			sandbox.stub(mockGame, 'nextPhase', () => {
+				mockGame.day++;
+			});
 
-			const game = {
-				day: 2,
-				name: 'testMafia',
-				time: mafiaDAO.gameTime.night
-			};
+			return modController.dayHandler(command).then( () => {
+				//Game actions
+				mockGame.nextPhase.called.should.be.true;
 
-
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'getCurrentTime').resolves(mafiaDAO.gameTime.night);
-			sandbox.stub(mafiaDAO, 'getGameById').resolves(game);
-			sandbox.stub(mafiaDAO, 'isPlayerMod').resolves(true);
-			sandbox.stub(mafiaDAO, 'incrementDay').resolves(2);
-			sandbox.stub(mafiaDAO, 'setCurrentTime').resolves();
-			sandbox.stub(mafiaDAO, 'getNumToLynch').resolves(54);
-			sandbox.stub(mafiaDAO, 'getLivingPlayers').resolves(players);
-			const fakeTemplate = sandbox.stub().returns('Some string output');
-			sandbox.stub(Handlebars, 'compile').returns(fakeTemplate);
-			
-			mafia.internals.configuration = {
-				mods: ['dreikin'],
-				name: 'testMafia'
-			};
-			
-			return mafia.dayHandler(command).then( () => {
-				//Actions
-				mafiaDAO.incrementDay.called.should.be.true;
-				mafiaDAO.setCurrentTime.called.should.be.true;
-				
 				//Output back to mod
+				view.respondWithTemplate.called.should.be.true;
+				const actualData = view.respondWithTemplate.getCall(0).args[1];
+				
+				actualData.day.should.equal(mockGame.day);
+				actualData.numPlayers.should.equal(3);
+				actualData.toExecute.should.equal(2);
+				actualData.names.should.deep.equal(['God', 'God', 'God']);
+
+			});
+		});
+		
+		it('Should optionally add an end time', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: ['ends', 'today']
+			};
+			sandbox.spy(mockGame, 'setValue');
+
+			return modController.dayHandler(command).then( () => {
+				//Set the flag
+				mockGame.setValue.called.should.be.true;
+				mockGame.setValue.calledWith('phaseEnd', 'today').should.be.true;
+				
 				view.respond.calledWith(command).should.be.true;
 				const modOutput = view.respond.getCall(0).args[1];
-				modOutput.should.include('Incremented day for testMafia');
-				
-				//Output to game
-				view.respondWithTemplate.called.should.be.true;
-				const gameOutputData = view.respondWithTemplate.getCall(0).args[1];
-				gameOutputData.toExecute.should.equal(54);
-				gameOutputData.numPlayers.should.equal(2);
-				gameOutputData.names.should.include('accalia');
-				gameOutputData.names.should.include('yamikuronue');
-				gameOutputData.names.length.should.equal(2);
+				modOutput.should.include('The phase will end today');
+
+			});
+		});
+		
+		it('Should optionally add an end time with spaces', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: ['ends', 'on', 'march', 'second']
+			};
+			sandbox.spy(mockGame, 'setValue');
+
+			return modController.dayHandler(command).then( () => {
+				//Set the flag
+				mockGame.setValue.called.should.be.true;
+				mockGame.setValue.calledWith('phaseEnd', 'on march second').should.be.true;
+
+			});
+		});
+		
+		it('Should not require an end time', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: []
+			};
+			sandbox.spy(mockGame, 'setValue');
+
+			return modController.dayHandler(command).then( () => {
+				//Set the flag
+				mockGame.setValue.called.should.be.false;
+			});
+		});
+		
+		it('Should handle malformed end time', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: ['ends']
+			};
+			sandbox.spy(mockGame, 'setValue');
+
+			return modController.dayHandler(command).then( () => {
+				//Set the flag
+				mockGame.setValue.called.should.be.false;
+			});
+		});
+		
+		it('Should ignore other args', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: ['banana', 'today']
+			};
+			sandbox.spy(mockGame, 'setValue');
+
+			return modController.dayHandler(command).then( () => {
+				//Set the flag
+				mockGame.setValue.called.should.be.false;
 			});
 		});
 	});
-	
+
 	describe('set()', () => {
+
+		let mockGame, mockUser, mockTarget, mockdao, modController;
+
+		beforeEach(() => {
+			mockUser = {
+				username: 'God',
+				getPlayerProperty: () => [],
+				isModerator: true
+			};
+
+			mockTarget = {
+				username: 'Margaret',
+				getPlayerProperty: () => [],
+				isModerator: false,
+				isAlive: true,
+				addProperty: () => true
+			};
+
+			mockGame = {
+				isActive: true,
+				name: 'testMafia',
+				getAllPlayers: () => 1,
+				killPlayer: () => Promise.resolve(),
+				nextPhase: () => 1,
+				getActions: () => 1,
+				getPlayer: (player) => mockTarget,
+				getModerator: () => mockUser,
+				topicId: 12,
+				day: 1
+			};
+
+
+			mockdao = {
+				getGameByTopicId: () => Promise.resolve(mockGame),
+				getGameByName: () => Promise.resolve(mockGame)
+			};
+
+			modController = new ModController(mockdao);
+		});
+
+
 		it('Should reject non-mods', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
-					'yamikuronue',
+					'Margaret',
 					'loved'
 				]
 			};
 
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerMod').resolves(false);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'addPropertyToPlayer').resolves();
-			
-			mafia.internals.configuration = {
-				mods: ['dreikin'],
-				name: 'testMafia'
-			};
-			
-			return mafia.setHandler(command).then( () => {
-				view.reportError.calledWith(command).should.be.true;
-				const output = view.reportError.getCall(0).args[2];
+			mockUser.isModerator = false;
+			sandbox.stub(mockGame, 'getModerator').throws('E_NOMOD');
 
-				output.should.include('Poster is not mod');
+
+			return modController.setHandler(command).then( () => {
+				view.reportError.calledWith(command).should.be.true;
+				const output = view.reportError.getCall(0).args[2].toString();
+
+				output.should.include('You are not a moderator');
 			});
 		});
 
 		it('Should reject non-players', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
-					'yamikuronue',
+					'Sanderson',
 					'loved'
 				]
 			};
 
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerMod').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(false);
-			sandbox.stub(mafiaDAO, 'addPropertyToPlayer').resolves();
+			sandbox.stub(mockGame, 'getPlayer').throws();
 			
-			mafia.internals.configuration = {
-				mods: ['dreikin'],
-				name: 'testMafia'
-			};
-			
-			return mafia.setHandler(command).then( () => {
+			return modController.setHandler(command).then( () => {
 				view.reportError.calledWith(command).should.be.true;
-				const output = view.reportError.getCall(0).args[2];
+				const output = view.reportError.getCall(0).args[2].toString();
 
-				output.should.include('Target not valid');
+				output.should.include('Target not in game');
 			});
 		});
-		
+
 		it('Should allow loved', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
-					'yamikuronue',
+					'Margaret',
 					'loved'
 				]
 			};
 
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerMod').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'addPropertyToPlayer').resolves();
-			
-			mafia.internals.configuration = {
-				mods: ['dreikin'],
-				name: 'testMafia'
-			};
 
 			const expected = {
 				command: 'Set property',
-				results: 'Player yamikuronue is now loved',
-				game: 12345
+				results: 'Player Margaret is now loved',
+				game: mockGame
 			};
-			
-			return mafia.setHandler(command).then( () => {
+
+			return modController.setHandler(command).then( () => {
 				view.respondWithTemplate.called.should.be.true;
 				const output = view.respondWithTemplate.getCall(0).args[1];
 				output.should.deep.equal(expected);
 			});
 		});
-		
+
 		it('Should allow hated', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
-					'yamikuronue',
+					'Margaret',
 					'hated'
 				]
 			};
 
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerMod').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'addPropertyToPlayer').resolves();
-			
-			mafia.internals.configuration = {
-				mods: ['dreikin'],
-				name: 'testMafia'
-			};
-			
 			const expected = {
 				command: 'Set property',
-				results: 'Player yamikuronue is now hated',
-				game: 12345
+				results: 'Player Margaret is now hated',
+				game: mockGame
 			};
-			
-			return mafia.setHandler(command).then( () => {
+
+			return modController.setHandler(command).then( () => {
 				view.respondWithTemplate.called.should.be.true;
 				const output = view.respondWithTemplate.getCall(0).args[1];
 				output.should.deep.equal(expected);
 			});
 		});
-		
+
 		it('Should allow doublevoter', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
-					'yamikuronue',
+					'Margaret',
 					'doublevoter'
 				]
 			};
 
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerMod').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'addPropertyToPlayer').resolves();
-			
-			mafia.internals.configuration = {
-				mods: ['dreikin'],
-				name: 'testMafia'
-			};
-			
 			const expected = {
 				command: 'Set property',
-				results: 'Player yamikuronue is now doublevoter',
-				game: 12345
+				results: 'Player Margaret is now doublevoter',
+				game: mockGame
 			};
-			
-			return mafia.setHandler(command).then( () => {
+
+			return modController.setHandler(command).then( () => {
 				view.respondWithTemplate.called.should.be.true;
 				const output = view.respondWithTemplate.getCall(0).args[1];
 				output.should.deep.equal(expected);
 			});
 		});
-		
+
 		it('Should reject doodoohead', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
-					'yamikuronue',
+					'Margaret',
 					'doodoohead'
 				]
 			};
 
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerMod').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'addPropertyToPlayer').resolves();
-			
-			mafia.internals.configuration = {
-				mods: ['dreikin'],
-				name: 'testMafia'
-			};
-			
-			return mafia.setHandler(command).then( () => {
+			return modController.setHandler(command).then( () => {
 				view.reportError.calledWith(command).should.be.true;
 				const output = view.reportError.getCall(0).args[2];
 
@@ -596,36 +539,88 @@ describe('mod controller', () => {
 				output.should.include('Valid properties: loved, hated, doublevote');
 			});
 		});
-		
-		it('Should report errors from the DAO', () => {
+
+		it('Should bubble up errors', () => {
 			const command = {
-				post: {
-					username: 'tehNinja',
-					'topic_id': 12345,
-					'post_number': 98765
-				},
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
-					'yamikuronue',
+					'Margaret',
 					'doublevoter'
 				]
 			};
+			sandbox.stub(mockTarget, 'addProperty').throws('An error occurred');
 
-			sandbox.stub(mafiaDAO, 'getGameStatus').resolves(mafiaDAO.gameStatus.running);
-			sandbox.stub(mafiaDAO, 'isPlayerMod').resolves(true);
-			sandbox.stub(mafiaDAO, 'isPlayerInGame').resolves(true);
-			sandbox.stub(mafiaDAO, 'addPropertyToPlayer').rejects('Error in DAO');
-			
-			mafia.internals.configuration = {
-				mods: ['dreikin'],
-				name: 'testMafia'
-			};
-			
-			return mafia.setHandler(command).then( () => {
+
+			return modController.setHandler(command).then( () => {
 				view.reportError.calledWith(command).should.be.true;
 				const output = view.reportError.getCall(0).args[2];
 				output.should.be.an('Error');
 
-				output.toString().should.include('Error in DAO');
+				output.toString().should.include('An error occurred');
+			});
+		});
+		
+		it('Should read "in" command with numeric arg', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: [
+					'Margaret',
+					'hated',
+					'in',
+					'527'
+				]
+			};
+			
+			sandbox.spy(mockdao, 'getGameByTopicId');
+
+			return modController.setHandler(command).then( () => {
+				mockdao.getGameByTopicId.calledWith('527').should.be.true;
+			});
+		});
+		
+		it('Should read "in" command with string arg', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: [
+					'Margaret',
+					'hated',
+					'in',
+					'Bushido',
+					'Mafia'
+				]
+			};
+			
+			sandbox.spy(mockdao, 'getGameByName');
+			sandbox.spy(mockdao, 'getGameByTopicId');
+
+			return modController.setHandler(command).then( () => {
+				mockdao.getGameByName.calledWith('Bushido Mafia').should.be.true;
+				mockdao.getGameByTopicId.called.should.be.false;
+			});
+		});
+		
+		it('Should not confuse string and numeric args', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: [
+					'Margaret',
+					'hated',
+					'in',
+					'21_Jump',
+					'Street'
+				]
+			};
+			
+			sandbox.spy(mockdao, 'getGameByName');
+			sandbox.spy(mockdao, 'getGameByTopicId');
+
+			return modController.setHandler(command).then( () => {
+				mockdao.getGameByName.calledWith('21_Jump Street').should.be.true;
+				mockdao.getGameByTopicId.called.should.be.false;
 			});
 		});
 	});

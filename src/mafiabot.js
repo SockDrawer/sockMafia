@@ -4,23 +4,29 @@
  *
  * Helps run mafia games, providing features such as vote tracking and listing.
  *
- * @module mafiabot
+ * @module sockmafia
  * @author Accalia, Dreikin, Yamikuronue
  * @license MIT
  */
 
+/**
+ * @external Forum
+ * @see {@link https://github.com/SockDrawer/SockBot/blob/master/docs/api/providers/nodebb/index.md#sockbot.providers.module_nodebb..Forum}
+ */
+
+
 // Requisites
 
-const dao = require('./dao.js');
-const modController = require('./mod_controller');
-const playerController = require('./player_controller');
+const MafiaDao = require('./dao');
+const MafiaModController = require('./mod_controller');
+const MafiaPlayerController = require('./player_controller');
 const view = require('./view');
 const Promise = require('bluebird');
 const debug = require('debug')('sockbot:mafia');
+require('./utils');
 
-// Constants
+let dao, modController,  playerController;
 
-const unvoteNicks = ['unvote', 'no-lynch', 'nolynch'];
 
 // Defaults
 
@@ -29,27 +35,27 @@ const unvoteNicks = ['unvote', 'no-lynch', 'nolynch'];
  */
 exports.defaultConfig = {
 	/**
-	 * Required delay before posting another reply in the same topic.
-	 *
-	 * @default
-	 * @type {Number}
-	 */
+	* Required delay before posting another reply in the same topic.
+	*
+	* @default
+	* @type {Number}
+	*/
 	cooldown: 0 * 1000,
 	/**
-	 * Messages to select reply from.
-	 *
-	 * @default
-	 * @type {string[]}
-	 */
+	* Messages to select reply from.
+	*
+	* @default
+	* @type {string[]}
+	*/
 	messages: [
 		'Command invalid or no command issued. Try the `help` command.'
 	],
 	/**
-	 * File location for database.
-	 *
-	 * @default
-	 * @type {string}
-	 */
+	* File location for database.
+	*
+	* @default
+	* @type {string}
+	*/
 	db: './mafiadb',
 
 	voteBars: 'bastard'
@@ -64,61 +70,56 @@ const internals = {
 };
 exports.internals = internals;
 
-// Local extensions
-/*eslint-disable no-extend-native*/
-Array.prototype.contains = function (element) {
-	return this.indexOf(element) > -1;
-};
-/*eslint-enable no-extend-native*/
-
-// Helper functions
-
-function patchIn(module) {
-	for (const property in module) {
-		if (typeof module[property] === 'function' && module.hasOwnProperty(property)) {
-			exports[property] = module[property];
-		}
-	}
-}
-
 /*eslint-disable no-console*/
-function handleCallback(err) {
-	if (err) {
-		console.log('ERROR: ' + err.toString());
+/**
+ * Sockbot 3.0 Activation function
+ * @returns {Promise} A promise that will resolve when the activation is complete
+ */
+exports.activate = function activate() {
+	debug('activating mafiabot');
+	const plugConfig = internals.configuration;
+
+	dao = new MafiaDao(plugConfig.db);
+	modController = new MafiaModController(dao, plugConfig);
+	playerController = new MafiaPlayerController(dao, plugConfig);
+	internals.forum.Commands.add('echo', 'echo a bunch of post info (for diagnostic purposes)', exports.echoHandler);
+
+	view.activate(internals.forum);
+	playerController.activate(internals.forum);
+	modController.activate(internals.forum);
+
+	return exports.createFromFile(plugConfig);
+};
+
+/**
+ * Sockbot 3.0 Plugin function
+ * @param  {Forum} forum  The forum provider's Forum class
+ * @param  {Object} config The plugin-specific configuration
+ * @returns {Object}        A temporary object representing this instance of the forum
+ */
+exports.plugin = function plugin(forum, config) {
+	debug('creating plugin object');
+	if (Array.isArray(config)) {
+		config = {
+			messages: config
+		};
 	}
-}
-/*eslint-enable no-console*/
+	if (config === null || typeof config !== 'object') {
+		config = {};
+	}
+	Object.keys(exports.defaultConfig).forEach((key) => {
+		if (!config[key]) {
+			config[key] = exports.defaultConfig[key];
+		}
+	});
+	internals.configuration = config;
+	internals.forum = forum;
 
-function registerPlayerCommands(events) {
-	patchIn(playerController);
-	events.onCommand('for', 'vote for a player to be executed', exports.voteHandler, handleCallback);
-	events.onCommand('join', 'join current mafia game', exports.joinHandler, handleCallback);
-	events.onCommand('list-all-players', 'list all players, dead and alive', exports.listAllPlayersHandler, handleCallback);
-	events.onCommand('list-all-votes', 'list all votes from the game\'s start', exports.listAllVotesHandler, handleCallback);
-	events.onCommand('list-players', 'list all players still alive', exports.listPlayersHandler, handleCallback);
-	events.onCommand('list-votes', 'list all votes from the day\'s start', exports.listVotesHandler, handleCallback);
-	events.onCommand('no-lynch', 'vote for noone to be lynched', exports.nolynchHandler, handleCallback);
-	events.onCommand('nolynch', 'vote for noone to be lynched', exports.nolynchHandler, handleCallback);
-	events.onCommand('unvote', 'rescind your vote', exports.unvoteHandler, handleCallback);
-	events.onCommand('vote', 'vote for a player to be executed (alt. form)', exports.voteHandler, handleCallback);
-}
-
-function registerModCommands(events) {
-	patchIn(modController);
-	events.onCommand('prepare', 'Start a new game', exports.prepHandler, handleCallback);
-	events.onCommand('start', 'move a game into active play (mod only)', exports.startHandler, handleCallback);
-	events.onCommand('new-day', 'move on to a new day (mod only)', exports.dayHandler, handleCallback);
-	events.onCommand('next-phase', 'move on to the next phase (mod only)', exports.dayHandler, handleCallback);
-	events.onCommand('kill', 'kill a player (mod only)', exports.killHandler, handleCallback);
-	events.onCommand('set', 'Assign a player a role (mod only)', exports.setHandler, handleCallback);
-	events.onCommand('end', 'end the game (mod only)', exports.finishHandler, handleCallback);
-}
-
-function registerCommands(events) {
-	events.onCommand('echo', 'echo a bunch of post info (for diagnostic purposes)', exports.echoHandler, handleCallback);
-	registerPlayerCommands(events);
-	registerModCommands(events);
-}
+	return {
+		activate: exports.activate,
+		deactivate: () => Promise.resolve()
+	};
+};
 
 /**
  * Register the mods listed in the configuration.
@@ -126,22 +127,19 @@ function registerCommands(events) {
  * @param {Number} game Thread number for the game.
  * @param {string[]} mods Array of mod names to add to the game.
  */
-/*eslint-disable no-console*/
 function registerMods(game, mods) {
-	return dao.ensureGameExists(game)
-		.then(() => Promise.mapSeries(
+	return Promise.mapSeries(
 			mods,
 			function (mod) {
 				console.log('Mafia: Adding mod: ' + mod);
-				return dao.addMod(game, mod)
+				return game.addModerator(mod)
 					.catch((err) => {
 						console.log('Mafia: Adding mod: failed to add mod: ' + mod + '\n\tReason: ' + err);
 						return Promise.resolve();
 					});
 			}
-		));
+		);
 }
-/*eslint-enable no-console*/
 
 /**
  * Register the players listed in the configuration.
@@ -149,20 +147,18 @@ function registerMods(game, mods) {
  * @param {Number} game Thread number for the game.
  * @param {string[]} players Array of player names to add to the game.
  */
-/*eslint-disable no-console*/
 function registerPlayers(game, players) {
-	return dao.ensureGameExists(game)
-		.then(() => Promise.mapSeries(
+	return Promise.mapSeries(
 			players,
 			function (player) {
 				console.log('Mafia: Adding player: ' + player);
-				return dao.addPlayerToGame(game, player)
+				return game.addPlayer(player)
 					.catch((err) => {
 						console.log('Mafia: Adding player: failed to add player: ' + player + '\n\tReason: ' + err);
 						return Promise.resolve();
 					});
 			}
-		));
+		);
 }
 
 /*eslint-enable no-console*/
@@ -186,102 +182,46 @@ exports.echoHandler = function (command) {
 	return Promise.resolve();
 };
 
+/**
+ * Create the game from the configuration file
+ * @param  {Object} plugConfig The configuration file
+ * @returns {Promise}           A promise that resolves when the creation is complete
+ */
+exports.createFromFile = function (plugConfig) {
+	let game;
 
-/*eslint-disable no-console*/
-// Sockbot 3.0 activation function
-exports.activate = function activate() {
-	debug('activating mafiabot');
-	const plugConfig = internals.configuration;
-	const fakeEvents = {
-		onCommand: (commandName, help, handler) => {
-			debug(`Registering command: ${commandName}`);
-
-			function translateHandler(command) {
-				debug(`Mafia received command ${command.command}`);
-				return Promise.all([
-					command.getPost(),
-					command.getTopic(),
-					command.getUser()
-				]).then((data) => {
-					debug(`Mafia processing command ${command.command} in topic ${data[1].id} on post ${data[0].id}`);
-					const translated = {
-						input: command.line,
-						command: command.command,
-						args: command.args,
-						mention: command.mention,
-						post: {
-							username: data[2].username,
-							'topic_id': data[1].id,
-							'post_number': data[0].id,
-							cleaned: data[0].content
-						}
-					};
-					return handler(translated);
-				});
-			}
-			return internals.forum.Commands.add(commandName, help, translateHandler);
-		}
-	};
-	return dao.createDB(internals.configuration)
-		.then(() => dao.ensureGameExists(plugConfig.thread))
-		.catch((reason) => {
-			if (reason === 'Game does not exist') {
-				return dao.addGame(plugConfig.thread, plugConfig.name);
+	return dao.createGame(plugConfig.thread, plugConfig.name)
+		.catch((err) => {
+			/*eslint-disable no-console*/
+			if (err === 'E_GAME_EXISTS') {
+				console.log('Existing game found, augmenting');
+				return dao.getGameByTopicId(plugConfig.thread);
 			} else {
-				console.log('Mafia: Error: Game not added to database.\n' + '\tReason: ' + reason);
-				return Promise.reject('Game not created');
+				console.log('ERROR! ' + err, err.stack);
+				/*eslint-enable no-console*/
+				throw err; // rethrow error to fail bot startup
 			}
+		
 		})
-		.then(() => {
+		.then((g) => {
+			game = g;
 			if (plugConfig.players) {
-				return registerPlayers(plugConfig.thread, plugConfig.players);
+				return registerPlayers(game, plugConfig.players);
 			} else {
 				return Promise.resolve();
 			}
 		})
 		.then(() => {
 			if (plugConfig.mods) {
-				return registerMods(plugConfig.thread, plugConfig.mods);
+				return registerMods(game, plugConfig.mods);
 			} else {
 				return Promise.resolve();
 			}
 		})
-		.then(() => {
-			modController.init(internals.forum);
-			playerController.init(internals.forum);
-			view.init(internals.forum.Post);
-			registerCommands(fakeEvents);
-		})
 		.catch((err) => {
+			/*eslint-disable no-console*/
 			console.log('ERROR! ' + err, err.stack);
+			/*eslint-enable no-console*/
 			throw err; // rethrow error to fail bot startup
 		});
 };
-
-// Sockbot 3.0 Plugin function
-exports.plugin = function plugin(forum, config) {
-	debug('creating plugin object');
-	if (Array.isArray(config)) {
-		config = {
-			messages: config
-		};
-	}
-	if (config === null || typeof config !== 'object') {
-		config = {};
-	}
-	Object.keys(exports.defaultConfig).forEach((key) => {
-		if (!config[key]) {
-			config[key] = exports.defaultConfig[key];
-		}
-	});
-	if (config.players) {
-		config.players.concat(unvoteNicks); // This is a noop as concat returns new array, not modifies self array
-	}
-	internals.configuration = config;
-	internals.forum = forum;
-	return {
-		activate: exports.activate,
-		deactivate: () => Promise.resolve()
-	};
-};
-/*eslint-enable no-console*/

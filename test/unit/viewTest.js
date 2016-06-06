@@ -12,18 +12,30 @@ chai.use(chaiAsPromised);
 chai.should();
 
 const view = require('../../src/view');
-const listNamesHelper = require('../../src/templates/helpers/listNames');
-const voteChartHelper = require('../../src/templates/helpers/voteChart');
+const NameHelperGenerator = require('../../src/templates/helpers/listNames');
+const VoteChartGenerator = require('../../src/templates/helpers/voteChart');
 const mafia = require('../../src/mafiabot');
+const MafiaAction = require('../../src/dao/mafiaAction');
+const MafiaUser = require('../../src/dao/mafiaUser');
 
 const Handlebars = require('handlebars');
 
 describe('View helpers', () => {
 
-	let sandbox;
+	let sandbox, fakeFormatter;
 	beforeEach(() => {
 		sandbox = sinon.sandbox.create();
 		mafia.internals.configuration = mafia.defaultConfig;
+
+		fakeFormatter = {
+			urlForTopic: (topicId, slug, postId) => {
+				return '/t/' + slug + '/' + topicId + '/' + postId;
+			},
+			urlForPost: (postId) => {
+				return '/p/' + postId;
+			}
+		};
+		
 	});
 	
 	afterEach(() => {
@@ -31,15 +43,20 @@ describe('View helpers', () => {
 	});
 
 	describe('listNames()', () => {
+		let listNamesHelper;
+
 		beforeEach(() => {
 			sandbox.stub(Math, 'random').returns(0);
+			listNamesHelper = NameHelperGenerator(fakeFormatter);
 		});
 	
 		it('Should one player without a comma', () => {
 			const input = [{
 				game: 123,
-				post: 43,
-				voter: 'yamikuronue'
+				postId: 43,
+				actor: {
+					username: 'yamikuronue'
+				}
 			}];
 			const output = listNamesHelper(input).toString();
 			output.should.contain('yamikuronue');
@@ -49,17 +66,27 @@ describe('View helpers', () => {
 		it('Should link to the post', () => {
 			const input = [{
 				game: 123,
-				post: 43,
-				voter: 'yamikuronue'
+				postId: 43,
+				actor: {
+					username: 'yamikuronue'
+				}
 			}];
-			listNamesHelper(input).toString().should.contain('/t/slug/123/43');
+			sandbox.spy(fakeFormatter, 'urlForPost');
+			listNamesHelper(input).toString().should.contain('/p/43');
+			
+			fakeFormatter.urlForPost.called.should.be.true;
+			const args = fakeFormatter.urlForPost.getCall(0).args;
+			args[0].should.equal(43);
 		});
 		
 		it('Should bold current posts', () => {
 			const input = [{
 				game: 123,
-				post: 43,
-				voter: 'yamikuronue'
+				postId: 43,
+				actor: {
+					username: 'yamikuronue'
+				},
+				isCurrent: true
 			}];
 			listNamesHelper(input).toString().should.contain('<b>');
 			listNamesHelper(input).toString().should.contain('</b>');
@@ -68,46 +95,121 @@ describe('View helpers', () => {
 		it('Should strikeout retracted posts', () => {
 			const input = [{
 				game: 123,
-				post: 43,
-				voter: 'yamikuronue',
-				retracted: true,
-				retractedAt: 44
+				postId: 43,
+				actor: {
+					username: 'yamikuronue'
+				},
+				isCurrent: false,
+				revokedId: 44
 			}];
-			listNamesHelper(input).toString().should.contain('<s>');
-			listNamesHelper(input).toString().should.contain('</s>');
+			const output = listNamesHelper(input).toString();
+			output.should.contain('<s>');
+			output.should.contain('</s>');
+
+
 		});
 		
 		it('Should link to the retraction', () => {
 			const input = [{
 				game: 123,
-				post: 43,
-				voter: 'yamikuronue',
-				retracted: true,
-				retractedAt: 44
+				postId: 43,
+				actor: {
+					username: 'yamikuronue'
+				},
+				isCurrent: false,
+				revokedId: 44
 			}];
-			listNamesHelper(input).toString().should.contain('/t/slug/123/44');
+			sandbox.spy(fakeFormatter, 'urlForPost');
+			listNamesHelper(input).toString().should.contain('/p/44');
+
+			fakeFormatter.urlForPost.calledTwice.should.be.true;
+			const args = fakeFormatter.urlForPost.getCall(1).args;
+			args[0].should.equal(44);
+
 		});
 
 		it('Should list two votes with a comma', () => {
 			const input = [{
 				game: 123,
-				post: 43,
-				voter: 'yamikuronue'
+				postId: 43,
+				actor: {
+					username: 'yamikuronue'
+				},
+				isCurrent: true
 			},
 			{
 				game: 123,
-				post: 47,
-				voter: 'accalia'
+				postId: 47,
+				actor: {
+					username: 'accalia'
+				},
+				isCurrent: true
 			}];
-			listNamesHelper(input).toString().should.contain('/t/slug/123/43');
-			listNamesHelper(input).toString().should.contain('/t/slug/123/47');
+			listNamesHelper(input).toString().should.contain('/p/43');
+			listNamesHelper(input).toString().should.contain('/p/47');
 			listNamesHelper(input).toString().should.contain(',');
 			listNamesHelper(input).toString().should.contain('yamikuronue');
 			listNamesHelper(input).toString().should.contain('accalia');
 		});
+		
+		it('Should handle real actions', () => {
+			const yami = new MafiaUser({
+				username: 'yamikuronue'
+			});
+			
+			const accalia = new MafiaUser({
+				username: 'accalia'
+			});
+			
+			const dreikin = new MafiaUser({
+				username: 'dreikin'
+			});
+			
+			const fakeGame = {
+				_getPlayer: (name) => {
+					if (name === 'yamikuronue') {
+						return yami;
+					}
+					
+					if (name === 'dreikin') {
+						return dreikin;
+					}
+					
+					return accalia;
+				}
+			};
+			
+			const voteOne = new MafiaAction({
+				postId: 1,
+				actor: 'yamikuronue',
+				target: 'accalia',
+				isCurrent: true,
+				day: 1
+				
+			}, fakeGame);
+			
+			const voteTwo = new MafiaAction({
+				postId: 2,
+				actor: 'dreikin',
+				target: 'accalia',
+				isCurrent: false,
+				revokedId: 3,
+				day: 1
+				
+			}, fakeGame);
+			
+			const output = listNamesHelper([voteOne, voteTwo]).toString();
+			output.should.contain('<a href="/p/1"><b>yamikuronue</b></a> ');
+			output.should.contain('<a href="/p/2"><s>dreikin</s></a> <a href="/p/3">[X]</a>');
+		});
 	});
 	
 	describe('voteChart()', () => {
+
+		let voteChartHelper;
+		beforeEach(() => {
+			voteChartHelper = VoteChartGenerator(fakeFormatter);
+		});
 
 		const colors = {
 			DARK_RED: '#560000',
@@ -261,46 +363,42 @@ describe('View helpers', () => {
 
 describe('View', () => {
 
-	let sandbox, postShim, readFileShim;
+	let sandbox, postShim, readFileShim, fakeCommand;
+
 	beforeEach(() => {
 		sandbox = sinon.sandbox.create();
 		postShim = {
 			reply: sandbox.stub().resolves()
 		};
+		
+		fakeCommand = {
+			reply: sandbox.stub().resolves()
+		};
+		
 		readFileShim = sandbox.stub().resolves(new Buffer('read file'));
 
-		view.init(postShim, readFileShim);
+		view.activate({Post: postShim, Format: undefined}, readFileShim);
 	});
 	
 	afterEach(() => {
 		sandbox.restore();
 	});
 
-	it('should wrap post.reply as respond', () => {
-		return view.respond({
-			post: {
-				topic_id: 123,
-				post_number: 345
-			}
-		}, 'This is a reply').then(() => {
-			postShim.reply.calledWith(123, 345, 'This is a reply').should.equal(true);
+	it('should wrap command.reply as respond', () => {
+		return view.respond(fakeCommand, 'This is a reply').then(() => {
+			fakeCommand.reply.calledWith('This is a reply').should.be.true;
 		});
 	});
 
 	it('should wrap post.reply as respondInThread', () => {
 		return view.respondInThread(123, 'This is a reply').then(() => {
-			postShim.reply.calledWith(123, undefined, 'This is a reply').should.equal(true);
+			postShim.reply.calledWith(123, undefined, 'This is a reply').should.be.true;
 		});
 	});
 
-	it('should wrap post.reply as reportError', () => {
-		return view.reportError({
-			post: {
-				topic_id: 123,
-				post_number: 345
-			}
-		}, 'ERR: ', 'This is an error').then(() => {
-			postShim.reply.calledWith(123, 345, 'ERR: This is an error').should.equal(true);
+	it('should wrap command.reply as reportError', () => {
+		return view.reportError(fakeCommand, 'ERR: ', 'This is an error').then(() => {
+			fakeCommand.reply.calledWith('ERR: This is an error').should.be.true;
 		});
 	});
 
@@ -309,15 +407,10 @@ describe('View', () => {
 		const fakeTemplate = sandbox.stub().returns('a compiled string');
 
 		sandbox.stub(Handlebars, 'compile').returns(fakeTemplate);
-		return view.respondWithTemplate('foo.hbrs', data, {
-			post: {
-				topic_id: 123,
-				post_number: 345
-			}
-		}).then(() => {
+		return view.respondWithTemplate('foo.hbrs', data, fakeCommand).then(() => {
 			Handlebars.compile.calledWith('read file').should.equal(true);
 			fakeTemplate.calledWith(data).should.equal(true);
-			postShim.reply.calledWith(123, 345, 'a compiled string').should.equal(true);
+			fakeCommand.reply.calledWith('a compiled string').should.equal(true);
 		});
 	});
 });
