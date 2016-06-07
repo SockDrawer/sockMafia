@@ -520,6 +520,29 @@ describe('mod controller', () => {
 				output.should.deep.equal(expected);
 			});
 		});
+		
+		it('Should allow lynchproof', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: [
+					'Margaret',
+					'lynchproof'
+				]
+			};
+
+			const expected = {
+				command: 'Set property',
+				results: 'Player Margaret is now lynchproof',
+				game: mockGame
+			};
+
+			return modController.setHandler(command).then( () => {
+				view.respondWithTemplate.called.should.be.true;
+				const output = view.respondWithTemplate.getCall(0).args[1];
+				output.should.deep.equal(expected);
+			});
+		});
 
 		it('Should reject doodoohead', () => {
 			const command = {

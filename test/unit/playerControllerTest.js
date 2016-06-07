@@ -170,6 +170,16 @@ describe('player controller', () => {
 					playerController.lynchPlayer.called.should.equal(false);
 				});
 			});
+			
+			it('should not lynch lynchproof', () => {
+				sandbox.stub(playerController, 'getNumVotesRequired').returns(1);
+				sandbox.stub(mockGame, 'getActions').returns([voteForSadie]);
+				mockTarget.getProperties = () => ['lynchproof'];
+
+				return playerController.checkForAutoLynch(mockGame, mockTarget).then(() => {
+					playerController.lynchPlayer.called.should.equal(false);
+				});
+			});
 		});
 	});
 

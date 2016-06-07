@@ -10,6 +10,7 @@
 const view = require('./view');
 const Promise = require('bluebird');
 const debug = require('debug')('sockbot:mafia:modController');
+const Utils = require('./utils');
 
 
 exports.internals = {};
@@ -23,11 +24,6 @@ exports.init = function(forum) {
  * Valid properties for a player to hold
  * @type {Array}
  */
-const validProperties = [
-	'loved',
-	'hated',
-	'doublevoter'
-];
 
 /**
  * Log an error that was recovered from
@@ -125,8 +121,8 @@ class MafiaModController {
 				return mod.isModerator ? Promise.resolve() : Promise.reject('You are not a moderator');
 			})
 			.then(() => {
-				if (!validProperties.contains(property.toLowerCase())) {
-					return Promise.reject('Property not valid.\n Valid properties: ' + validProperties.join(', '));
+				if (!Utils.Enums.validProperties.contains(property.toLowerCase())) {
+					return Promise.reject('Property not valid.\n Valid properties: ' + Utils.Enums.validProperties.join(', '));
 				}
 				
 				try {
