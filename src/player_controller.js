@@ -59,11 +59,14 @@ class MafiaPlayerController {
 		
 		//Register commandss
         forum.Commands.add('list-players', 'list all players still alive', this.listPlayersHandler.bind(this));
+        forum.Commands.add('listplayers', 'list all players still alive', this.listPlayersHandler.bind(this));
         forum.Commands.add('list-all-players', 'list all players, dead and alive', this.listAllPlayersHandler.bind(this));
+        forum.Commands.add('listallplayers', 'list all players, dead and alive', this.listAllPlayersHandler.bind(this));
         forum.Commands.add('join', 'join current mafia game', this.joinHandler.bind(this));
         forum.Commands.add('for', 'vote for a player to be executed', this.forHandler.bind(this));
         forum.Commands.add('vote', 'vote for a player to be executed (alt. form)', this.voteHandler.bind(this));
         forum.Commands.add('list-votes', 'list all votes from the day\'s start', this.listVotesHandler.bind(this));
+        forum.Commands.add('listvotes', 'list all votes from the day\'s start', this.listVotesHandler.bind(this));
         forum.Commands.add('unvote', 'rescind your vote', this.unvoteHandler.bind(this));
         forum.Commands.add('nolynch', 'vote for noone to be lynched', this.nolynchHandler.bind(this));
         forum.Commands.add('no-lynch', 'vote for noone to be lynched', this.nolynchHandler.bind(this));
