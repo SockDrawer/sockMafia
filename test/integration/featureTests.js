@@ -550,7 +550,7 @@ describe('MafiaBot', function () {
 			return playerController.unvoteHandler(command).then(() => {
 				command = {
 					args: [],
-					input: '!list-players',
+					input: '!list-votes',
 					reply: sandbox.stub(),
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 6}),
@@ -845,8 +845,254 @@ describe('MafiaBot', function () {
 	});
 	*/
 
-	describe('Special voting', () => {
+	context('Special voting', () => {
+		let dao, playerController, game;
+		
 		/*TODO: doublevoter*/
+		describe('Doublevoting', () => {
+			before(() => {
+				//Set up the database
+				dao = new DAO(':memory:');
+				playerController = new PlayerController(dao, testConfig);
+				playerController.formatter = {
+					urlForPost: () => '',
+					quoteText: (input) => input
+				};
+				
+	
+				return dao.createGame(2, 'Game 2')
+					.then((g) => {
+						game = g;
+						sinon.stub(dao, 'getGameByTopicId').resolves(game);
+						return game.addPlayer('yamikuronue');
+					})
+					.then(() => game.addPlayer('accalia'))
+					.then(() => game.addPlayer('dreikin'))
+					.then(() => game.addPlayer('tehNinja'))
+					.then(() => game.getPlayer('tehNinja'))
+					.then((ninja) => ninja.addProperty('doublevoter'))
+					.then(() => game.newDay());
+			});
+	
+			after(() => {
+				dao.getGameByTopicId.restore();
+			});
+			
+			it('Should allow two votes', () => {
+				let command = {
+					args: ['@accalia'],
+					input: '!for @accalia',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 4}),
+					getPost: () => Promise.resolve({id: 1}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
+				};
+				
+				sandbox.spy(game, 'registerAction');
+			
+				return playerController.forHandler(command).then(() => {
+					game.registerAction.called.should.equal(true);
+	
+					command.reply.called.should.equal(true);
+					command.reply.firstCall.args[0].should.include('@tehNinja voted for @accalia');
+					
+					command = {
+						args: ['@dreikin'],
+						input: '!vote @dreikin',
+						reply: sandbox.stub(),
+						getTopic: () => Promise.resolve({id: 4}),
+						getPost: () => Promise.resolve({id: 2}),
+						getUser: () => Promise.resolve({username: 'tehNinja'}),
+					};
+		
+					view.respond.reset();
+					view.reportError.reset();
+					game.registerAction.reset();
+					return playerController.voteHandler(command);
+				}).then(() => {
+					game.registerAction.called.should.equal(true);
+	
+					command.reply.called.should.equal(true);
+					command.reply.firstCall.args[0].should.include('@tehNinja voted for @dreikin');
+					
+					command = {
+						args: [''],
+						input: '!list-votes',
+						reply: sandbox.stub(),
+						getTopic: () => Promise.resolve({id: 4}),
+						getPost: () => Promise.resolve({id: 3}),
+						getUser: () => Promise.resolve({username: 'tehNinja'}),
+					};
+					
+					view.respond.reset();
+					view.reportError.reset();
+					game.registerAction.reset();
+					return playerController.listVotesHandler(command);
+				}).then(() => {
+					view.reportError.called.should.be.false;
+					command.reply.called.should.be.true;
+					
+					//List both votes
+					const output = command.reply.firstCall.args[0];
+					output.should.include('<td><b>accalia');
+					output.should.include('<a href="/p/1"><b>tehNinja</b></a>');
+					output.should.include('<a href="/p/2"><b>tehNinja</b></a>');
+				});
+			});
+			
+			it('Should retract one of the votes', () => {
+				let command = {
+					args: ['@dreikin'],
+					input: '!for @dreikin',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 4}),
+					getPost: () => Promise.resolve({id: 5}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
+				};
+				
+				sandbox.spy(game, 'registerAction');
+			
+				return playerController.forHandler(command).then(() => {
+					game.registerAction.called.should.equal(true);
+	
+					command.reply.called.should.equal(true);
+					command.reply.firstCall.args[0].should.include('@tehNinja voted for @dreikin');
+					command = {
+						args: [''],
+						input: '!list-votes',
+						reply: sandbox.stub(),
+						getTopic: () => Promise.resolve({id: 4}),
+						getPost: () => Promise.resolve({id: 6}),
+						getUser: () => Promise.resolve({username: 'tehNinja'}),
+					};
+					
+					view.respond.reset();
+					view.reportError.reset();
+					game.registerAction.reset();
+					return playerController.listVotesHandler(command);
+				}).then(() => {
+					view.reportError.called.should.be.false;
+					command.reply.called.should.be.true;
+					
+					//List both votes
+					const output = command.reply.firstCall.args[0];
+					output.should.include('<td><b>accalia');
+					output.should.include('<a href="/p/5"><b>tehNinja</b></a>');
+					output.should.include('<a href="/p/1"><s>tehNinja</s></a> <a href="/p/5">[X]</a>'); //retracted vote
+				});
+			});
+			
+			it('Should allow two votes for the same person', () => {
+				let command = {
+					args: ['@yamikuronue'],
+					input: '!for @yamikuronue',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 4}),
+					getPost: () => Promise.resolve({id: 7}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
+				};
+				
+				sandbox.spy(game, 'registerAction');
+			
+				return playerController.forHandler(command).then(() => {
+					game.registerAction.called.should.equal(true);
+	
+					command.reply.called.should.equal(true);
+					command.reply.firstCall.args[0].should.include('@tehNinja voted for @yamikuronue');
+					
+					command = {
+						args: ['@yamikuronue'],
+						input: '!vote @yamikuronue',
+						reply: sandbox.stub(),
+						getTopic: () => Promise.resolve({id: 4}),
+						getPost: () => Promise.resolve({id: 8}),
+						getUser: () => Promise.resolve({username: 'tehNinja'}),
+					};
+		
+					view.respond.reset();
+					view.reportError.reset();
+					game.registerAction.reset();
+					return playerController.voteHandler(command);
+				}).then(() => {
+					game.registerAction.called.should.equal(true);
+	
+					command.reply.called.should.equal(true);
+					command.reply.firstCall.args[0].should.include('@tehNinja voted for @yamikuronue');
+					
+					command = {
+						args: [''],
+						input: '!list-votes',
+						reply: sandbox.stub(),
+						getTopic: () => Promise.resolve({id: 4}),
+						getPost: () => Promise.resolve({id: 9}),
+						getUser: () => Promise.resolve({username: 'tehNinja'}),
+					};
+					
+					view.respond.reset();
+					view.reportError.reset();
+					game.registerAction.reset();
+					return playerController.listVotesHandler(command);
+				}).then(() => {
+					view.reportError.called.should.be.false;
+					command.reply.called.should.be.true;
+					
+					//List all votes
+					const output = command.reply.firstCall.args[0];
+					output.should.include('<td><b>yamikuronue');
+					output.should.include('<a href="/p/1"><s>tehNinja</s></a> <a href="/p/5">[X]</a>');
+					output.should.include('<a href="/p/2"><s>tehNinja</s></a> <a href="/p/8">[X]</a>');
+					output.should.include('<a href="/p/5"><s>tehNinja</s></a> <a href="/p/7">[X]</a>');
+					output.should.include('<a href="/p/7"><b>tehNinja</b></a>');
+					output.should.include('<a href="/p/8"><b>tehNinja</b></a>');
+				});
+			});
+			
+			it('Should unvote everything', () => {
+				let command = {
+					args: [''],
+					input: '!unvote',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 4}),
+					getPost: () => Promise.resolve({id: 10}),
+					getUser: () => Promise.resolve({username: 'tehNinja'}),
+				};
+				
+				sandbox.spy(game, 'registerAction');
+				sandbox.spy(game, 'revokeAction');
+			
+				return playerController.unvoteHandler(command).then(() => {
+					game.revokeAction.called.should.equal(true);
+	
+					command.reply.called.should.equal(true);
+					
+					command = {
+						args: [''],
+						input: '!list-votes',
+						reply: sandbox.stub(),
+						getTopic: () => Promise.resolve({id: 4}),
+						getPost: () => Promise.resolve({id: 11}),
+						getUser: () => Promise.resolve({username: 'tehNinja'}),
+					};
+		
+					view.respond.reset();
+					view.reportError.reset();
+					game.registerAction.reset();
+					return playerController.listVotesHandler(command);
+				}).then(() => {
+					view.reportError.called.should.be.false;
+					command.reply.called.should.be.true;
+					
+					//List all votes
+					const output = command.reply.firstCall.args[0];
+					output.should.include('<td><b>yamikuronue');
+					output.should.include('<a href="/p/1"><s>tehNinja</s></a> <a href="/p/5">[X]</a>');
+					output.should.include('<a href="/p/2"><s>tehNinja</s></a> <a href="/p/8">[X]</a>');
+					output.should.include('<a href="/p/5"><s>tehNinja</s></a> <a href="/p/7">[X]</a>');
+					output.should.include('<a href="/p/7"><s>tehNinja</s></a> <a href="/p/10">[X]</a>');
+					output.should.include('<a href="/p/8"><s>tehNinja</s></a> <a href="/p/10">[X]</a>');
+				});
+			});
+		})
 
 		/*TODO: bastard bars: loved*/
 

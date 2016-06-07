@@ -10,12 +10,9 @@ require('chai-as-promised');
 
 chai.should();
 
-const mafia = require('../../src/player_controller');
 const PlayerController = require('../../src/player_controller');
-const mafiaDAO = require('../../src/dao/index.js');
-const Handlebars = require('handlebars');
 const view = require('../../src/view.js');
-const validator = require('../../src/validator.js');
+const Utils = require('../../src/utils');
 
 const browser = {
 	createPost: sinon.stub().yields()
@@ -184,8 +181,199 @@ describe('player controller', () => {
 	});
 
 	describe('Voting functions', () => {
+		let mockGame, mockVoter, mockTarget, mockdao, playerController;
+		
+		describe('For', () => {
+			beforeEach(() => {
+				mockVoter = {
+					username: 'Lars',
+					getPlayerProperty: () => 1,
+					isAlive: true
+				};
+
+				mockTarget = {
+					username: 'Sadie',
+					getPlayerProperty: () => 1,
+					isAlive: true
+				};
+
+				mockGame = {
+					getAllPlayers: () => 1,
+					killPlayer: () => 1,
+					nextPhase: () => 1,
+					registerAction: () => Promise.resolve('Ok'),
+					getPlayer: (player) => {
+						if (player === 'Lars') {
+							return mockVoter;
+						}
+
+						if (player === 'Sadie') {
+							return mockTarget;
+						}
+						throw new Error('No such player: ' + player);
+					},
+					topicId: 12,
+					isActive: true,
+					isDay: true
+				};
+
+				mockdao = {
+					getGameByTopicId: () => Promise.resolve(mockGame)
+				};
+				
+				playerController = new PlayerController(mockdao, null);
+				playerController.formatter = {
+					urlForPost: () => '',
+					quoteText: (input) => input
+				};
+		
+				sandbox.spy(view, 'respondInThread');
+				sandbox.spy(view, 'respond');
+				sandbox.spy(view, 'reportError');
+				
+			});
+			
+			it('Should call DoVote()', () => {
+				const command = {
+					getTopic: () => Promise.resolve({id: 200}),
+					getUser: () => Promise.resolve(mockVoter),
+					getPost: () => Promise.resolve({id: 5}),
+					args: ['Sadie'],
+					line: '!for Sadie',
+					reply: () => Promise.resolve()
+				};
+				
+				const resolution = 'Some resolution value';
+				
+				sandbox.stub(playerController, 'doVote').resolves(resolution);
+				return playerController.forHandler(command).then((value) => {
+					value.should.equal(resolution);
+					
+					playerController.doVote.called.should.be.true;
+					const args = playerController.doVote.firstCall.args;
+
+					args[0].should.equal(200);			//Game ID
+					args[1].should.equal(5);			//Post ID
+					args[2].should.equal('Lars');		//Voter
+					args[3].should.equal('Sadie');		//Target string
+					args[4].should.equal('!for Sadie');	//Input
+					args[5].should.equal(1);			//Vote number
+					args[6].should.deep.equal(command);	//Command
+				});
+			});
+		});
+		
+		describe('Vote', () => {
+			beforeEach(() => {
+				mockVoter = {
+					username: 'Lars',
+					getProperties: () => [],
+					isAlive: true
+				};
+
+				mockTarget = {
+					username: 'Sadie',
+					getProperties: () => [],
+					isAlive: true
+				};
+
+				mockGame = {
+					getAllPlayers: () => 1,
+					killPlayer: () => 1,
+					nextPhase: () => 1,
+					registerAction: () => Promise.resolve('Ok'),
+					getPlayer: (player) => {
+						if (player === 'Lars') {
+							return mockVoter;
+						}
+
+						if (player === 'Sadie') {
+							return mockTarget;
+						}
+						throw new Error('No such player: ' + player);
+					},
+					topicId: 12,
+					isActive: true,
+					isDay: true
+				};
+
+				mockdao = {
+					getGameByTopicId: () => Promise.resolve(mockGame)
+				};
+				
+				playerController = new PlayerController(mockdao, null);
+				playerController.formatter = {
+					urlForPost: () => '',
+					quoteText: (input) => input
+				};
+		
+				sandbox.spy(view, 'respondInThread');
+				sandbox.spy(view, 'respond');
+				sandbox.spy(view, 'reportError');
+				
+			});
+			
+			it('Should call DoVote()', () => {
+				const command = {
+					getTopic: () => Promise.resolve({id: 200}),
+					getUser: () => Promise.resolve(mockVoter),
+					getPost: () => Promise.resolve({id: 5}),
+					reply: () => Promise.resolve(),
+					args: ['Sadie'],
+					line: '!for Sadie'
+				};
+				
+				const resolution = 'Some resolution value';
+				
+				sandbox.stub(playerController, 'doVote').resolves(resolution);
+				sandbox.spy(command, 'reply');
+				return playerController.voteHandler(command).then((value) => {
+					value.should.equal(resolution);
+					
+					playerController.doVote.called.should.be.true;
+					const args = playerController.doVote.firstCall.args;
+					
+					args[0].should.equal(200);			//Game ID
+					args[1].should.equal(5);			//Post ID
+					args[2].should.equal('Lars');		//Voter
+					args[3].should.equal('Sadie');		//Target string
+					args[4].should.equal('!for Sadie');	//Input
+					args[5].should.equal(1);			//Vote number
+					args[6].should.deep.equal(command);	//Command
+				});
+			});
+			
+			it('Should enable doublevotes', () => {
+				const command = {
+					getTopic: () => Promise.resolve({id: 200}),
+					getUser: () => Promise.resolve(mockVoter),
+					getPost: () => Promise.resolve({id: 5}),
+					args: ['Sadie'],
+					line: '!for Sadie'
+				};
+				
+				const resolution = 'Some resolution value';
+				mockVoter.getProperties = () => ['doublevoter'];
+				
+				sandbox.stub(playerController, 'doVote').resolves(resolution);
+				return playerController.voteHandler(command).then((value) => {
+					value.should.equal(resolution);
+					playerController.doVote.called.should.be.true;
+					const args = playerController.doVote.firstCall.args;
+					
+					args[0].should.equal(200);			//Game ID
+					args[1].should.equal(5);			//Post ID
+					args[2].should.equal('Lars');		//Voter
+					args[3].should.equal('Sadie');		//Target string
+					args[4].should.equal('!for Sadie');	//Input
+					args[5].should.equal(2);			//Vote number
+					args[6].should.deep.equal(command);	//Command
+				});
+			});
+		});
+		
 		describe('doVote()', () => {
-			let mockGame, mockVoter, mockTarget, mockdao, playerController, command;
+			let command;
 				beforeEach(() => {
 
 					mockVoter = {
@@ -320,7 +508,17 @@ describe('player controller', () => {
 				sandbox.spy(mockGame, 'registerAction');
 				return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 1, command).then(() => {
 					//Args: (postId, actor, target, type, actionToken)
-					const expectedArgs = [43, 'Lars', 'Sadie', 'vote'];
+					const expectedArgs = [43, 'Lars', 'Sadie', 'vote', 'vote'];
+					mockGame.registerAction.called.should.equal(true);
+					mockGame.registerAction.getCall(0).args.should.deep.equal(expectedArgs);
+				});
+			});
+			
+			it('should register second vote', () => {
+				sandbox.spy(mockGame, 'registerAction');
+				return playerController.doVote(1234, 43, 'Lars', 'Sadie', '!vote Sadie', 2, command).then(() => {
+					//Args: (postId, actor, target, type, actionToken)
+					const expectedArgs = [43, 'Lars', 'Sadie', 'vote', 'doubleVote'];
 					mockGame.registerAction.called.should.equal(true);
 					mockGame.registerAction.getCall(0).args.should.deep.equal(expectedArgs);
 				});
@@ -337,7 +535,6 @@ describe('player controller', () => {
 		});
 
 		describe('unvote()', () => {
-			let mockGame, mockVoter, mockdao, playerController;
 			beforeEach(() => {
 
 				mockVoter = {
@@ -452,11 +649,15 @@ describe('player controller', () => {
 
 				sandbox.spy(mockGame, 'revokeAction');
 				return playerController.unvoteHandler(command).then(() => {
-					mockGame.revokeAction.called.should.be.true;
+					mockGame.revokeAction.calledTwice.should.be.true;
 
 					//Args: (postId, actor, target, type, actionToken)
-					const expectedArgs = [98765, 'tehNinja', undefined, 'vote'];
-					mockGame.revokeAction.getCall(0).args.should.deep.equal(expectedArgs);
+					let expectedArgs = [98765, 'tehNinja', undefined, 'vote', 'vote'];
+					mockGame.revokeAction.firstCall.args.should.deep.equal(expectedArgs);
+					
+					//Doublevote handler
+					expectedArgs = [98765, 'tehNinja', undefined, 'vote', 'doubleVote'];
+					mockGame.revokeAction.secondCall.args.should.deep.equal(expectedArgs);
 
 					view.respond.called.should.be.true;
 
@@ -468,7 +669,6 @@ describe('player controller', () => {
 
 		describe('noLynch()', () => {
 
-			let mockGame, mockVoter, mockdao, playerController;
 			beforeEach(() => {
 
 				mockVoter = {

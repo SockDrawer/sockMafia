@@ -336,7 +336,8 @@ class MafiaPlayerController {
 
 			return this.verifyVotePreconditions(game, voter, votee);
 		})
-		.then(() =>	game.revokeAction(post, actor, target, 'vote'))
+		.then(() =>	game.revokeAction(post, actor, target, 'vote', 'vote'))
+		.then(() =>	game.revokeAction(post, actor, target, 'vote', 'doubleVote')) //Just in case
 		.then(() => {
 			const text = this.getVoteAttemptText(actor, 'unvoted', gameId, post, command.line);
 			view.respond(command, text);
@@ -381,15 +382,27 @@ class MafiaPlayerController {
 	*/
 	voteHandler (command) {
 		let gameId, voter;
+		let voteNum = 1;
+		
+					
+		// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
+		// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
+		const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
 		
 		return command.getTopic().then((topic) => {
 			gameId = topic.id;
 			return command.getUser();
 		}).then((user) => {
 			voter = user.username;
+			return this.dao.getGameByTopicId(gameId);
+		}).then((game) => {
+			return game.getPlayer(voter);
+		}).then((player) => {
+			if (player.getProperties().contains('doublevoter')) {
+				voteNum = 2;
+			}
 			return command.getPost();
 		}).then((post) => {
-			
 			if (command.args.length <= 0) {
 				return this.getVotingErrorText('No target specified', voter, '')
 				.then((text) => {
@@ -403,27 +416,31 @@ class MafiaPlayerController {
 					return view.reportError(command, '', text);
 				});
 			}
-			
-			// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
-			// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
-			const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
+
 			logDebug('Received vote request from ' + voter + ' for ' + targetString + ' in game ' + gameId);
 			
-			return this.doVote(gameId, post.id, voter, targetString, command.line, 1, command);
-		}).catch((err) => {
-			debug(err);
-			throw err;
+			return this.doVote(gameId, post.id, voter, targetString, command.line, voteNum, command);
+		}).catch((reason) => {
+			if (reason === E_NOGAME) {
+				return Promise.resolve();
+			}
+
+
+			/*Error handling*/
+			return command.getPost().then((post) => {
+				return this.getVotingErrorText(reason, voter, targetString)
+				.then((text) => {
+					
+					text += '\n<hr />\n';
+					text += this.getVoteAttemptText(voter, 'tried to vote for @' + targetString, gameId, post, command.line);
+	
+					//Log error
+					logRecoveredError('Vote failed: ' + reason);
+	
+					return view.reportError(command, '', text);
+				});
+			});
 		});
-
-		//TODO: make doublevoter work
-	/*	let target = game.getPlayer(targetString);
-		let properties = target.getPlayerProperty();
-
-		if (properties.indexOf('doublevoter') > -1) {
-			return doVote(game, post, voter, target, command.input, 2);
-		} else {
-			return doVote(game, post, voter, target, command.input, 1);
-		}*/
 	}
 	
 	forHandler (command) {
@@ -463,11 +480,6 @@ class MafiaPlayerController {
 
 	doVote (gameId, post, actor, target, input, voteNum, command) {
 		let action, voter, votee, game;
-		/*if (voteNum === 2) {
-			action = dao.action.dblVote;
-		} else {
-			action = dao.action.vote;
-		}*/
 
 		return this.dao.getGameByTopicId(gameId)
 			.catch(() => {
@@ -496,7 +508,7 @@ class MafiaPlayerController {
 			
 		})
 		.then(() => {
-			return game.registerAction(post, actor, target, 'vote');
+			return game.registerAction(post, actor, target, 'vote', voteNum > 1 ? 'doubleVote' : 'vote');
 			})
 		.then(() => {
 			const text = this.getVoteAttemptText(actor, 'voted for @' + target, gameId, post, input);
