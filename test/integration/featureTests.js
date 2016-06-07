@@ -1092,14 +1092,6 @@ describe('MafiaBot', function () {
 					output.should.include('<a href="/p/8"><s>tehNinja</s></a> <a href="/p/10">[X]</a>');
 				});
 			});
-		})
-
-		/*TODO: bastard bars: loved*/
-
-		/*TODO: bastard bars: hated*/
-
-		/*TODO: open bars: loved*/
-
-		/*TODO: open bars: hated*/
+		});
 	});
 });
