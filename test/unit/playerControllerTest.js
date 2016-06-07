@@ -31,7 +31,7 @@ describe('player controller', () => {
 
 
 	describe('Vote helpers', () => {
-		let mockGame, mockUser, mockTarget, mockdao, playerController;
+		let mockGame, mockUser, mockTarget, playerController;
 
 		beforeEach(() => {
 			mockGame = {
@@ -549,7 +549,7 @@ describe('player controller', () => {
 					nextPhase: () => 1,
 					registerAction: () => Promise.resolve('Ok'),
 					revokeAction: () => Promise.resolve('Ok'),
-					getPlayer: (player) => mockVoter,
+					getPlayer: () => mockVoter,
 					topicId: 12,
 					isActive: true,
 					isDay: true
@@ -683,7 +683,7 @@ describe('player controller', () => {
 					nextPhase: () => 1,
 					registerAction: () => Promise.resolve('Ok'),
 					revokeAction: () => Promise.resolve('Ok'),
-					getPlayer: (player) => mockVoter,
+					getPlayer: () => mockVoter,
 					topicId: 12,
 					isActive: true,
 					isDay: true

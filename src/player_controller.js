@@ -41,9 +41,8 @@ class MafiaPlayerController {
 	/**
 	* The constructor
 	* @param  {sockmafia.src.dao.MafiaDao} d      The dao to use to persist the data
-	* @param  {Object} config The parsed configuration file pertaining to this instance of the plugin
 	*/
-    constructor(d, config) {
+    constructor(d) {
         this.dao = d;
         this.formatter = undefined;
     }
@@ -482,7 +481,7 @@ class MafiaPlayerController {
 
 
 	doVote (gameId, post, actor, target, input, voteNum, command) {
-		let action, voter, votee, game;
+		let voter, votee, game;
 
 		return this.dao.getGameByTopicId(gameId)
 			.catch(() => {

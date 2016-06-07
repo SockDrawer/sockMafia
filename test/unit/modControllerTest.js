@@ -41,7 +41,7 @@ describe('mod controller', () => {
 				killPlayer: () => Promise.resolve(),
 				nextPhase: () => 1,
 				getActions: () => 1,
-				getPlayer: (player) => mockTarget,
+				getPlayer: () => mockTarget,
 				getModerator: () => mockUser,
 				topicId: 12
 			};
@@ -393,7 +393,7 @@ describe('mod controller', () => {
 				killPlayer: () => Promise.resolve(),
 				nextPhase: () => 1,
 				getActions: () => 1,
-				getPlayer: (player) => mockTarget,
+				getPlayer: () => mockTarget,
 				getModerator: () => mockUser,
 				topicId: 12,
 				day: 1

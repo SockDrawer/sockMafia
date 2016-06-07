@@ -54,9 +54,8 @@ class MafiaModController {
 	/**
 	* The constructor
 	* @param  {sockmafia.src.dao.MafiaDao} d      The dao to use to persist the data
-	* @param  {Object} config The parsed configuration file pertaining to this instance of the plugin
 	*/
-	constructor(d, config) {
+	constructor(d) {
 		this.dao = d;
 	}
 	

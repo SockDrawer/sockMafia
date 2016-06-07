@@ -12,9 +12,7 @@ chai.use(chaiAsPromised);
 chai.should();
 
 const PlayerController = require('../../src/player_controller');
-const modController = require('../../src/mod_controller');
 const DAO = require('../../src/dao');
-const Handlebars = require('handlebars');
 const view = require('../../src/view.js');
 
 const testConfig = {

@@ -12,8 +12,8 @@ chai.use(chaiAsPromised);
 chai.should();
 
 const view = require('../../src/view');
-const NameHelperGenerator = require('../../src/templates/helpers/listNames');
-const VoteChartGenerator = require('../../src/templates/helpers/voteChart');
+const nameHelperGenerator = require('../../src/templates/helpers/listNames');
+const voteChartGenerator = require('../../src/templates/helpers/voteChart');
 const mafia = require('../../src/mafiabot');
 const MafiaAction = require('../../src/dao/mafiaAction');
 const MafiaUser = require('../../src/dao/mafiaUser');
@@ -47,7 +47,7 @@ describe('View helpers', () => {
 
 		beforeEach(() => {
 			sandbox.stub(Math, 'random').returns(0);
-			listNamesHelper = NameHelperGenerator(fakeFormatter);
+			listNamesHelper = nameHelperGenerator(fakeFormatter);
 		});
 	
 		it('Should one player without a comma', () => {
@@ -208,7 +208,7 @@ describe('View helpers', () => {
 
 		let voteChartHelper;
 		beforeEach(() => {
-			voteChartHelper = VoteChartGenerator(fakeFormatter);
+			voteChartHelper = voteChartGenerator(fakeFormatter);
 		});
 
 		const colors = {

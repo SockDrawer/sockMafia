@@ -1,25 +1,6 @@
 'use strict';
 const Handlebars = require('handlebars');
 
-const slugs = [
-	'slug',
-	'snail',
-	'randomBSForDiscourse',
-	'shoutOutToCodingHorror',
-	'bodge',
-	'stupidHack',
-	'iJustMetYouAndILoveYou',
-	'isAnyoneReadingThis',
-	'nativeAmericanShootingAStar',
-	'freeIpads',
-	'easterEgg',
-	'upupdowndownleftrightleftrightbastart',
-	'discourse-sucks-purple-monkey-balls',
-	'donateToAGDQ',
-	'stillABetterLoveStoryThanTwilight',
-	'spaceInfixOperators'
-];
-
 module.exports = function(formatter) {
 
 	return function(list) {

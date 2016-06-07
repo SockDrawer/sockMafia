@@ -12,7 +12,7 @@ const colors = {
 	WHITE: '#FFFFFF'
 };
 
-module.exports = function(formatter) {
+module.exports = function() {
 	return function(votes, modifier, toExecute) {
 		let fillColor, bgColor, percent;
 		if (mafia.internals.configuration.voteBars.toLowerCase() === 'hidden') {
