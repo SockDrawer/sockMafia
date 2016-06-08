@@ -618,6 +618,44 @@ describe('nouveau dao/MafiaGame', () => {
             chai.expect(game._getPlayer(user)).to.be.null;
         });
     });
+    describe('getModerator()', () => {
+        let game = null;
+        beforeEach(() => game = new MafiaGame({}));
+        it('should throw exception for no moderators', () => {
+            const name = `nale${Math.random()}`;
+            chai.expect(()=> game.getModerator(name)).to.throw('E_MODERATOR_NOT_EXIST');
+        });
+        it('should return moderator user', () => {
+            const name = `nale${Math.random()}`;
+            game._data.moderators[name.replace('.', '')] = {
+                username: name
+            };
+            const player = game.getModerator(name);
+            player.should.be.an.instanceOf(MafiaUser);
+            player.username.should.equal(name);
+        });
+        it('should return moderator via userslug', () => {
+            const name = `nale${Math.random()}`;
+            game._data.moderators[name.replace('.', '')] = {
+                username: name
+            };
+            const player = game.getModerator(name.toUpperCase());
+            player.should.be.an.instanceOf(MafiaUser);
+            player.username.should.equal(name);
+        });
+        it('should return moderator for MafiaUser', () => {
+            const name = `nale${Math.random()}`;
+            game._data.moderators[name.replace('.', '')] = {
+                username: name
+            };
+            const user = new MafiaUser({
+                username: name
+            });
+            const player = game.getModerator(user);
+            player.should.be.an.instanceOf(MafiaUser);
+            player.username.should.equal(name);
+        });
+    });
     describe('getPlayer()', () => {
         let game = null;
         beforeEach(() => {
