@@ -623,7 +623,7 @@ describe('nouveau dao/MafiaGame', () => {
         beforeEach(() => game = new MafiaGame({}));
         it('should throw exception for no moderators', () => {
             const name = `nale${Math.random()}`;
-            chai.expect(()=> game.getModerator(name)).to.throw('E_MODERATOR_NOT_EXIST');
+            chai.expect(() => game.getModerator(name)).to.throw('E_MODERATOR_NOT_EXIST');
         });
         it('should return moderator user', () => {
             const name = `nale${Math.random()}`;
@@ -1003,6 +1003,20 @@ describe('nouveau dao/MafiaGame', () => {
             });
             chai.expect(game.getActionOfType('foobar')).to.be.null;
         });
+        it('should default action type to `vote`', () => {
+            actions.push({
+                actor: 'foo',
+                day: 1,
+                action: 'vote',
+                token: 4
+            });
+            actions.push({
+                actor: 'foo',
+                day: 1,
+                action: 'bar'
+            });
+            game.getActionOfType().token.should.equal(4);
+        });
         it('should return action when includeRevokedActions is set', () => {
             actions.push({
                 actor: 'foobar',
@@ -1099,7 +1113,28 @@ describe('nouveau dao/MafiaGame', () => {
                 action: 'vote',
                 token: 'abc'
             });
-            chai.expect(game.getAction('vote', undefined, 'cde')).to.be.null;
+            chai.expect(game.getActionOfType('vote', undefined, 'cde')).to.be.null;
+        });
+        it('should not choose action for non filter action token', () => {
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                token: 'abc'
+            });
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                token: 'def'
+            });
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                token: 'xyz'
+            });
+            chai.expect(game.getActionOfType('vote', undefined, 'def')).to.not.be.null;
         });
     });
     describe('getActions()', () => {
