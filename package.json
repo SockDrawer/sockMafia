@@ -29,8 +29,10 @@
     "debug": "^2.2.0",
     "fs-readfile-promise": "^2.0.1",
     "handlebars": "^4.0.5",
-    "sockbot": "^3.0.0",
     "string": "^3.3.1"
+  },
+  "peerDependencies": {
+    "sockbot": "^3.0.0",
   },
   "devDependencies": {
     "chai": "^3.2.0",
