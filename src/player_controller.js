@@ -31,7 +31,7 @@ function logRecoveredError(error) {
 
 function logDebug(statement) {
 	debug(statement);
-	
+
 	if (eventLogger && eventLogger.emit) {
 		eventLogger.emit('logExtended', 5, statement);
 	}
@@ -46,7 +46,7 @@ class MafiaPlayerController {
         this.dao = d;
         this.formatter = undefined;
     }
-    
+
     /**
      * Activation function for the plugin
      * @param   {Forum} forum The forum object to activate for
@@ -55,7 +55,7 @@ class MafiaPlayerController {
 		//Set name
 		myName = forum.username;
 		this.formatter = forum.Format;
-		
+
 		//Register commandss
         forum.Commands.add('list-players', 'list all players still alive', this.listPlayersHandler.bind(this));
         forum.Commands.add('listplayers', 'list all players still alive', this.listPlayersHandler.bind(this));
@@ -131,20 +131,19 @@ class MafiaPlayerController {
 		if (!target) {
 			return 0;
 		}
-		
-		const properties = target.getProperties();
-		if (properties.contains('loved')) {
+
+		if (target.hasProperty('loved')) {
 			return 1;
 		}
-		if (properties.contains('hated')) {
+		if (target.hasProperty('hated')) {
 			return -1;
 		}
 		return 0;
 	}
-	
+
 	getVoteAttemptText(actor, action, thread, post, input) {
 		const url = this.formatter.urlForPost(post);
-	
+
 		const text = `@${actor} ${action} in post <a href="${url}">${post}</a>`
 				+ '\n\n'
 				+ `Original input:\n ${this.formatter.quoteText(input, actor, url)}\n`;
@@ -176,11 +175,11 @@ class MafiaPlayerController {
 
 	checkForAutoLynch(game, target) {
 		const todaysVotes = game.getActions();
-		
-		if (target.getProperties().contains('lynchproof')) {
+
+		if (target.hasProperty('lynchproof')) {
 			return Promise.resolve();
 		}
-		
+
 		let numVotesForTarget = 0;
 		for (let i = 0; i < todaysVotes.length; i++) {
 			if (todaysVotes[i].isCurrent && todaysVotes[i].target.userslug === target.userslug) {
@@ -235,7 +234,7 @@ class MafiaPlayerController {
 	nolynchHandler (command) {
 		let gameId, post, actor, voter, votee, game;
 
-		
+
 		/*Validation*/
 		return command.getTopic().then((topic) => {
 			gameId = topic.id;
@@ -303,7 +302,7 @@ class MafiaPlayerController {
 		}
 
 		/*Validation*/
-		
+
 		return command.getTopic().then((topic) => {
 			gameId = topic.id;
 			return command.getUser();
@@ -312,7 +311,7 @@ class MafiaPlayerController {
 			logDebug('Received unvote request from ' + actor + ' in game ' + gameId);
 			return command.getPost();
 		}).then((p) => {
-			post = p.id;	
+			post = p.id;
 			return this.dao.getGameByTopicId(gameId).catch(() => {
 				logWarning('Ignoring message in nonexistant game thread ' + game);
 				throw(E_NOGAME);
@@ -385,12 +384,12 @@ class MafiaPlayerController {
 	voteHandler (command) {
 		let gameId, voter;
 		let voteNum = 1;
-		
-					
+
+
 		// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
 		// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
 		const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
-		
+
 		return command.getTopic().then((topic) => {
 			gameId = topic.id;
 			return command.getUser();
@@ -400,7 +399,7 @@ class MafiaPlayerController {
 		}).then((game) => {
 			return game.getPlayer(voter);
 		}).then((player) => {
-			if (player.getProperties().contains('doublevoter')) {
+			if (player.hasProperty('doublevoter')) {
 				voteNum = 2;
 			}
 			return command.getPost();
@@ -408,19 +407,19 @@ class MafiaPlayerController {
 			if (command.args.length <= 0) {
 				return this.getVotingErrorText('No target specified', voter, '')
 				.then((text) => {
-					
+
 					text += '\n<hr />\n';
 					text += this.getVoteAttemptText(voter, 'tried to vote', gameId, post.id, command.line);
-		
+
 					//Log error
 					logRecoveredError('Vote failed: No target specified');
-		
+
 					return view.reportError(command, '', text);
 				});
 			}
 
 			logDebug('Received vote request from ' + voter + ' for ' + targetString + ' in game ' + gameId);
-			
+
 			return this.doVote(gameId, post.id, voter, targetString, command.line, voteNum, command);
 		}).catch((reason) => {
 			if (reason === E_NOGAME) {
@@ -432,19 +431,19 @@ class MafiaPlayerController {
 			return command.getPost().then((post) => {
 				return this.getVotingErrorText(reason, voter, targetString)
 				.then((text) => {
-					
+
 					text += '\n<hr />\n';
 					text += this.getVoteAttemptText(voter, 'tried to vote for @' + targetString, gameId, post, command.line);
-	
+
 					//Log error
 					logRecoveredError('Vote failed: ' + reason);
-	
+
 					return view.reportError(command, '', text);
 				});
 			});
 		});
 	}
-	
+
 	forHandler (command) {
 		let gameId, voter;
 
@@ -455,26 +454,26 @@ class MafiaPlayerController {
 			voter = user.username;
 			return command.getPost();
 		}).then((post) => {
-			
+
 			if (command.args.length <= 0) {
 				return this.getVotingErrorText('No target specified', voter, '')
 				.then((text) => {
-					
+
 					text += '\n<hr />\n';
 					text += this.getVoteAttemptText(voter, 'tried to vote', gameId, post.id, command.line);
-		
+
 					//Log error
 					logRecoveredError('Vote failed: No target specified');
-		
+
 					return view.reportError(command, '', text);
 				});
 			}
-			
+
 			// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
 			// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
 			const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
 			logDebug('Received vote request from ' + voter + ' for ' + targetString + ' in game ' + gameId);
-		
+
 			return this.doVote(gameId, post.id, voter, targetString, command.line, 1, command);
 		});
 	}
@@ -490,7 +489,7 @@ class MafiaPlayerController {
 			})
 		.then((g) => {
 			game = g;
-			
+
 			try {
 				voter = game.getPlayer(actor);
 			} catch (_) {
@@ -507,7 +506,7 @@ class MafiaPlayerController {
 				throw new Error('No target specified');
 			}
 			return this.verifyVotePreconditions(game, voter, votee);
-			
+
 		})
 		.then(() => {
 			return game.registerAction(post, actor, target, 'vote', voteNum > 1 ? 'doubleVote' : 'vote');
@@ -527,7 +526,7 @@ class MafiaPlayerController {
 			/*Error handling*/
 			return this.getVotingErrorText(reason, actor, target)
 			.then((text) => {
-				
+
 				text += '\n<hr />\n';
 				text += this.getVoteAttemptText(actor, 'tried to vote for @' + target, gameId, post, input);
 
@@ -554,7 +553,7 @@ class MafiaPlayerController {
 	*/
 	joinHandler(command) {
 		let game, gameId, player;
-		
+
 		return command.getTopic().then((topic) => {
 				gameId = topic.id;
 				return this.dao.getGameByTopicId(gameId).catch(() => {
@@ -621,7 +620,7 @@ class MafiaPlayerController {
 				//Store a reference otherwise it'll shuffle every time we dip
 				const alive = game.livePlayers;
 				const mods =  game.moderators;
-				
+
 				const numLiving = alive.length;
 				const numMods = mods.length;
 
@@ -673,7 +672,7 @@ class MafiaPlayerController {
 	*/
 	listAllPlayersHandler(command) {
 		let game, id;
-		
+
 		return command.getTopic().then((topic) => {
 				id = topic.id;
 				return this.dao.getGameByTopicId(id).catch(() => {
@@ -689,7 +688,7 @@ class MafiaPlayerController {
 				const alive = game.livePlayers;
 				const mods =  game.moderators;
 				const dead = game.deadPlayers;
-				
+
 				const numLiving = alive.length;
 				const numDead = dead.length;
 				const numMods = mods.length;
@@ -760,7 +759,7 @@ class MafiaPlayerController {
 			notVoting: [],
 			toExecute: 0
 		};
-		
+
 
 		let game, id;
 		return command.getTopic().then((topic) => {
@@ -772,12 +771,12 @@ class MafiaPlayerController {
 			})
 			.then((g) => {
 				game = g;
-				
+
 				logDebug('Received list request in game ' + id);
-				
+
 				data.toExecute = this.getNumVotesRequired(game);
 				data.day = game.day;
-				
+
 				const phaseEnd = game.getValue('phaseEnd');
 				if (phaseEnd) {
 					data.endTime = phaseEnd;
@@ -793,7 +792,7 @@ class MafiaPlayerController {
 					if (row.action !== 'vote') {
 						return;
 					}
-					
+
 					let votee = row.target ? row.target.username : undefined;
 					const voter = row.actor.username;
 
