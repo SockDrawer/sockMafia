@@ -876,7 +876,8 @@ describe('nouveau dao/MafiaGame', () => {
             actions.push({
                 actor: 'foobar',
                 day: 1,
-                action: 'vote'
+                action: 'vote',
+                revokedId: 19
             });
             game.getAction('foobar').should.be.an.instanceOf(MafiaAction);
         });
@@ -947,6 +948,120 @@ describe('nouveau dao/MafiaGame', () => {
                 token: 'abc'
             });
             chai.expect(game.getAction('foobar', undefined, undefined, 'cde')).to.be.null;
+        });
+    });
+    describe('getActionOfType()', () => {
+        let game = null,
+            actions = null;
+        beforeEach(() => {
+            game = new MafiaGame({});
+            actions = game._data.actions;
+        });
+        it('should return null when no action matches', () => {
+            actions.push({
+                actor: 'foo',
+                day: 1,
+                action: 'vote'
+            });
+            chai.expect(game.getActionOfType('foobar')).to.be.null;
+        });
+        it('should return action when includeRevokedActions is set', () => {
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                revokedId: 50
+            });
+            game.getActionOfType('vote', undefined, undefined, undefined, true).should.be.an.instanceOf(MafiaAction);
+        });
+        it('should not return action when includeRevokedActions is unset', () => {
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                revokedId: 50
+            });
+            chai.expect(game.getActionOfType('vote', undefined, undefined, undefined, false)).to.be.null;
+        });
+        it('should default includeRevokedActions to unset', () => {
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                revokedId: 50
+            });
+            chai.expect(game.getActionOfType('vote')).to.be.null;
+        });
+        it('should return latest matching action when actions matches', () => {
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                token: 1
+            });
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                token: 2
+            });
+            game.getActionOfType('vote').token.should.equal(2);
+        });
+        it('should return latest unrevoked matching action when actions matches', () => {
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                token: 1
+            });
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                token: 2
+            });
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                token: 3,
+                revokedId: 99
+            });
+            game.getActionOfType('vote').token.should.equal(2);
+        });
+        it('should not choose action for non filter day', () => {
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote'
+            });
+            chai.expect(game.getActionOfType('vote', undefined, undefined, 2)).to.be.null;
+        });
+        it('should not choose action for non filter type', () => {
+            actions.push({
+                actor: 'foobar',
+                day: 2,
+                action: 'vote'
+            });
+            chai.expect(game.getActionOfType('fish')).to.be.null;
+        });
+        it('should not choose action for non filter target', () => {
+            actions.push({
+                actor: 'foobar',
+                target: 'hexadecimal',
+                day: 1,
+                action: 'vote'
+            });
+            chai.expect(game.getActionOfType('vote', 'ocatal')).to.be.null;
+        });
+        it('should not choose action for non filter action token', () => {
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                token: 'abc'
+            });
+            chai.expect(game.getAction('vote', undefined, 'cde')).to.be.null;
         });
     });
     describe('getActions()', () => {
