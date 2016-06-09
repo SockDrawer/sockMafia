@@ -74,11 +74,13 @@ class MafiaDao {
     /**
      * Create a new MafiaGame and store it in this DAO
      *
-     * @param {number} topicId Game topic
+     * @param {number} topicId Game topic. Must be an integer
      * @param {string} [name] Custom name for the game
      * @returns {Promise<MafiaGame>} Resolves to created game, rejects if preconditions or save state fails
      */
     createGame(topicId, name) {
+        //Force number coercsion
+        topicId = parseInt(topicId, 10);
         return this.load().then((data) => {
             const conflicts = data.filter((candidate) => {
                 return candidate.topicId === topicId || candidate.name === name;
@@ -98,10 +100,12 @@ class MafiaDao {
     /**
      * Retrieve a previously created game by topicId
      *
-     * @param {number} topicId Game Topic identifier
+     * @param {number} topicId Game Topic identifier. Must be an integer
      * @returns {Promise<MafiaGame>} Resolves to requested game, rejects when read error occurs or game not found
      */
     getGameByTopicId(topicId) {
+        //Force number coercsion
+        topicId = parseInt(topicId, 10);
         return this.load().then((data) => {
             const game = data.filter((candidate) => candidate.topicId === topicId)[0];
             if (!game) {

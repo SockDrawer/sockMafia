@@ -869,7 +869,6 @@ describe('player controller', () => {
 		});
 	});
 
-
 	describe('join()', () => {
 
 		let mockGame, mockUser, mockdao, playerController;
@@ -1497,6 +1496,192 @@ describe('player controller', () => {
 					chai.expect(dataSent.endTime).to.equal('today');
 					dataSent.showEndTime.should.be.true;
 				});
+			});
+		});
+	});
+	
+	describe('target()', () => {
+
+		let mockGame, mockUser, mockTarget, mockdao, playerController;
+		beforeEach(() => {
+
+			mockUser = {
+				username: 'tehNinja',
+				getProperties: () => [],
+				hasProperty: () => false,
+				isAlive: true
+			};
+
+			mockTarget = {
+				username: 'noLunch',
+				getProperties: () => [],
+				hasProperty: () => false,
+				isAlive: true
+			};
+			
+			mockGame = {
+				allPlayers: [],
+				killPlayer: () => 1,
+				nextPhase: () => 1,
+				registerAction: () => Promise.resolve('Ok'),
+				revokeAction: () => Promise.resolve('Ok'),
+				getPlayer: () => 1,
+				addPlayer: () => 1,
+				topicId: 12,
+				isActive: false,
+				isDay: true
+			};
+
+			mockdao = {
+				getGameByTopicId: () => Promise.resolve(mockGame),
+				getGameByName: () => Promise.resolve(mockGame)
+			};
+
+			playerController = new PlayerController(mockdao, null);
+			playerController.formatter = {
+				urlForPost: () => '',
+				quoteText: (input) => input
+			};
+			sandbox.stub(view, 'respondInThread');
+			sandbox.stub(view, 'respond');
+			sandbox.stub(view, 'reportError');
+		});
+		
+		it('Should register actions', () => {
+			const command = {
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getPost: () => Promise.resolve({
+					id: 42
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
+				args: ['123', '@noLunch'],
+				input: '!target @noLunch'
+			};
+				
+			sandbox.spy(mockGame, 'registerAction');
+			return playerController.targetHandler(command).then(() => {
+				mockGame.registerAction.calledWith(42, 'tehNinja', 'noLunch', 'target', 'target').should.equal.true;
+			});
+		});
+		
+		it('Should search for the game by ID', () => {
+			const command = {
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getPost: () => Promise.resolve({
+					id: 42
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
+				args: ['123', '@noLunch'],
+				input: '!target @noLunch'
+			};
+				
+			sandbox.spy(mockdao, 'getGameByTopicId');
+			sandbox.spy(mockdao, 'getGameByName');
+			return playerController.targetHandler(command).then(() => {
+				mockdao.getGameByName.called.should.be.false;
+				mockdao.getGameByTopicId.called.should.be.true;
+				mockdao.getGameByTopicId.calledWith('123').should.be.true;
+			});
+		});
+		
+		it('Should search for the game by name', () => {
+			const command = {
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getPost: () => Promise.resolve({
+					id: 42
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
+				args: ['testMafia', '@noLunch'],
+				input: '!target @noLunch'
+			};
+				
+			sandbox.spy(mockdao, 'getGameByTopicId');
+			sandbox.spy(mockdao, 'getGameByName');
+			return playerController.targetHandler(command).then(() => {
+				mockdao.getGameByName.called.should.be.true;
+				mockdao.getGameByTopicId.called.should.be.false;
+				mockdao.getGameByName.calledWith('testMafia').should.be.true;
+			});
+		});
+		
+		it('Should register scum actions', () => {
+			const command = {
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getPost: () => Promise.resolve({
+					id: 42
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
+				args: ['123', '@noLunch'],
+				input: '!target @noLunch'
+			};
+				
+			sandbox.spy(mockGame, 'registerAction');
+			sandbox.spy(mockGame, 'revokeAction');
+			sandbox.stub(mockUser, 'hasProperty').returns(false).withArgs('scum').returns(true);
+			return playerController.targetHandler(command).then(() => {
+				mockGame.registerAction.calledWith(42, 'tehNinja', 'noLunch', 'target', 'scum').should.equal.true;
+				mockGame.revokeAction.calledWith(42, 'tehNinja', 'noLunch', 'target', 'scum').should.equal.true;
+			});
+		});
+		
+		it('Should register secondary scum actions', () => {
+			const command = {
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getPost: () => Promise.resolve({
+					id: 42
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
+				args: ['123', '@noLunch'],
+				input: '!target @noLunch'
+			};
+				
+			sandbox.spy(mockGame, 'registerAction');
+			sandbox.spy(mockGame, 'revokeAction');
+			sandbox.stub(mockUser, 'hasProperty').returns(false).withArgs('scum2').returns(true);
+			return playerController.targetHandler(command).then(() => {
+				mockGame.registerAction.calledWith(42, 'tehNinja', 'noLunch', 'target', 'scum2').should.equal.true;
+				mockGame.revokeAction.calledWith(42, 'tehNinja', 'noLunch', 'target', 'scum2').should.equal.true;
+			});
+		});
+		
+		it('Should not respond when there is no game found', () => {
+			const command = {
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getPost: () => Promise.resolve({
+					id: 42
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
+				args: ['123', '@noLunch'],
+				input: '!target @noLunch'
+			};
+				
+			sandbox.spy(mockGame, 'registerAction');
+			return playerController.targetHandler(command).then(() => {
+				mockGame.registerAction.calledWith(42, 'tehNinja', 'noLunch', 'target', 'target').should.equal.false;
 			});
 		});
 	});

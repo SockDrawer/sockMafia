@@ -215,14 +215,14 @@ describe('nouveau dao', () => {
             });
         });
         it('should reject when topic id is already a game', () => {
-            const topicId = Math.random();
+            const topicId = Math.floor(Math.random() * 10000);
             dao._data.push({
                 topicId: topicId
             });
             return dao.createGame(topicId, 'foobar').should.be.rejectedWith('E_GAME_EXISTS');
         });
         it('should reject when name is already a game', () => {
-            const name = `namename${Math.random()}`;
+            const name = `namename${Math.floor(Math.random() * 10000)}`;
             dao._data.push({
                 name: name
             });
@@ -245,14 +245,14 @@ describe('nouveau dao', () => {
             return dao.getGameByTopicId(42).should.be.rejectedWith('E_NO_GAME');
         });
         it('should resolve when there is a matching game', () => {
-            const id = Math.random();
+            const id = Math.floor(Math.random() * 10000);
             dao._data.push({
                 topicId: id
             });
             return dao.getGameByTopicId(id).should.be.fulfilled;
         });
         it('should resolve to first matching game', () => {
-            const id = Math.random();
+            const id = Math.floor(Math.random() * 10000);
             dao._data.push({
                 topicId: id,
                 id: 0
@@ -266,7 +266,7 @@ describe('nouveau dao', () => {
             });
         });
         it('should resolve to an instance of MafiaGame', () => {
-            const id = Math.random();
+            const id = Math.floor(Math.random() * 10000);
             dao._data.push({
                 topicId: id
             });
@@ -275,7 +275,7 @@ describe('nouveau dao', () => {
             });
         });
         it('should bind result to this dao', () => {
-            const id = Math.random();
+            const id = Math.floor(Math.random() * 10000);
             dao._data.push({
                 topicId: id
             });

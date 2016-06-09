@@ -869,6 +869,62 @@ class MafiaPlayerController {
 		logDebug('List all votes is not yet implemented.');
 		return Promise.resolve();
 	}
+	
+	/**
+	* Target: target another player as the recipient of a night action.
+	*
+	* Game rules:
+	* - A target selection by any member of a scum faction counts for the whole faction,
+	*	and revokes any previous target action
+	* - Only the cult leader can target a member of the cult
+	* - Any other type of player's target action should revoke any previous action by that player
+	*
+	* @example !unvote
+	*
+	* @param  {commands.command} command The command that was passed in.
+	* @returns {Promise}        A promise that will resolve when the game is ready
+	*/
+	targetHandler (command) {
+		let actor, target, game;
+		const targetString = command.args[1];
+		const gameId = command.args[0];
+		const lookupFunc = parseInt(gameId) > 0 ? this.dao.getGameByTopicId : this.dao.getGameByName;
+
+		return Promise.all([lookupFunc(gameId), command.getUser()])
+		.then((g, user) => {
+			game = g;
+			return Promise.all([game.getUser(user), game.getUser(targetString), command.getPost()]);
+		}).then((a, t, post) => {
+			actor = a;
+			let actionToken = 'target';
+			
+			/* Group types*/
+			if (actor.hasProperty('scum') || actor.hasProperty('mafia')) {
+				//Revoke previous scum action
+				game.getActionOfType('target', null, 'scum').revoke(post.id);
+				actionToken = 'scum';
+			}
+			
+			if (actor.hasProperty('scum2')) {
+				//Revoke previous scum action
+				game.getActionOfType('target', null, 'scum2').revoke(post.id);
+				actionToken = 'scum2';
+			}
+			
+			if (actor.hasProperty('cultLeader')) {
+				actionToken = 'cult';
+			}
+			
+			return game.registerAction(post.id, actor.username, target.username, 'target', actionToken);
+		}).catch((err) => {
+			if (err === E_NOGAME) {
+				return Promise.resolve();
+			}
+
+			view.reportError(command, 'Error resolving list: ', err);
+			logRecoveredError('List failed ' + err);
+		});
+	}
 }
 
 module.exports = MafiaPlayerController;
