@@ -879,7 +879,8 @@ class MafiaPlayerController {
 	* - Only the cult leader can target a member of the cult
 	* - Any other type of player's target action should revoke any previous action by that player
 	*
-	* @example !unvote
+	* @example !target 123 yamikuronue
+	* @example !target testMafia yamikuronue
 	*
 	* @param  {commands.command} command The command that was passed in.
 	* @returns {Promise}        A promise that will resolve when the game is ready

@@ -646,5 +646,156 @@ describe('mod controller', () => {
 				mockdao.getGameByTopicId.called.should.be.false;
 			});
 		});
+	}); //end of Set
+	
+	describe('listNightActions()', () => {
+
+		let mockGame, mockUserList, mockUser, mockdao, modController;
+
+		beforeEach(() => {
+			mockUser = {
+				username: 'God',
+				getPlayerProperty: () => [],
+				isModerator: true
+			};
+			
+			mockUserList = {};
+			
+			mockUserList.god = mockUser;
+
+			mockUserList.margaret = {
+				username: 'Margaret',
+				getPlayerProperty: () => [],
+				isModerator: false,
+				isAlive: true,
+				addProperty: () => true
+			};
+
+			mockUserList.alex = {
+				username: 'Margaret',
+				getPlayerProperty: () => [],
+				isModerator: false,
+				isAlive: true,
+				addProperty: () => true
+			};
+			
+			mockUserList.steve = {
+				username: 'Margaret',
+				getPlayerProperty: () => [],
+				isModerator: false,
+				isAlive: true,
+				addProperty: () => true
+			};
+			
+			mockGame = {
+				isActive: true,
+				name: 'testMafia',
+				getAllPlayers: () => 1,
+				killPlayer: () => Promise.resolve(),
+				nextPhase: () => 1,
+				getActions: () => 1,
+				getPlayer: (p) =>  mockUserList[p.toLowerCase()],
+				getModerator: () => mockUser,
+				topicId: 12,
+				day: 1
+			};
+
+
+			mockdao = {
+				getGameByTopicId: () => Promise.resolve(mockGame),
+				getGameByName: () => Promise.resolve(mockGame)
+			};
+
+			modController = new ModController(mockdao);
+		});
+		
+		it('Should reject non-mods', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: [
+					'123'
+				]
+			};
+
+			mockUser.isModerator = false;
+			sandbox.stub(mockGame, 'getModerator').throws('E_NOMOD');
+
+
+			return modController.listNAHandler(command).then( () => {
+				view.reportError.calledWith(command).should.be.true;
+				const output = view.reportError.getCall(0).args[2].toString();
+
+				output.should.include('You are not a moderator');
+			});
+		});
+		
+		it('Should search for the game by ID', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: [
+					'123'
+				]
+			};
+				
+			sandbox.spy(mockdao, 'getGameByTopicId');
+			sandbox.spy(mockdao, 'getGameByName');
+			return modController.listNAHandler(command).then(() => {
+				mockdao.getGameByName.called.should.be.false;
+				mockdao.getGameByTopicId.called.should.be.true;
+				mockdao.getGameByTopicId.calledWith('123').should.be.true;
+			});
+		});
+		
+		it('Should search for the game by name', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: [
+					'testMafia'
+				]
+			};
+				
+			sandbox.spy(mockdao, 'getGameByTopicId');
+			sandbox.spy(mockdao, 'getGameByName');
+			return modController.listNAHandler(command).then(() => {
+				mockdao.getGameByName.called.should.be.true;
+				mockdao.getGameByTopicId.called.should.be.false;
+				mockdao.getGameByName.calledWith('testMafia').should.be.true;
+			});
+		});
+		
+		it('Should fetch the list of actions', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: [
+					'123'
+				]
+			};
+			
+			const mockAction = {
+				id: 1,
+				actor: mockUserList.margaret,
+				target: mockUserList.alex,
+				type: 'target',
+				actionToken: 'scum'
+			};
+			
+			sandbox.stub(mockGame, 'getActions').returns([mockAction]);
+			
+			return modController.listNAHandler(command).then(() => {
+				mockGame.getActions.calledWith('target').should.be.true;
+				view.respondWithTemplate.called.should.be.true;
+				
+				const dataReceived = view.respondWithTemplate.firstCall.args[1];
+				dataReceived.scum.show.should.be.true;
+				dataReceived.scum.actions.should.include(mockAction);
+				dataReceived.scum.actions.length.should.equal(1);
+			});
+		});
+		
+		
 	});
 });

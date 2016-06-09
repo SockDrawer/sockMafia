@@ -1542,9 +1542,10 @@ describe('player controller', () => {
 				urlForPost: () => '',
 				quoteText: (input) => input
 			};
-			sandbox.stub(view, 'respondInThread');
-			sandbox.stub(view, 'respond');
-			sandbox.stub(view, 'reportError');
+			sandbox.stub(view, 'respondInThread').resolves();
+			sandbox.stub(view, 'respond').resolves();
+			sandbox.stub(view, 'reportError').resolves();
+			sandbox.stub(view, 'respondWithTemplate').resolves();
 		});
 		
 		it('Should register actions', () => {
@@ -1585,6 +1586,7 @@ describe('player controller', () => {
 				
 			sandbox.spy(mockdao, 'getGameByTopicId');
 			sandbox.spy(mockdao, 'getGameByName');
+			
 			return playerController.targetHandler(command).then(() => {
 				mockdao.getGameByName.called.should.be.false;
 				mockdao.getGameByTopicId.called.should.be.true;
