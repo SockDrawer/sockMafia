@@ -287,7 +287,7 @@ describe('MafiaBot', function () {
 
 		before(() => {
 			//Set up the database
-			dao = new DAO(':memory:');
+			dao = new DAO('onyxdb');
 			playerController = new PlayerController(dao, testConfig);
 			playerController.formatter = {
 				urlForPost: () => '',
@@ -412,7 +412,7 @@ describe('MafiaBot', function () {
 			});
 		});
 		
-		it('Should not reproduce the Onyx revote bug 2', () => {
+		it.only('Should not reproduce the Onyx revote bug 2', () => {
 			let command = {
 				args: ['@accalia'],
 				input: '!vote @accalia',
