@@ -427,9 +427,10 @@ describe('MafiaBot', function () {
 			sandbox.spy(game, 'revokeAction');
 			
 			//First, register a vote
-			return playerController.voteHandler(command).then(() => {
+			return game.newDay().then(() => playerController.voteHandler(command))
+			.then(() => {
 				game.registerAction.called.should.equal(true);
-
+				
 				command.reply.called.should.equal(true);
 				command.reply.firstCall.args[0].should.include('@yamikuronue voted for @accalia');
 				
@@ -504,13 +505,13 @@ describe('MafiaBot', function () {
 				return playerController.listVotesHandler(command);
 			}).then(() => {
 				const data = view.respondWithTemplate.firstCall.args[1];
-				data.votes.accalia.votes[0].postId.should.equal(1);
+				data.votes.accalia.votes[0].postId.should.equal(6);
 				data.votes.accalia.votes[0].isCurrent.should.be.false;
-				data.votes.accalia.votes[0].revokedId.should.equal(2);
+				data.votes.accalia.votes[0].revokedId.should.equal(7);
 				
-				data.votes.accalia.votes[1].postId.should.equal(3);
+				data.votes.accalia.votes[1].postId.should.equal(8);
 				data.votes.accalia.votes[1].isCurrent.should.be.false;
-				data.votes.accalia.votes[1].revokedId.should.equal(4);
+				data.votes.accalia.votes[1].revokedId.should.equal(9);
 			});
 		});
 		

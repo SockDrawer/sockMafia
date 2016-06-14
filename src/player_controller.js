@@ -376,7 +376,7 @@ class MafiaPlayerController {
 	*/
 	voteHandler (command) {
 		let gameId, voter;
-		
+
 		return command.getTopic().then((topic) => {
 			gameId = topic.id;
 			return command.getUser();
@@ -384,7 +384,6 @@ class MafiaPlayerController {
 			voter = user.username;
 			return command.getPost();
 		}).then((post) => {
-			
 			if (command.args.length <= 0) {
 				return this.getVotingErrorText('No target specified', voter, '')
 				.then((text) => {
@@ -394,7 +393,7 @@ class MafiaPlayerController {
 		
 					//Log error
 					logRecoveredError('Vote failed: No target specified');
-		
+					
 					return view.reportError(command, '', text);
 				});
 			}
@@ -403,7 +402,7 @@ class MafiaPlayerController {
 			// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
 			const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
 			logDebug('Received vote request from ' + voter + ' for ' + targetString + ' in game ' + gameId);
-			
+
 			return this.doVote(gameId, post.id, voter, targetString, command.line, 1, command);
 		}).catch((err) => {
 			debug(err);
@@ -463,6 +462,7 @@ class MafiaPlayerController {
 		} else {
 			action = dao.action.vote;
 		}*/
+		
 
 		return this.dao.getGameByTopicId(gameId)
 			.catch(() => {
@@ -492,7 +492,7 @@ class MafiaPlayerController {
 		})
 		.then(() => {
 			return game.registerAction(post, actor, target, 'vote');
-			})
+		})
 		.then(() => {
 			const text = this.getVoteAttemptText(actor, 'voted for @' + target, gameId, post, input);
 			logDebug('Vote succeeded');
