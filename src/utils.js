@@ -14,7 +14,13 @@ module.exports = {
 			'loved',
 			'hated',
 			'doublevoter',
-			'lynchproof'
+			'lynchproof',
+			'scum',
+			'scum2',
+			'cultleader',
+			'cultist',
+			'cop',
+			'wanderer'
 		]
 	}
 };

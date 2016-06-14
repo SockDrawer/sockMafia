@@ -12,6 +12,7 @@ chai.use(chaiAsPromised);
 chai.should();
 
 const PlayerController = require('../../src/player_controller');
+const ModController = require('../../src/mod_controller');
 const DAO = require('../../src/dao');
 const view = require('../../src/view.js');
 
@@ -412,7 +413,6 @@ describe('MafiaBot', function () {
 		
 	});
 
-	/*eslint-disable*/
 	describe('Vote history', () => {
 		let dao, playerController, game, fakeFormatter;
 		
@@ -843,10 +843,9 @@ describe('MafiaBot', function () {
 	});
 	*/
 
-	context('Special voting', () => {
+	describe('Special voting', () => {
 		let dao, playerController, game;
 		
-		/*TODO: doublevoter*/
 		describe('Doublevoting', () => {
 			before(() => {
 				//Set up the database
@@ -1089,6 +1088,77 @@ describe('MafiaBot', function () {
 					output.should.include('<a href="/p/7"><s>tehNinja</s></a> <a href="/p/10">[X]</a>');
 					output.should.include('<a href="/p/8"><s>tehNinja</s></a> <a href="/p/10">[X]</a>');
 				});
+			});
+		});
+	});
+	
+	describe('Night Actions', () => {
+		let dao, playerController, modController, game, fakeFormatter;
+		
+		before(() => {
+			//Set up the database
+			dao = new DAO(':memory:');
+			playerController = new PlayerController(dao, testConfig);
+			playerController.formatter = {
+				urlForPost: () => '',
+				quoteText: (input) => input
+			};
+			
+			modController = new ModController(dao, testConfig);
+			
+			fakeFormatter = {
+				urlForTopic: (topicId, slug, postId) => {
+					return '/t/' + slug + '/' + topicId + '/' + postId;
+				},
+				urlForPost: (postId) => {
+					return '/p/' + postId;
+				}
+			};
+			
+			view.activate({Format: fakeFormatter});
+
+			return dao.createGame(3, 'Game 3')
+				.then((g) => {
+					game = g;
+					sinon.stub(dao, 'getGameByTopicId').resolves(game);
+					return game.addPlayer('yamikuronue');
+				})
+				.then(() => game.addPlayer('accalia'))
+				.then(() => game.addPlayer('dreikin'))
+				.then(() => game.addPlayer('tehninja'))
+				.then(() => game.addModerator('God'))
+				.then(() => game.newDay())
+				.then(() => game.nextPhase()); //Make it night
+		});
+		
+		it('Should allow setting of properties', () => {
+			let command = {
+				args: ['accalia', 'scum', 'in', '3'],
+				line: '!set @accalia scum in 3',
+				reply: sandbox.stub(),
+				getTopic: () => Promise.resolve({id: 12}),
+				getPost: () => Promise.resolve({id: 1}),
+				getUser: () => Promise.resolve({username: 'God'}),
+			};
+		
+			return modController.setHandler(command).then(() => {
+				game.getPlayer('accalia').hasProperty('scum').should.be.true;
+				
+				command = {
+					args: ['@yamikuronue', 'scum2', 'in', '3'],
+					line: '!set @yamikuronue scum2 in 3',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 12}),
+					getPost: () => Promise.resolve({id: 2}),
+					getUser: () => Promise.resolve({username: 'God'}),
+				};
+		
+				view.respond.reset();
+				view.reportError.reset();
+				return modController.setHandler(command);
+			}).then(() => {
+				game.getPlayer('yamikuronue').hasProperty('scum2').should.be.true;
+				game.getPlayer('yamikuronue').hasProperty('scum').should.be.false;
 			});
 		});
 	});

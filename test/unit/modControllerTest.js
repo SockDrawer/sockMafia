@@ -542,6 +542,36 @@ describe('mod controller', () => {
 				const output = view.respondWithTemplate.getCall(0).args[1];
 				output.should.deep.equal(expected);
 			});
+		});	
+		
+		it('Should allow night action properties', () => {
+			const properties = ['scum', 'scum2', 'cultLeader', 'cultist', 'cop', 'wanderer'];
+			let command;
+			const tests = [];
+			for (let i = 0; i < properties.length; i++) {
+				command = {
+					getTopic: () => Promise.resolve({id: 12345}),
+					getUser: () => Promise.resolve({username: 'God'}),
+					args: [
+						'Margaret',
+						properties[i]
+					]
+				};
+				
+				tests[i] = modController.setHandler(command);
+			}
+
+			return Promise.all(tests).then(() => {
+				view.respondWithTemplate.called.should.be.true;
+				view.respondWithTemplate.callCount.should.equal(properties.length);
+				for (let i = 0; i < properties.length; i++) {
+					view.respondWithTemplate.calledWith('templates/modSuccess.handlebars', {
+						command: 'Set property',
+						results: 'Player Margaret is now ' + properties[i],
+						game: mockGame
+					}).should.be.true;
+				}
+			});
 		});
 
 		it('Should reject doodoohead', () => {
