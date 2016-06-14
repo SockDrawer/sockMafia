@@ -412,6 +412,108 @@ describe('MafiaBot', function () {
 			});
 		});
 		
+		it('Should not reproduce the Onyx revote bug 2', () => {
+			let command = {
+				args: ['@accalia'],
+				input: '!vote @accalia',
+				reply: sandbox.stub(),
+				getTopic: () => Promise.resolve({id: 2}),
+				getPost: () => Promise.resolve({id: 6}),
+				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+			};
+
+			//Spies
+			sandbox.spy(game, 'registerAction');
+			sandbox.spy(game, 'revokeAction');
+			
+			//First, register a vote
+			return playerController.voteHandler(command).then(() => {
+				game.registerAction.called.should.equal(true);
+
+				command.reply.called.should.equal(true);
+				command.reply.firstCall.args[0].should.include('@yamikuronue voted for @accalia');
+				
+				command = {
+					args: [],
+					input: '!nolynch',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 2}),
+					getPost: () => Promise.resolve({id: 7}),
+					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				};
+	
+			//Then, nolynch
+				view.respond.reset();
+				view.reportError.reset();
+				game.registerAction.reset();
+				return playerController.nolynchHandler(command);
+			}).then(() => {
+				view.reportError.called.should.equal(false);
+				game.registerAction.called.should.equal(true);
+				view.respond.firstCall.args[1].should.include('@yamikuronue voted to not lynch');
+				
+				command = {
+					args: ['@accalia'],
+					input: '!vote @accalia',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 2}),
+					getPost: () => Promise.resolve({id: 8}),
+					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				};
+			
+			//Vote for the same person again
+				view.respond.reset();
+				view.reportError.reset();
+				game.registerAction.reset();
+				return playerController.voteHandler(command);
+			}).then(() => {
+				game.registerAction.called.should.equal(true);
+
+				command.reply.called.should.equal(true);
+				command.reply.firstCall.args[0].should.include('@yamikuronue voted for @accalia');
+				
+				command = {
+					args: [],
+					input: '!unvote',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 2}),
+					getPost: () => Promise.resolve({id: 9}),
+					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				};
+			
+			//Then unvote
+				view.respond.reset();
+				view.reportError.reset();
+				game.revokeAction.reset();
+				return playerController.unvoteHandler(command);
+			}).then(() => {
+				view.reportError.called.should.equal(false);
+				game.revokeAction.called.should.equal(true);
+				
+				command = {
+					args: [],
+					input: '!list-players',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 2}),
+					getPost: () => Promise.resolve({id: 10}),
+					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				};
+				
+				view.respond.reset();
+				view.reportError.reset();
+				return playerController.listVotesHandler(command);
+			}).then(() => {
+				const data = view.respondWithTemplate.firstCall.args[1];
+				data.votes.accalia.votes[0].postId.should.equal(1);
+				data.votes.accalia.votes[0].isCurrent.should.be.false;
+				data.votes.accalia.votes[0].revokedId.should.equal(2);
+				
+				data.votes.accalia.votes[1].postId.should.equal(3);
+				data.votes.accalia.votes[1].isCurrent.should.be.false;
+				data.votes.accalia.votes[1].revokedId.should.equal(4);
+			});
+		});
+		
 	});
 
 	/*eslint-disable*/
