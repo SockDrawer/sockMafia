@@ -10,8 +10,8 @@ const sinon = require('sinon');
 require('sinon-as-promised');
 
 const sockMafia = require('../../src/mafiabot');
-const playerController = require('../../src/player_controller');
-const modController = require('../../src/mod_controller');
+const PlayerController = require('../../src/player_controller');
+const  ModController = require('../../src/mod_controller');
 
 const testConfig = {
 	db: ':memory:',
@@ -63,55 +63,33 @@ describe('SockMafia', function() {
 	});
 
 	describe('command formats', () => {
-
-		const knownCommands = {
-			'for': playerController.forHandler,
-			'join': playerController.joinHandler,
-			'list-all-players': playerController.listAllPlayersHandler,
-			'list-players': playerController.listPlayersHandler,
-			'list-votes': playerController.listVotesHandler,
-			'no-lynch': playerController.nolynchHandler,
-			'nolynch': playerController.nolynchHandler,
-			'unvote': playerController.unvoteHandler,
-			'vote': playerController.voteHandler
-		};
+		let playerController, modController;
+		let knownCommands;
+		before(() => {
+			playerController = new PlayerController(require('../../src/dao'), null);
+			modController = new ModController(require('../../src/dao'), null);
+			
+			knownCommands = {
+				'for': playerController.forHandler,
+				'join': playerController.joinHandler,
+				'list-all-players': playerController.listAllPlayersHandler,
+				'list-players': playerController.listPlayersHandler,
+				'list-votes': playerController.listVotesHandler,
+				'no-lynch': playerController.nolynchHandler,
+				'nolynch': playerController.nolynchHandler,
+				'unvote': playerController.unvoteHandler,
+				'vote': playerController.voteHandler,
+				'set': modController.setHandler,
+				'kill': modController.killHandler
+			};
+		});
 
 		it('Should register the correct commands', () => {
 			return mafiabot.activate().then(() => {
 				for (const command in knownCommands) {
 					Object.keys(Commands.commandList).should.include(command);
 				}
-			}).catch((err) => {
-				console.log('ERROR:' + err);
 			});
 		});
-/*eslint no-loop-func:0*/
-		for (const command in knownCommands) {
-			it('should have the proper interface for ' + command, () => {
-				const fakeCommandObject = {
-					post: {
-						username: 'yamikuronue',
-						'topic_id': 11,
-						'post_number': 5
-					},
-					args: ['@accalia'],
-					input: '!doStuffTo @accalia',
-					reply: sandbox.stub().resolves()
-				};
-				return knownCommands[command](fakeCommandObject).then(() => {
-					//TODO: The following is the correct interface, but our shims fuck it up
-					// fakeCommandObject.reply.called.should.equal(true);
-					//This is the shim version:
-					mockForum.Post.reply.called.should.equal(true);
-					mockForum.Post.reply.reset();
-				});
-			});
-		}
-
-
-		/*
-		.then(() => {
-				
-		 */
 	});
 });

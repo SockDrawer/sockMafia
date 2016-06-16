@@ -97,6 +97,17 @@ class MafiaUser {
     }
 
     /**
+     * Determine if custom property is associated with the user.
+     *
+     *
+     * @param {string> property Array or properties to filter results to.
+     * @returns {boolean} true if the user has the property, false otherwise
+     */
+    hasProperty(property) {
+        return this._data.properties.some((prop) => prop === property);
+    }
+
+    /**
      * Add a custom property to the user.
      *
      * @param {string} property The property to add to the user

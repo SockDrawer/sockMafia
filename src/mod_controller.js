@@ -10,6 +10,7 @@
 const view = require('./view');
 const Promise = require('bluebird');
 const debug = require('debug')('sockbot:mafia:modController');
+const Utils = require('./utils');
 
 
 exports.internals = {};
@@ -23,11 +24,6 @@ exports.init = function(forum) {
  * Valid properties for a player to hold
  * @type {Array}
  */
-const validProperties = [
-	'loved',
-	'hated',
-	'doublevoter'
-];
 
 /**
  * Log an error that was recovered from
@@ -58,9 +54,8 @@ class MafiaModController {
 	/**
 	* The constructor
 	* @param  {sockmafia.src.dao.MafiaDao} d      The dao to use to persist the data
-	* @param  {Object} config The parsed configuration file pertaining to this instance of the plugin
 	*/
-	constructor(d, config) {
+	constructor(d) {
 		this.dao = d;
 	}
 	
@@ -125,8 +120,8 @@ class MafiaModController {
 				return mod.isModerator ? Promise.resolve() : Promise.reject('You are not a moderator');
 			})
 			.then(() => {
-				if (!validProperties.contains(property.toLowerCase())) {
-					return Promise.reject('Property not valid.\n Valid properties: ' + validProperties.join(', '));
+				if (!Utils.Enums.validProperties.contains(property.toLowerCase())) {
+					return Promise.reject('Property not valid.\n Valid properties: ' + Utils.Enums.validProperties.join(', '));
 				}
 				
 				try {
@@ -309,6 +304,68 @@ class MafiaModController {
 				logRecoveredError('Error killing player: ' + err);
 				view.reportError(command, 'Error killing player: ', err);
 			});
+	}
+
+	
+	/**
+	* List Night Actions: A mod function that lists the current night actions.
+	* Useful when the mod is ready to take action on them, or for shits and grins
+	* in club ded
+	*
+	* @example !list-night-actions testMafia
+	* @example !list-night-actions 123
+	*
+	* @param  {commands.command} command The command that was passed in.
+	* @returns {Promise}        A promise that will resolve when the game is ready
+	*/
+	listNAHandler(command) {
+		let game;
+		const gameId = command.args[0];
+		const lookupFunc = parseInt(gameId) > 0 ? this.dao.getGameByTopicId : this.dao.getGameByName;
+
+		return Promise.all([lookupFunc(gameId), command.getUser()])
+		.then((responses) => {
+			game = responses[0];
+			return game.getPlayer(responses[1].username);
+		}).then((a) => {
+			if (!a.isModerator) {
+				return Promise.reject('You are not a moderator!');
+			}
+			
+			const actions = game.getActions('target');
+			const data = {
+				scum2: {
+					show: false,
+					actions: []
+				}, 
+				scum: {
+					show: false,
+					actions: []
+				}, 
+				other: {
+					show: false,
+					actions: []
+				}, 
+			};
+			
+			for (let i = 0; i < actions.length; i++) {
+				if (actions[i].actionToken === 'scum') {
+					data.scum.actions.push(actions[i]);
+					data.scum.show = true;
+				} else if (actions[i].actionToken === 'scum2') {
+					data.scum2.actions.push(actions[i]);
+					data.scum2.show = true;
+				} else {
+					data.other.actions.push(actions[i]);
+					data.other.show = true;
+				}
+			}
+			
+			return view.respondWithTemplate('listNightActions.hbs', data, command);
+		}).catch((err) => {
+			logRecoveredError('Error killing player: ' + err);
+			view.reportError(command, 'Error killing player: ', err);
+		});
 	}
 }
 

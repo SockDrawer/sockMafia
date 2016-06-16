@@ -125,6 +125,24 @@ describe('nouveau dao/MafiaUser', () => {
             user.getProperties(filter).should.eql(expected);
         });
     });
+
+    describe('hasProperty()', () => {
+        let user = null;
+        const properties = ['strawberry', 'chocolate', 'vanilla', 'wasabi'];
+        beforeEach(() => user = new MafiaUser({
+            properties: properties
+        }));
+        it('should return true for matching property', () => {
+            user.hasProperty('strawberry').should.be.true;
+        });
+        it('should return false for non-matching property', () => {
+            user.hasProperty('Strawberry').should.be.false;
+        });
+        it('should return false for matching property', () => {
+            user._data.properties = [];
+            user.hasProperty('strawberry').should.be.false;
+        });
+    });
     describe('addProperty()', () => {
         let user = null,
             game = null,

@@ -291,7 +291,7 @@ class MafiaGame {
         }
         return getUser(this, this._data.deadPlayers, user);
     }
-    
+
     /**
      * Get a game moderator
      *
@@ -425,6 +425,41 @@ class MafiaGame {
         }
         return new MafiaAction(actions[0], this);
     }
+
+    /**
+     * Get latest game action of the given type
+     *
+     * @param {string} [type='vote'] Action type of the requested action
+     * @param {string|MafiaUser} [target] Target for the requested action
+     * @param {string} [actionToken] ActionToken of the requested action
+     * @param {number} [day=this.day] Day of the game for the requested action
+     * @param {boolean} [includeRevokedActions=false] If true include actions that have been revoked
+     * @returns {MafiaAction} Action matching the provided query, null if no action matched query
+     */
+    getActionOfType(type, target, actionToken, day, includeRevokedActions) {
+        target = getUserSlug(target);
+        type = type || 'vote';
+        day = day || this.day;
+        let actions = this._data.actions.filter((action) => {
+            return action.day === day &&
+                action.action === type &&
+                (
+                    includeRevokedActions ||
+                    !action.revokedId
+                );
+        });
+        if (target) {
+            actions = actions.filter((action) => action.target === target);
+        }
+        if (actionToken) {
+            actions = actions.filter((action) => action.token === actionToken);
+        }
+        if (!actions.length) {
+            return null;
+        }
+        return new MafiaAction(actions[actions.length - 1], this);
+    }
+
 
     /**
      * Get actions for a particular day of a particular type
