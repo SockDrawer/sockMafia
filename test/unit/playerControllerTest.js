@@ -168,6 +168,16 @@ describe('player controller', () => {
 				});
 			});
 
+			it('should handle votes with no-lynches thrown in', () => {
+				const voteNoLynch = {
+					target: null,
+					isCurrent: true
+				};
+				sandbox.stub(playerController, 'getNumVotesRequired').returns(2);
+				sandbox.stub(mockGame, 'getActions').returns([voteForLars, voteForLars, voteNoLynch]);
+
+				return playerController.checkForAutoLynch(mockGame, mockTarget).should.resolve;
+			});
 			it('should not lynch lynchproof', () => {
 				sandbox.stub(playerController, 'getNumVotesRequired').returns(1);
 				sandbox.stub(mockGame, 'getActions').returns([voteForSadie]);
