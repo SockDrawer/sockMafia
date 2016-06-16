@@ -68,7 +68,7 @@ describe('MafiaBot', function () {
 		after(() => {
 			dao.getGameByTopicId.restore();
 		});
-		
+
 		it('Should list players', () => {
 			const command = {
 				args: [''],
@@ -246,7 +246,7 @@ describe('MafiaBot', function () {
 				getPost: () => Promise.resolve({id: 12}),
 				getUser: () => Promise.resolve({username: 'tehninja'}),
 			};
-			
+
 
 			//Spies
 			sandbox.spy(game, 'registerAction');
@@ -309,7 +309,7 @@ describe('MafiaBot', function () {
 		after(() => {
 			dao.getGameByTopicId.restore();
 		});
-		
+
 		it('Should not reproduce the Onyx revote bug', () => {
 			let command = {
 				args: ['@accalia'],
@@ -323,14 +323,14 @@ describe('MafiaBot', function () {
 			//Spies
 			sandbox.spy(game, 'registerAction');
 			sandbox.spy(game, 'revokeAction');
-			
+
 			//First, register a vote
 			return playerController.voteHandler(command).then(() => {
 				game.registerAction.called.should.equal(true);
 
 				command.reply.called.should.equal(true);
 				command.reply.firstCall.args[0].should.include('@yamikuronue voted for @accalia');
-				
+
 				command = {
 					args: [],
 					input: '!unvote',
@@ -339,7 +339,7 @@ describe('MafiaBot', function () {
 					getPost: () => Promise.resolve({id: 2}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
 				};
-	
+
 			//Then, unvote
 				view.respond.reset();
 				view.reportError.reset();
@@ -349,7 +349,7 @@ describe('MafiaBot', function () {
 				view.reportError.called.should.equal(false);
 				game.revokeAction.called.should.equal(true);
 				view.respond.firstCall.args[1].should.include('@yamikuronue unvoted');
-				
+
 				command = {
 					args: ['@accalia'],
 					input: '!vote @accalia',
@@ -358,7 +358,7 @@ describe('MafiaBot', function () {
 					getPost: () => Promise.resolve({id: 3}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
 				};
-			
+
 			//Vote for the same person again
 				view.respond.reset();
 				view.reportError.reset();
@@ -369,7 +369,7 @@ describe('MafiaBot', function () {
 
 				command.reply.called.should.equal(true);
 				command.reply.firstCall.args[0].should.include('@yamikuronue voted for @accalia');
-				
+
 				command = {
 					args: [],
 					input: '!unvote',
@@ -378,7 +378,7 @@ describe('MafiaBot', function () {
 					getPost: () => Promise.resolve({id: 4}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
 				};
-			
+
 			//Then unvote
 				view.respond.reset();
 				view.reportError.reset();
@@ -387,7 +387,7 @@ describe('MafiaBot', function () {
 			}).then(() => {
 				view.reportError.called.should.equal(false);
 				game.revokeAction.called.should.equal(true);
-				
+
 				command = {
 					args: [],
 					input: '!list-players',
@@ -396,7 +396,7 @@ describe('MafiaBot', function () {
 					getPost: () => Promise.resolve({id: 5}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
 				};
-				
+
 				view.respond.reset();
 				view.reportError.reset();
 				return playerController.listVotesHandler(command);
@@ -405,19 +405,18 @@ describe('MafiaBot', function () {
 				data.votes.accalia.votes[0].postId.should.equal(1);
 				data.votes.accalia.votes[0].isCurrent.should.be.false;
 				data.votes.accalia.votes[0].revokedId.should.equal(2);
-				
+
 				data.votes.accalia.votes[1].postId.should.equal(3);
 				data.votes.accalia.votes[1].isCurrent.should.be.false;
 				data.votes.accalia.votes[1].revokedId.should.equal(4);
 			});
 		});
-		
+
 	});
 
-	/*eslint-disable*/
-	describe('Vote history', () => {
-		let dao, playerController, game, fakeFormatter;
-		
+	describe('Vote bug: no-lynch autolynch', function () {
+		let dao, playerController, game;
+
 		before(() => {
 			//Set up the database
 			dao = new DAO(':memory:');
@@ -426,7 +425,102 @@ describe('MafiaBot', function () {
 				urlForPost: () => '',
 				quoteText: (input) => input
 			};
-			
+
+			return dao.createGame(2, 'Game autolynch bug')
+				.then((g) => {
+					game = g;
+					sinon.stub(dao, 'getGameByTopicId').resolves(game);
+					return game.addPlayer('yamikuronue');
+				})
+				.then(() => game.addPlayer('accalia'))
+				.then(() => game.addPlayer('dreikin'))
+				.then(() => game.addPlayer('tehninja'))
+				.then(() => game.newDay());
+		});
+
+		after(() => {
+			dao.getGameByTopicId.restore();
+		});
+
+		it('Should not reproduce the autolynch', () => {
+			let command = {
+				args: ['@accalia'],
+				input: '!vote @accalia',
+				reply: sandbox.stub(),
+				getTopic: () => Promise.resolve({id: 2}),
+				getPost: () => Promise.resolve({id: 1}),
+				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+			};
+
+			//Spies
+			sandbox.spy(game, 'registerAction');
+			sandbox.spy(game, 'revokeAction');
+
+			//First, register a vote
+			return playerController.voteHandler(command).then(() => {
+				game.registerAction.called.should.equal(true);
+
+				command.reply.called.should.equal(true);
+				command.reply.lastCall.args[0].should.include('@yamikuronue voted for @accalia');
+
+				command = {
+					args: [],
+					input: '!no-lynch',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 2}),
+					getPost: () => Promise.resolve({id: 2}),
+					getUser: () => Promise.resolve({username: 'dreikin'}),
+				};
+
+			//Then, nolynch
+				view.respond.reset();
+				view.reportError.reset();
+				game.revokeAction.reset();
+				return playerController.nolynchHandler(command);
+			}).then(() => {
+				view.reportError.called.should.equal(false);
+				game.registerAction.called.should.equal(true);
+				command.reply.lastCall.args[0].should.include('@dreikin voted to not lynch');
+
+				command = {
+					args: ['@accalia'],
+					input: '!vote @accalia',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 2}),
+					getPost: () => Promise.resolve({id: 3}),
+					getUser: () => Promise.resolve({username: 'tehninja'}),
+				};
+
+			//Vote for the original
+				view.respond.reset();
+				view.reportError.reset();
+				game.registerAction.reset();
+				return playerController.voteHandler(command);
+			}).then(() => {
+				game.registerAction.called.should.equal(true);
+
+				command.reply.called.should.equal(true);
+				command.reply.lastCall.args[0].should.include('@tehninja voted for @accalia');
+			});
+		});
+
+
+
+	});
+
+	/*eslint-disable*/
+	describe('Vote history', () => {
+		let dao, playerController, game, fakeFormatter;
+
+		before(() => {
+			//Set up the database
+			dao = new DAO(':memory:');
+			playerController = new PlayerController(dao, testConfig);
+			playerController.formatter = {
+				urlForPost: () => '',
+				quoteText: (input) => input
+			};
+
 			fakeFormatter = {
 				urlForTopic: (topicId, slug, postId) => {
 					return '/t/' + slug + '/' + topicId + '/' + postId;
@@ -435,7 +529,7 @@ describe('MafiaBot', function () {
 					return '/p/' + postId;
 				}
 			};
-			
+
 			view.activate({Format: fakeFormatter});
 
 			return dao.createGame(2, 'Game 2')
@@ -453,9 +547,9 @@ describe('MafiaBot', function () {
 		after(() => {
 			dao.getGameByTopicId.restore();
 		});
-	
+
 		it('Should list one vote', () => {
-			
+
 			let command = {
 				args: ['@accalia'],
 				input: '!vote @accalia',
@@ -468,7 +562,7 @@ describe('MafiaBot', function () {
 			//Spies
 			sandbox.spy(game, 'registerAction');
 			sandbox.spy(game, 'revokeAction');
-			
+
 			//First, register a vote
 			return playerController.voteHandler(command).then(() => {
 				command = {
@@ -479,21 +573,21 @@ describe('MafiaBot', function () {
 					getPost: () => Promise.resolve({id: 2}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
 				};
-				
+
 				view.reportError.reset();
 				return playerController.listVotesHandler(command);
 			}).then(() => {
 				view.reportError.called.should.be.false;
 				command.reply.called.should.be.true;
-				
+
 				const output = command.reply.firstCall.args[0];
 				output.should.include('<td><b>accalia');
 				output.should.include('<a href="/p/1"><b>yamikuronue</b></a>');
 			});
 		});
-		
+
 		it('Should list two votes', () => {
-			
+
 			let command = {
 				args: ['@accalia'],
 				input: '!vote @accalia',
@@ -506,7 +600,7 @@ describe('MafiaBot', function () {
 			//Spies
 			sandbox.spy(game, 'registerAction');
 			sandbox.spy(game, 'revokeAction');
-			
+
 			//First, register a vote
 			return playerController.voteHandler(command).then(() => {
 				command = {
@@ -517,22 +611,22 @@ describe('MafiaBot', function () {
 					getPost: () => Promise.resolve({id: 4}),
 					getUser: () => Promise.resolve({username: 'dreikin'}),
 				};
-				
+
 				view.reportError.reset();
 				return playerController.listVotesHandler(command);
 			}).then(() => {
 				view.reportError.called.should.be.false;
 				command.reply.called.should.be.true;
-				
+
 				const output = command.reply.firstCall.args[0];
 				output.should.include('<td><b>accalia');
 				output.should.include('<a href="/p/1"><b>yamikuronue</b></a>');
 				output.should.include('<a href="/p/3"><b>dreikin</b></a>');
 			});
 		});
-		
+
 		it('Should list revoked votes', () => {
-			
+
 			let command = {
 				args: [''],
 				input: '!unvote',
@@ -545,7 +639,7 @@ describe('MafiaBot', function () {
 			//Spies
 			sandbox.spy(game, 'registerAction');
 			sandbox.spy(game, 'revokeAction');
-			
+
 			//First, register a vote
 			return playerController.unvoteHandler(command).then(() => {
 				command = {
@@ -556,13 +650,13 @@ describe('MafiaBot', function () {
 					getPost: () => Promise.resolve({id: 6}),
 					getUser: () => Promise.resolve({username: 'dreikin'}),
 				};
-				
+
 				view.reportError.reset();
 				return playerController.listVotesHandler(command);
 			}).then(() => {
 				view.reportError.called.should.be.false;
 				command.reply.called.should.be.true;
-				
+
 				const output = command.reply.firstCall.args[0];
 				output.should.include('<td><b>accalia');
 				output.should.include('<a href="/p/1"><b>yamikuronue</b></a>');
