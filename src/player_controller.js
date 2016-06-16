@@ -421,6 +421,7 @@ class MafiaPlayerController {
 
 			logDebug('Received vote request from ' + voter + ' for ' + targetString + ' in game ' + gameId);
 
+
 			return this.doVote(gameId, post.id, voter, targetString, command.line, voteNum, command);
 		}).catch((reason) => {
 			if (reason === E_NOGAME) {
@@ -870,7 +871,7 @@ class MafiaPlayerController {
 		logDebug('List all votes is not yet implemented.');
 		return Promise.resolve();
 	}
-	
+
 	/**
 	* Target: target another player as the recipient of a night action.
 	*
@@ -899,24 +900,24 @@ class MafiaPlayerController {
 		}).then((a, t, post) => {
 			actor = a;
 			let actionToken = 'target';
-			
+
 			/* Group types*/
 			if (actor.hasProperty('scum') || actor.hasProperty('mafia')) {
 				//Revoke previous scum action
 				game.getActionOfType('target', null, 'scum').revoke(post.id);
 				actionToken = 'scum';
 			}
-			
+
 			if (actor.hasProperty('scum2')) {
 				//Revoke previous scum action
 				game.getActionOfType('target', null, 'scum2').revoke(post.id);
 				actionToken = 'scum2';
 			}
-			
+
 			if (actor.hasProperty('cultLeader')) {
 				actionToken = 'cult';
 			}
-			
+
 			return game.registerAction(post.id, actor.username, target.username, 'target', actionToken);
 		}).catch((err) => {
 			if (err === E_NOGAME) {
