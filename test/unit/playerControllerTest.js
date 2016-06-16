@@ -168,6 +168,17 @@ describe('player controller', () => {
 				});
 			});
 
+			it('should handle votes with no-lynches thrown in', () => {
+				const voteNoLynch = {
+					target: null,
+					isCurrent: true
+				};
+				sandbox.stub(playerController, 'getNumVotesRequired').returns(2);
+				sandbox.stub(mockGame, 'getActions').returns([voteForLars, voteForLars, voteNoLynch]);
+
+				return playerController.checkForAutoLynch(mockGame, mockTarget).should.resolve;
+			});
+
 			it('should not lynch lynchproof', () => {
 				sandbox.stub(playerController, 'getNumVotesRequired').returns(1);
 				sandbox.stub(mockGame, 'getActions').returns([voteForSadie]);
@@ -1499,7 +1510,7 @@ describe('player controller', () => {
 			});
 		});
 	});
-	
+
 	describe('target()', () => {
 
 		let mockGame, mockUser, mockTarget, mockdao, playerController;
@@ -1518,7 +1529,7 @@ describe('player controller', () => {
 				hasProperty: () => false,
 				isAlive: true
 			};
-			
+
 			mockGame = {
 				allPlayers: [],
 				killPlayer: () => 1,
@@ -1547,7 +1558,7 @@ describe('player controller', () => {
 			sandbox.stub(view, 'reportError').resolves();
 			sandbox.stub(view, 'respondWithTemplate').resolves();
 		});
-		
+
 		it('Should register actions', () => {
 			const command = {
 				getTopic: () => Promise.resolve({
@@ -1562,13 +1573,13 @@ describe('player controller', () => {
 				args: ['123', '@noLunch'],
 				input: '!target @noLunch'
 			};
-				
+
 			sandbox.spy(mockGame, 'registerAction');
 			return playerController.targetHandler(command).then(() => {
 				mockGame.registerAction.calledWith(42, 'tehNinja', 'noLunch', 'target', 'target').should.equal.true;
 			});
 		});
-		
+
 		it('Should search for the game by ID', () => {
 			const command = {
 				getTopic: () => Promise.resolve({
@@ -1583,17 +1594,17 @@ describe('player controller', () => {
 				args: ['123', '@noLunch'],
 				input: '!target @noLunch'
 			};
-				
+
 			sandbox.spy(mockdao, 'getGameByTopicId');
 			sandbox.spy(mockdao, 'getGameByName');
-			
+
 			return playerController.targetHandler(command).then(() => {
 				mockdao.getGameByName.called.should.be.false;
 				mockdao.getGameByTopicId.called.should.be.true;
 				mockdao.getGameByTopicId.calledWith('123').should.be.true;
 			});
 		});
-		
+
 		it('Should search for the game by name', () => {
 			const command = {
 				getTopic: () => Promise.resolve({
@@ -1608,7 +1619,7 @@ describe('player controller', () => {
 				args: ['testMafia', '@noLunch'],
 				input: '!target @noLunch'
 			};
-				
+
 			sandbox.spy(mockdao, 'getGameByTopicId');
 			sandbox.spy(mockdao, 'getGameByName');
 			return playerController.targetHandler(command).then(() => {
@@ -1617,7 +1628,7 @@ describe('player controller', () => {
 				mockdao.getGameByName.calledWith('testMafia').should.be.true;
 			});
 		});
-		
+
 		it('Should register scum actions', () => {
 			const command = {
 				getTopic: () => Promise.resolve({
@@ -1632,7 +1643,7 @@ describe('player controller', () => {
 				args: ['123', '@noLunch'],
 				input: '!target @noLunch'
 			};
-				
+
 			sandbox.spy(mockGame, 'registerAction');
 			sandbox.spy(mockGame, 'revokeAction');
 			sandbox.stub(mockUser, 'hasProperty').returns(false).withArgs('scum').returns(true);
@@ -1641,7 +1652,7 @@ describe('player controller', () => {
 				mockGame.revokeAction.calledWith(42, 'tehNinja', 'noLunch', 'target', 'scum').should.equal.true;
 			});
 		});
-		
+
 		it('Should register secondary scum actions', () => {
 			const command = {
 				getTopic: () => Promise.resolve({
@@ -1656,7 +1667,7 @@ describe('player controller', () => {
 				args: ['123', '@noLunch'],
 				input: '!target @noLunch'
 			};
-				
+
 			sandbox.spy(mockGame, 'registerAction');
 			sandbox.spy(mockGame, 'revokeAction');
 			sandbox.stub(mockUser, 'hasProperty').returns(false).withArgs('scum2').returns(true);
@@ -1665,7 +1676,7 @@ describe('player controller', () => {
 				mockGame.revokeAction.calledWith(42, 'tehNinja', 'noLunch', 'target', 'scum2').should.equal.true;
 			});
 		});
-		
+
 		it('Should not respond when there is no game found', () => {
 			const command = {
 				getTopic: () => Promise.resolve({
@@ -1680,7 +1691,7 @@ describe('player controller', () => {
 				args: ['123', '@noLunch'],
 				input: '!target @noLunch'
 			};
-				
+
 			sandbox.spy(mockGame, 'registerAction');
 			return playerController.targetHandler(command).then(() => {
 				mockGame.registerAction.calledWith(42, 'tehNinja', 'noLunch', 'target', 'target').should.equal.false;
