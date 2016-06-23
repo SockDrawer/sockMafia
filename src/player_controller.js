@@ -81,7 +81,7 @@ class MafiaPlayerController {
 		return game.killPlayer(target)
 			.then(() => game.nextPhase())
 			.then(() => {
-				const text = '@' + target.properName + ' has been lynched! Stay tuned for the flip.'
+				const text = '@' + target.username + ' has been lynched! Stay tuned for the flip.'
 					+ ' <b>It is now Night.</b>';
 				view.respondInThread(game.topicId, text);
 			})

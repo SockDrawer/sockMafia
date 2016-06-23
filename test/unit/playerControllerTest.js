@@ -112,6 +112,7 @@ describe('player controller', () => {
 					mockGame.killPlayer.calledWith(mockUser).should.equal(true);
 					mockGame.nextPhase.called.should.equal(true);
 					view.respondInThread.calledWith(12).should.equal(true);
+					view.respondInThread.firstCall.args[1].should.equal('@Lars has been lynched! Stay tuned for the flip. <b>It is now Night.</b>');
 				});
 			});
 
