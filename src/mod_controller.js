@@ -223,7 +223,7 @@ class MafiaModController {
 					
 					const numPlayers = game.livePlayers.length;
 					data.day = game.day;
-					data.toExecute = Math.ceil(numPlayers / 2);
+					data.toExecute = Math.ceil((numPlayers + 1) / 2);
 					
 					data.numPlayers = game.livePlayers.length;
 					
