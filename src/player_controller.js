@@ -73,6 +73,8 @@ class MafiaPlayerController {
         forum.Commands.add('unvote', 'rescind your vote', this.unvoteHandler.bind(this));
         forum.Commands.add('nolynch', 'vote for noone to be lynched', this.nolynchHandler.bind(this));
         forum.Commands.addAlias('no-lynch', this.nolynchHandler.bind(this));
+        
+        forum.Commands.add('target', 'Target a player with any night action you may have', this.targetHandler.bind(this));
     }
 
 	/**

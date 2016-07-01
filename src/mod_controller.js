@@ -118,6 +118,7 @@ class MafiaModController {
         forum.Commands.add('kill', 'kill a player (mod only)', this.killHandler.bind(this));
         forum.Commands.add('new-day', 'move on to a new day (mod only)', this.dayHandler.bind(this));
         forum.Commands.add('next-phase', 'move on to the next phase (mod only)', this.phaseHandler.bind(this));
+        forum.Commands.add('list-night-actions', 'List night actions submitted (mod only)', this.listNAHandler.bind(this));
     }
 
     /**
