@@ -47,6 +47,55 @@ function logDebug(statement) {
 }
 
 /**
+ * Advance the day.
+ * @returns Promise that resolves when the action is complete
+ */
+function advance(game, type, endTime, command) {
+	const advFunc = type.toLowerCase() === 'day' ? game.newDay : game.nextPhase;
+	const currDay = game.day;
+	const currPhase = game.phase;
+	
+	const data = {};
+	
+	return advFunc().then(() => {
+		
+		debug('Went from ' + currDay + ' ' + currPhase + ' to ' + game.day + ' ' + game.phase);
+		if (endTime) {
+			data.phaseEnd = endTime;
+			data.showPhaseEnd = true;
+				return game.setValue('phaseEnd', endTime);
+		} else {
+			data.showPhaseEnd = false;
+			return Promise.resolve();
+		}
+	})
+	.then(() => {
+		if (game.day > currDay) {
+			
+			const numPlayers = game.livePlayers.length;
+			data.day = game.day;
+			data.toExecute = Math.ceil(numPlayers / 2);
+			
+			data.numPlayers = game.livePlayers.length;
+			
+			data.names = game.livePlayers.map((player) => {
+				return player.username;
+			});
+
+			logDebug('Moved to new day in  ' + game.name);
+			return view.respondWithTemplate('/templates/newDayTemplate.handlebars', data, command);
+		} else {
+			let text = 'It is now ' + game.phase;
+			if (data.showPhaseEnd) {
+				text += '. The phase will end ' + data.phaseEnd;
+			}
+			return view.respond(command, text);
+		}
+		
+	});
+}
+
+/**
  * The controller class for Mafiabot
  */
 class MafiaModController {
@@ -68,7 +117,7 @@ class MafiaModController {
         forum.Commands.add('set', 'Assign a player a role (mod only)', this.setHandler.bind(this));
         forum.Commands.add('kill', 'kill a player (mod only)', this.killHandler.bind(this));
         forum.Commands.add('new-day', 'move on to a new day (mod only)', this.dayHandler.bind(this));
-        forum.Commands.add('next-phase', 'move on to the next phase (mod only)', this.dayHandler.bind(this));
+        forum.Commands.add('next-phase', 'move on to the next phase (mod only)', this.phaseHandler.bind(this));
     }
 
     /**
@@ -145,6 +194,61 @@ class MafiaModController {
 				view.reportError(command, 'Error setting player property: ', err);
 			});
 	}
+	
+	/**
+	* Next-phase: A mod function that moves to the next phase
+	* Must be used in the game thread.
+	*
+	* Game rules:
+	*  - A game can advance to night when it is in the day phase
+	*  - A game can only be advanced by the mod
+	*  - When the game is advanced to night, a new day does not start
+	* 
+	* @example !next-phase
+	*
+	* @param  {commands.command} command The command that was passed in.
+	* @returns {Promise}        A promise that will resolve when the game is ready
+	*/
+	phaseHandler (command) {
+		const data = {
+			numPlayers: 0,
+			toExecute: 0,
+			day: 0,
+			names: []
+		};
+		let gameId, modName, game, mod, endTime;
+		
+		if (command.args[0] === 'ends' && command.args[1]) {
+			command.args.shift();
+			endTime = command.args.join(' ');
+		}
+
+		return command.getTopic().then((topic) => {
+				gameId = topic.id;
+				return command.getUser();
+			}).then((user) => {
+				modName = user.username;
+				logDebug('Received new day request from ' + modName + ' in thread ' + game);
+				return this.dao.getGameByTopicId(gameId);
+			})
+			.then((g) => {
+				game = g;
+				return game.isActive ? Promise.resolve() : Promise.reject('Game not started. Try `!start`.');
+			})
+			.then(() => {
+				try {
+					mod = game.getModerator(modName);
+				} catch (_) {
+					return Promise.reject('You are not a moderator');
+				}
+				return mod.isModerator ? Promise.resolve() : Promise.reject('You are not a moderator');
+			})
+			.then(() => advance(game, 'phase', endTime, command))
+			.catch((err) => {
+				logRecoveredError('Error incrementing phase: ' + err);
+				view.reportError(command, 'Error incrementing phase: ', err);
+			});
+	}
 
 	/**
 	* New-day: A mod function that starts a new day
@@ -172,9 +276,14 @@ class MafiaModController {
 			day: 0,
 			names: []
 		};
-		let gameId, modName, currDay, currPhase, game, mod;
+		let gameId, modName, game, mod, endTime;
+		
+		if (command.args[0] === 'ends' && command.args[1]) {
+			command.args.shift();
+			endTime = command.args.join(' ');
+		}
 
-			return command.getTopic().then((topic) => {
+		return command.getTopic().then((topic) => {
 				gameId = topic.id;
 				return command.getUser();
 			}).then((user) => {
@@ -184,8 +293,6 @@ class MafiaModController {
 			})
 			.then((g) => {
 				game = g;
-				currDay = game.day;
-				currPhase = game.phase;
 				return game.isActive ? Promise.resolve() : Promise.reject('Game not started. Try `!start`.');
 			})
 			.then(() => {
@@ -196,47 +303,7 @@ class MafiaModController {
 				}
 				return mod.isModerator ? Promise.resolve() : Promise.reject('You are not a moderator');
 			})
-			.then(() => {
-				return game.nextPhase();
-			})
-			.then(() => {
-				debug('Went from ' + currDay + ' ' + currPhase + ' to ' + game.day + ' ' + game.phase);
-				
-				if (command.args[0] === 'ends' && command.args[1]) {
-					command.args.shift();
-					data.phaseEnd = command.args.join(' ');
-					data.showPhaseEnd = true;
-					
-					return game.setValue('phaseEnd', data.phaseEnd);
-				} else {
-					data.showPhaseEnd = false;
-					return Promise.resolve();
-				}
-			})
-			.then(() => {
-				if (game.day > currDay) {
-					
-					const numPlayers = game.livePlayers.length;
-					data.day = game.day;
-					data.toExecute = Math.ceil(numPlayers / 2);
-					
-					data.numPlayers = game.livePlayers.length;
-					
-					data.names = game.livePlayers.map((player) => {
-						return player.username;
-					});
-
-					logDebug('Moved to new day in  ' + game.name);
-					return view.respondWithTemplate('/templates/newDayTemplate.handlebars', data, command);
-				} else {
-					let text = 'It is now ' + game.phase;
-					if (data.showPhaseEnd) {
-						text += '. The phase will end ' + data.phaseEnd;
-					}
-					return view.respond(command, text);
-				}
-				
-			})
+			.then(() => advance(game, 'day', endTime, command))
 			.catch((err) => {
 				logRecoveredError('Error incrementing day: ' + err);
 				view.reportError(command, 'Error incrementing day: ', err);

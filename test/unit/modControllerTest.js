@@ -165,7 +165,7 @@ describe('mod controller', () => {
 		});
 	});
 
-	describe('new-day()', () => {
+	describe('nextPhase()', () => {
 		let mockGame, mockUser, mockdao, modController;
 
 		beforeEach(() => {
@@ -183,7 +183,7 @@ describe('mod controller', () => {
 				getAllPlayers: () => ['Rachel', 'Ross', 'Joey', 'Chandler', 'Phoebe', 'Monica'],
 				livePlayers: [mockUser, mockUser, mockUser],
 				killPlayer: () => Promise.resolve(),
-				nextPhase: () => 1,
+				nextPhase: () => Promise.resolve(),
 				getActions: () => 1,
 				getPlayer: () => mockUser,
 				getModerator: () => mockUser,
@@ -203,7 +203,187 @@ describe('mod controller', () => {
 		it('Should reject non-mods', () => {
 			const command = {
 				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'tehNinja'})
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: []
+			};
+			mockUser.isModerator = false;
+			sandbox.spy(mockGame, 'nextPhase');
+			sandbox.stub(mockGame, 'getModerator').throws();
+
+			return modController.phaseHandler(command).then( () => {
+				//Game actions
+				mockGame.nextPhase.called.should.equal(false);
+
+				//Output back to mod
+				view.reportError.calledWith(command).should.be.true;
+				const modOutput = view.reportError.getCall(0).args[2].toString();
+				modOutput.should.include('You are not a moderator');
+			});
+		});
+
+		it('Should reject non-existant game', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: []
+			};
+
+			sandbox.stub(mockdao, 'getGameByTopicId').rejects('No such game');
+			sandbox.spy(mockGame, 'nextPhase');
+
+			return modController.phaseHandler(command).then( () => {
+				//Output back to mod
+				view.reportError.calledWith(command).should.be.true;
+				const modOutput = view.reportError.getCall(0).args[2];
+				modOutput.should.be.an('Error');
+				modOutput.toString().should.include('Error: No such game');
+
+			});
+		});
+
+		it('Should move to night', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: []
+			};
+			sandbox.stub(mockGame, 'nextPhase').resolves();
+
+			return modController.phaseHandler(command).then( () => {
+				//Game actions
+				mockGame.nextPhase.called.should.be.true;
+
+				//Output to game
+				view.respond.calledWith(command).should.be.true;
+				const modOutput = view.respond.getCall(0).args[1];
+				modOutput.should.include('It is now night');
+
+				
+				view.respondWithTemplate.called.should.not.be.true;
+
+			});
+		});
+		
+		it('Should optionally add an end time', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: ['ends', 'today']
+			};
+			sandbox.spy(mockGame, 'setValue');
+
+			return modController.phaseHandler(command).then( () => {
+				//Set the flag
+				mockGame.setValue.called.should.be.true;
+				mockGame.setValue.calledWith('phaseEnd', 'today').should.be.true;
+				
+				view.respond.calledWith(command).should.be.true;
+				const modOutput = view.respond.getCall(0).args[1];
+				modOutput.should.include('The phase will end today');
+
+			});
+		});
+		
+		it('Should optionally add an end time with spaces', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: ['ends', 'on', 'march', 'second']
+			};
+			sandbox.spy(mockGame, 'setValue');
+
+			return modController.phaseHandler(command).then( () => {
+				//Set the flag
+				mockGame.setValue.called.should.be.true;
+				mockGame.setValue.calledWith('phaseEnd', 'on march second').should.be.true;
+
+			});
+		});
+		
+		it('Should not require an end time', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: []
+			};
+			sandbox.spy(mockGame, 'setValue');
+
+			return modController.phaseHandler(command).then( () => {
+				//Set the flag
+				mockGame.setValue.called.should.be.false;
+			});
+		});
+		
+		it('Should handle malformed end time', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: ['ends']
+			};
+			sandbox.spy(mockGame, 'setValue');
+
+			return modController.phaseHandler(command).then( () => {
+				//Set the flag
+				mockGame.setValue.called.should.be.false;
+			});
+		});
+		
+		it('Should ignore other args', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: ['banana', 'today']
+			};
+			sandbox.spy(mockGame, 'setValue');
+
+			return modController.phaseHandler(command).then( () => {
+				//Set the flag
+				mockGame.setValue.called.should.be.false;
+			});
+		});
+	});	
+	
+	describe('new-day()', () => {
+		let mockGame, mockUser, mockdao, modController;
+
+		beforeEach(() => {
+			
+			mockUser = {
+				username: 'God',
+				getPlayerProperty: () => [],
+				isModerator: true
+			};
+
+
+			mockGame = {
+				isActive: true,
+				name: 'testMafia',
+				getAllPlayers: () => ['Rachel', 'Ross', 'Joey', 'Chandler', 'Phoebe', 'Monica'],
+				livePlayers: [mockUser, mockUser, mockUser],
+				killPlayer: () => Promise.resolve(),
+				nextPhase: () => Promise.resolve(),
+				newDay: () => Promise.resolve(),
+				getActions: () => 1,
+				getPlayer: () => mockUser,
+				getModerator: () => mockUser,
+				topicId: 12,
+				day: 1,
+				setValue: () => Promise.resolve(),
+				phase: 'night'
+			};
+
+			mockdao = {
+				getGameByTopicId: () => Promise.resolve(mockGame)
+			};
+
+			modController = new ModController(mockdao);
+		});
+
+		it('Should reject non-mods', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: []
 			};
 			mockUser.isModerator = false;
 			sandbox.spy(mockGame, 'nextPhase');
@@ -223,7 +403,8 @@ describe('mod controller', () => {
 		it('Should reject non-existant game', () => {
 			const command = {
 				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'tehNinja'})
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: []
 			};
 
 			sandbox.stub(mockdao, 'getGameByTopicId').rejects('No such game');
@@ -238,29 +419,6 @@ describe('mod controller', () => {
 
 			});
 		});
-
-		it('Should move to night', () => {
-			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'tehNinja'}),
-				args: []
-			};
-			sandbox.stub(mockGame, 'nextPhase');
-
-			return modController.dayHandler(command).then( () => {
-				//Game actions
-				mockGame.nextPhase.called.should.be.true;
-
-				//Output to game
-				view.respond.calledWith(command).should.be.true;
-				const modOutput = view.respond.getCall(0).args[1];
-				modOutput.should.include('It is now night');
-
-				
-				view.respondWithTemplate.called.should.not.be.true;
-
-			});
-		});
 		
 		it('Should advance days', () => {
 			const command = {
@@ -268,13 +426,14 @@ describe('mod controller', () => {
 				getUser: () => Promise.resolve({username: 'tehNinja'}),
 				args: []
 			};
-			sandbox.stub(mockGame, 'nextPhase', () => {
+			sandbox.stub(mockGame, 'newDay', () => {
 				mockGame.day++;
+				return Promise.resolve();
 			});
 
 			return modController.dayHandler(command).then( () => {
 				//Game actions
-				mockGame.nextPhase.called.should.be.true;
+				mockGame.newDay.called.should.be.true;
 
 				//Output back to mod
 				view.respondWithTemplate.called.should.be.true;
