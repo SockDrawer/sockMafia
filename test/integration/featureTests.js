@@ -1289,6 +1289,7 @@ describe('MafiaBot', function () {
 			});
 		});
 	});
+	*/
 	
 	describe('Night Actions', () => {
 		let dao, playerController, modController, game, fakeFormatter;
@@ -1319,6 +1320,7 @@ describe('MafiaBot', function () {
 				.then((g) => {
 					game = g;
 					sinon.stub(dao, 'getGameByTopicId').resolves(game);
+					sinon.stub(dao, 'getGameByName').resolves(game);
 					return game.addPlayer('yamikuronue');
 				})
 				.then(() => game.addPlayer('accalia'))
@@ -1357,8 +1359,91 @@ describe('MafiaBot', function () {
 			}).then(() => {
 				game.getPlayer('yamikuronue').hasProperty('scum2').should.be.true;
 				game.getPlayer('yamikuronue').hasProperty('scum').should.be.false;
+				
+				command = {
+					args: ['@tehninja', 'scum2', 'in', '3'],
+					line: '!set @tehninja scum2 in 3',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 12}),
+					getPost: () => Promise.resolve({id: 2}),
+					getUser: () => Promise.resolve({username: 'God'}),
+				};
+				
+				view.respond.reset();
+				view.reportError.reset();
+				return modController.setHandler(command);
+			}).then(() => {
+				game.getPlayer('tehninja').hasProperty('scum2').should.be.true;
+				game.getPlayer('tehninja').hasProperty('scum').should.be.false;
+			});
+		});
+		
+		it('Should allow night actions by factions', () => {
+			let command = {
+				args: [3, '@dreikin'],
+				line: '!target 3 @dreikin',
+				reply: sandbox.stub(),
+				getTopic: () => Promise.resolve({id: 3}),
+				getPost: () => Promise.resolve({id: 100}),
+				getUser: () => Promise.resolve({username: 'accalia'}),
+			};
+			
+			sandbox.spy(game, 'registerAction');
+			return playerController.targetHandler(command).then(() => {
+
+				command = {
+					args: [3, '@dreikin'],
+					line: '!target 3 @dreikin',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 3}),
+					getPost: () => Promise.resolve({id: 102}),
+					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				};
+				
+				return playerController.targetHandler(command);
+			}).then(() => {
+
+				command = {
+					args: ['3'],
+					line: '!list-night-actions 3',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 3}),
+					getPost: () => Promise.resolve({id: 103}),
+					getUser: () => Promise.resolve({username: 'God'}),
+				};
+				
+				return modController.listNAHandler(command);
+			}).then(() => {
+				const output = command.reply.firstCall.args[0];
+				output.should.include('**Scum**: Target dreikin');
+				output.should.include('**Scum 2**: Target dreikin');
+				
+				command = {
+					args: [3, '@accalia'],
+					line: '!target 3 @accalia',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 3}),
+					getPost: () => Promise.resolve({id: 102}),
+					getUser: () => Promise.resolve({username: 'tehninja'}),
+				};
+				
+				return playerController.targetHandler(command);
+			}).then(() => {
+				command = {
+					args: ['3'],
+					line: '!list-night-actions 3',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 3}),
+					getPost: () => Promise.resolve({id: 103}),
+					getUser: () => Promise.resolve({username: 'God'}),
+				};
+				
+				return modController.listNAHandler(command);
+			}).then(() => {
+				const output = command.reply.firstCall.args[0];
+				output.should.include('**Scum**: Target dreikin');
+				output.should.include('**Scum 2**: Target accalia');
 			});
 		});
 	});
-	*/
 });

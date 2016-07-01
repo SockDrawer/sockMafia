@@ -908,7 +908,7 @@ describe('mod controller', () => {
 			};
 
 			mockUser.isModerator = false;
-			sandbox.stub(mockGame, 'getModerator').throws('E_NOMOD');
+			sandbox.stub(mockGame, 'getModerator').throws('E_MODERATOR_NOT_EXIST');
 
 
 			return modController.listNAHandler(command).then( () => {
@@ -969,7 +969,7 @@ describe('mod controller', () => {
 				actor: mockUserList.margaret,
 				target: mockUserList.alex,
 				type: 'target',
-				actionToken: 'scum'
+				token: 'scum'
 			};
 			
 			sandbox.stub(mockGame, 'getActions').returns([mockAction]);

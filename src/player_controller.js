@@ -889,42 +889,60 @@ class MafiaPlayerController {
 	*/
 	targetHandler (command) {
 		let actor, target, game;
-		const targetString = command.args[1];
+		const targetString = command.args[1].replace('@', '');
 		const gameId = command.args[0];
 		const lookupFunc = parseInt(gameId) > 0 ? this.dao.getGameByTopicId : this.dao.getGameByName;
 
 		return Promise.all([lookupFunc(gameId), command.getUser()])
-		.then((g, user) => {
-			game = g;
-			return Promise.all([game.getUser(user), game.getUser(targetString), command.getPost()]);
-		}).then((a, t, post) => {
-			actor = a;
+		.then((data) => {
+			game = data[0]; 
+			try {
+				actor = game.getPlayer(data[1].username);
+			} catch (e) {
+				throw new Error('You are not playing in game ' + gameId);
+			}
+			
+			
+			try {
+				target = game.getPlayer(targetString);
+			} catch (e) {
+				throw new Error('Target is invalid');
+			}
+
+			return command.getPost();
+		}).then((post) => {
 			let actionToken = 'target';
 			
 			/* Group types*/
 			if (actor.hasProperty('scum') || actor.hasProperty('mafia')) {
 				//Revoke previous scum action
-				game.getActionOfType('target', null, 'scum').revoke(post.id);
+				const prevAction = game.getActionOfType('target', null, 'scum');
+				if (prevAction) {
+					prevAction.revoke(post.id);
+				}
 				actionToken = 'scum';
 			}
 			
 			if (actor.hasProperty('scum2')) {
 				//Revoke previous scum action
-				game.getActionOfType('target', null, 'scum2').revoke(post.id);
+				const prevAction = game.getActionOfType('target', null, 'scum2');
+				if (prevAction) {
+					prevAction.revoke(post.id);
+				}
 				actionToken = 'scum2';
 			}
 			
 			if (actor.hasProperty('cultLeader')) {
 				actionToken = 'cult';
 			}
-			
 			return game.registerAction(post.id, actor.username, target.username, 'target', actionToken);
-		}).catch((err) => {
+		}).then(() => command.reply('Action recorded.'))
+		.catch((err) => {
 			if (err === E_NOGAME) {
 				return Promise.resolve();
 			}
 
-			view.reportError(command, 'Error resolving list: ', err);
+			view.reportError(command, 'Error recording action: ', err);
 			logRecoveredError('List failed ' + err);
 		});
 	}

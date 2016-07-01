@@ -393,12 +393,8 @@ class MafiaModController {
 		return Promise.all([lookupFunc(gameId), command.getUser()])
 		.then((responses) => {
 			game = responses[0];
-			return game.getPlayer(responses[1].username);
+			return game.getModerator(responses[1].username);
 		}).then((a) => {
-			if (!a.isModerator) {
-				return Promise.reject('You are not a moderator!');
-			}
-			
 			const actions = game.getActions('target');
 			const data = {
 				scum2: {
@@ -416,10 +412,10 @@ class MafiaModController {
 			};
 			
 			for (let i = 0; i < actions.length; i++) {
-				if (actions[i].actionToken === 'scum') {
+				if (actions[i].token === 'scum') {
 					data.scum.actions.push(actions[i]);
 					data.scum.show = true;
-				} else if (actions[i].actionToken === 'scum2') {
+				} else if (actions[i].token === 'scum2') {
 					data.scum2.actions.push(actions[i]);
 					data.scum2.show = true;
 				} else {
@@ -428,10 +424,13 @@ class MafiaModController {
 				}
 			}
 			
-			return view.respondWithTemplate('listNightActions.hbs', data, command);
+			return view.respondWithTemplate('templates/listNightActions.hbs', data, command);
 		}).catch((err) => {
-			logRecoveredError('Error killing player: ' + err);
-			view.reportError(command, 'Error killing player: ', err);
+			if (err.toString() === 'E_MODERATOR_NOT_EXIST') {
+				err = 'You are not a moderator!';
+			}
+			logRecoveredError('Error listing night actions: ' + err);
+			view.reportError(command, 'Error listing night actions: ', err);
 		});
 	}
 }
