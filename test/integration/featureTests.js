@@ -1040,7 +1040,7 @@ describe('MafiaBot', function () {
 	});
 	*/
 
-	/*
+
 	describe('Special voting', () => {
 		let dao, playerController, game;
 		
@@ -1289,7 +1289,6 @@ describe('MafiaBot', function () {
 			});
 		});
 	});
-	*/
 	
 	describe('Night Actions', () => {
 		let dao, playerController, modController, game, fakeFormatter;

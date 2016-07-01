@@ -27,6 +27,11 @@ describe('SockMafia', function() {
 		add: (name, help, handler) => {
 			Commands.commandList[name] = handler;
 			return Promise.resolve();
+		},
+		
+		addAlias: (name, help, handler) => {
+			Commands.commandList[name] = handler;
+			return Promise.resolve();
 		}
 	};
 
