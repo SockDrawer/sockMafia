@@ -182,7 +182,8 @@ class MafiaPlayerController {
 
 		let numVotesForTarget = 0;
 		for (let i = 0; i < todaysVotes.length; i++) {
-			if (todaysVotes[i].isCurrent && todaysVotes[i].target.userslug === target.userslug) {
+			const voteTarget = todaysVotes[i].target && todaysVotes[i].target.userslug;
+			if (todaysVotes[i].isCurrent && voteTarget === target.userslug) {
 				numVotesForTarget++;
 			}
 		}
@@ -419,6 +420,7 @@ class MafiaPlayerController {
 			}
 
 			logDebug('Received vote request from ' + voter + ' for ' + targetString + ' in game ' + gameId);
+
 
 			return this.doVote(gameId, post.id, voter, targetString, command.line, voteNum, command);
 		}).catch((reason) => {
