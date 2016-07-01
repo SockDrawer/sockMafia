@@ -32,7 +32,7 @@
     "string": "^3.3.1"
   },
   "peerDependencies": {
-    "sockbot": "^3.0.0"
+    "sockbot": "^4.3.0"
   },
   "devDependencies": {
     "chai": "^3.2.0",
