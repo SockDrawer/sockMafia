@@ -624,7 +624,7 @@ describe('mod controller', () => {
 			const expected = {
 				command: 'Set property',
 				results: 'Player Margaret is now loved',
-				game: mockGame
+				game: 'testMafia'
 			};
 
 			return modController.setHandler(command).then( () => {
@@ -647,7 +647,7 @@ describe('mod controller', () => {
 			const expected = {
 				command: 'Set property',
 				results: 'Player Margaret is now hated',
-				game: mockGame
+				game: 'testMafia'
 			};
 
 			return modController.setHandler(command).then( () => {
@@ -670,7 +670,7 @@ describe('mod controller', () => {
 			const expected = {
 				command: 'Set property',
 				results: 'Player Margaret is now doublevoter',
-				game: mockGame
+				game: 'testMafia'
 			};
 
 			return modController.setHandler(command).then( () => {
@@ -693,7 +693,7 @@ describe('mod controller', () => {
 			const expected = {
 				command: 'Set property',
 				results: 'Player Margaret is now lynchproof',
-				game: mockGame
+				game: 'testMafia'
 			};
 
 			return modController.setHandler(command).then( () => {
@@ -727,7 +727,7 @@ describe('mod controller', () => {
 					view.respondWithTemplate.calledWith('templates/modSuccess.handlebars', {
 						command: 'Set property',
 						results: 'Player Margaret is now ' + properties[i],
-						game: mockGame
+						game: 'testMafia'
 					}).should.be.true;
 				}
 			});

@@ -187,7 +187,7 @@ class MafiaModController {
 				return view.respondWithTemplate('templates/modSuccess.handlebars', {
 					command: 'Set property',
 					results: 'Player ' + target.username + ' is now ' + property,
-					game: game
+					game: game.name
 				}, command);
 			})
 			.catch((err) => {
