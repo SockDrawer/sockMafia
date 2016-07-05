@@ -899,7 +899,7 @@ class MafiaPlayerController {
 		const gameId = command.args[0];
 		const lookupFunc = parseInt(gameId) > 0 ? this.dao.getGameByTopicId : this.dao.getGameByName;
 
-		return Promise.all([lookupFunc(gameId), command.getUser()])
+		return Promise.all([lookupFunc.call(this.dao, gameId), command.getUser()])
 		.then((data) => {
 			game = data[0]; 
 			try {

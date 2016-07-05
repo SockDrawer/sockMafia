@@ -389,9 +389,10 @@ class MafiaModController {
 	listNAHandler(command) {
 		let game;
 		const gameId = command.args[0];
+		debug('Listing night actions for ' + gameId);
 		const lookupFunc = parseInt(gameId) > 0 ? this.dao.getGameByTopicId : this.dao.getGameByName;
 
-		return Promise.all([lookupFunc(gameId), command.getUser()])
+		return Promise.all([lookupFunc.call(this.dao, gameId), command.getUser()])
 		.then((responses) => {
 			game = responses[0];
 			return game.getModerator(responses[1].username);
