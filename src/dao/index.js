@@ -43,7 +43,7 @@ function readData(filename) {
  * @returns {Promise} Resolves when data has been written, rejects on serialization or file access error
  */
 function saveData(filename, data) {
-    if (filename === ':memory:'){
+    if (filename === ':memory:') {
         return Promise.resolve(data);
     }
     return new Promise((resolve, reject) => {
@@ -94,6 +94,21 @@ class MafiaDao {
             }, this);
             this._data.push(game._data);
             return this.save().then(() => game);
+        });
+    }
+
+    /**
+     * Retrieve a previously created game by topicId or name
+     *
+     * @param {number|string} game Game identifier.
+     * @returns {Promise<MafiaGame>} Resolves to requested game, rejects when read error occurs or game not found
+     */
+    getGame(game) {
+        return this.getGameByTopicId(game).catch((err) => {
+            if (err.message !== 'E_NO_GAME') {
+                throw err;
+            }
+            return this.getGameByName(game);
         });
     }
 

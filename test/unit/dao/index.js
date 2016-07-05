@@ -229,6 +229,39 @@ describe('nouveau dao', () => {
             return dao.createGame(42, name).should.be.rejectedWith('E_GAME_EXISTS');
         });
     });
+    describe('getGame()', () => {
+        let dao = null;
+        beforeEach(() => {
+            dao = new MafiaDao();
+            dao._data = [];
+            dao.getGameByName = sinon.stub().resolves();
+            dao.getGameByTopicId = sinon.stub().resolves();
+        });
+        it('should resolve to game by id when ID matches', () => {
+            const expected = Math.random();
+            dao.getGameByTopicId.resolves(expected);
+            return dao.getGame('name').then((value) => {
+                dao.getGameByName.called.should.be.false;
+                dao.getGameByTopicId.called.should.be.true;
+                value.should.equal(expected);
+            });
+        });
+        it('should resolve to game by name when ID does not match', () => {
+            const expected = Math.random();
+            dao.getGameByTopicId.rejects('E_NO_GAME');
+            dao.getGameByName.resolves(expected);
+            return dao.getGame('name').then((value) => {
+                dao.getGameByName.called.should.be.true;
+                dao.getGameByTopicId.called.should.be.true;
+                value.should.equal(expected);
+            });
+        });
+        it('should reject wehn neither id nor name match', () => {
+            dao.getGameByTopicId.rejects('E_NO_GAME');
+            dao.getGameByName.rejects('E_NO_GAME');
+            return dao.getGame('name').should.be.rejectedWith('E_NO_GAME');
+        });
+    });
     describe('getGameByTopicId()', () => {
         let dao = null;
         beforeEach(() => {
