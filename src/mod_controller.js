@@ -30,6 +30,7 @@ exports.init = function(forum) {
  * @param  {Error} error The error to log
  */
 function logRecoveredError(error) {
+	debug(error);
 	if (eventLogger && eventLogger.emit) {
 		eventLogger.emit('logExtended', 3, error);
 	}
@@ -57,7 +58,7 @@ function advance(game, type, endTime, command) {
 	
 	const data = {};
 	
-	return advFunc().then(() => {
+	return advFunc.bind(game)().then(() => {
 		
 		debug('Went from ' + currDay + ' ' + currPhase + ' to ' + game.day + ' ' + game.phase);
 		if (endTime) {
@@ -229,7 +230,7 @@ class MafiaModController {
 				return command.getUser();
 			}).then((user) => {
 				modName = user.username;
-				logDebug('Received new day request from ' + modName + ' in thread ' + game);
+				logDebug('Received next phase request from ' + modName + ' in thread ' + gameId);
 				return this.dao.getGameByTopicId(gameId);
 			})
 			.then((g) => {
@@ -246,6 +247,8 @@ class MafiaModController {
 			})
 			.then(() => advance(game, 'phase', endTime, command))
 			.catch((err) => {
+				
+		debug(err.stack);
 				logRecoveredError('Error incrementing phase: ' + err);
 				view.reportError(command, 'Error incrementing phase: ', err);
 			});
