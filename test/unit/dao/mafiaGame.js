@@ -1637,6 +1637,50 @@ describe('nouveau dao/MafiaGame', () => {
             });
         });
     });
+    describe('alias proxies', () => {
+        let game = null;
+        beforeEach(() => {
+            game = new MafiaGame({});
+            game.addAlias = sinon.stub().resolves();
+            game.removeAlias = sinon.stub().resolves(false);
+        });
+        it('should alias `addTopic()` to `addAlias()`', () => {
+            const topic = Math.random(),
+                expected = Math.random();
+            game.addAlias.resolves(expected);
+            return game.addTopic(topic).then((actual) => {
+                actual.should.equal(expected);
+                game.addAlias.should.be.calledWith(`t_${topic}`).once;
+            });
+        });
+        it('should alias `addChat()` to `addAlias()`', () => {
+            const chat = Math.random(),
+                expected = Math.random();
+            game.addAlias.resolves(expected);
+            return game.addChat(chat).then((actual) => {
+                actual.should.equal(expected);
+                game.addAlias.should.be.calledWith(`c_${chat}`).once;
+            });
+        });
+        it('should alias `removeTopic()` to `removeAlias()`', () => {
+            const topic = Math.random(),
+                expected = Math.random();
+            game.removeAlias.resolves(expected);
+            return game.removeTopic(topic).then((actual) => {
+                actual.should.equal(expected);
+                game.removeAlias.should.be.calledWith(`t_${topic}`).once;
+            });
+        });
+        it('should alias `removeChat()` to `removeAlias()`', () => {
+            const chat = Math.random(),
+                expected = Math.random();
+            game.removeAlias.resolves(expected);
+            return game.removeChat(chat).then((actual) => {
+                actual.should.equal(expected);
+                game.removeAlias.should.be.calledWith(`c_${chat}`).once;
+            });
+        });
+    });
     describe('toJSON()', () => {
         it('should return internal data store', () => {
             const data = {};

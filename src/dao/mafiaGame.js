@@ -621,6 +621,46 @@ class MafiaGame {
     }
 
     /**
+     * Add a topic to this game
+     *
+     * @param {number} topicId ID of topic to add to the game
+     * @returns {Promise} Resolves when topic has been added, Rejects if topic would conflict.
+     */
+    addTopic(topicId) {
+        return this.addAlias(`t_${topicId}`);
+    }
+
+    /**
+     * Remove a topic from this game
+     *
+     * @param {number} topicId ID of topic to remove from the game
+     * @returns {Promise<boolean>} Resolves true if topic was member of game, false otherwise.
+     */
+    removeTopic(topicId) {
+        return this.removeAlias(`t_${topicId}`);
+    }
+
+    /**
+     * Add a chat thread to this game
+     *
+     * @param {number} chatId ID of chat to add to the game
+     * @returns {Promise} Resolves when chat has been added, Rejects if chat would conflict.
+     */
+    addChat(chatId) {
+        return this.addAlias(`c_${chatId}`);
+    }
+
+    /**
+     * Remove a chat from this game
+     *
+     * @param {number} chatId ID of chat to remove from the game
+     * @returns {Promise<boolean>} Resolves true if chat was member of game, false otherwise.
+     */
+    removeChat(chatId) {
+        return this.removeAlias(`c_${chatId}`);
+    }
+
+    /**
      * Create a serializeable representation of the DAO object.
      *
      * @returns {object} A serializeable clone of this action's internal data store.
