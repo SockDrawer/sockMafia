@@ -119,15 +119,17 @@ class MafiaDao {
      * @returns {Promise<MafiaGame>} Resolves to requested game, rejects when read error occurs or game not found
      */
     getGameByTopicId(topicId) {
-        //Force number coercsion
-        topicId = parseInt(topicId, 10);
-        return this.load().then((data) => {
-            const game = data.filter((candidate) => candidate.topicId === topicId)[0];
-            if (!game) {
-                return Promise.reject('E_NO_GAME');
-            }
-            return new MafiaGame(game, this);
-        });
+        return this.getGameByAlias(`t_${topicId}`);
+    }
+    
+    /**
+     * Retrieve a previously created game by chatId
+     *
+     * @param {number} chatId Chat identifier. Must be an integer
+     * @returns {Promise<MafiaGame>} Resolves to requested game, rejects when read error occurs or game not found
+     */
+    getGameByChatId(chatId) {
+        return this.getGameByAlias(`c_${chatId}`);
     }
 
     /**
@@ -137,14 +139,25 @@ class MafiaDao {
      * @returns {Promise<MafiaGame>} Resolves to requested game, rejects when read error occurs or game not found
      */
     getGameByName(name) {
+        return this.getGameByAlias(name);
+    }
+
+    /**
+     * Retrieve a previously created game by alias
+     *
+     * @param {string} alias Custom game alias
+     * @returns {Promise<MafiaGame>} Resolves to requested game, rejects when read error occurs or game not found
+     */
+    getGameByAlias(alias) {
         return this.load().then((data) => {
-            const game = data.filter((candidate) => candidate.name === name)[0];
+            const game = data.filter((candidate) => candidate.aliases.some((gamealias) => gamealias === alias))[0];
             if (!game) {
                 return Promise.reject('E_NO_GAME');
             }
             return new MafiaGame(game, this);
         });
     }
+    
 
     /**
      * Load data from disk, once.

@@ -6,6 +6,7 @@ const chai = require('chai'),
 //promise library plugins
 require('sinon-as-promised');
 chai.use(require('chai-as-promised'));
+chai.use(require('sinon-chai'));
 
 chai.should();
 
@@ -261,59 +262,41 @@ describe('nouveau dao', () => {
             dao.getGameByName.rejects('E_NO_GAME');
             return dao.getGame('name').should.be.rejectedWith('E_NO_GAME');
         });
+        it('should reject wehn error occurs', () => {
+            dao.getGameByTopicId.rejects('E_OOGY_BOOY_BOO');
+            dao.getGameByName.rejects('E_NO_GAME');
+            return dao.getGame('name').should.be.rejectedWith('E_OOGY_BOOY_BOO');
+        });
     });
     describe('getGameByTopicId()', () => {
         let dao = null;
         beforeEach(() => {
             dao = new MafiaDao();
             dao._data = [];
+            dao.getGameByAlias = sinon.stub().resolves();
         });
-        it('should reject when there are no games', () => {
-            return dao.getGameByTopicId(42).should.be.rejectedWith('E_NO_GAME');
-        });
-        it('should reject when there are no matching games', () => {
-            dao._data.push({
-                topicId: 45
-            });
-            return dao.getGameByTopicId(42).should.be.rejectedWith('E_NO_GAME');
-        });
-        it('should resolve when there is a matching game', () => {
-            const id = Math.floor(Math.random() * 10000);
-            dao._data.push({
-                topicId: id
-            });
-            return dao.getGameByTopicId(id).should.be.fulfilled;
-        });
-        it('should resolve to first matching game', () => {
-            const id = Math.floor(Math.random() * 10000);
-            dao._data.push({
-                topicId: id,
-                id: 0
-            });
-            dao._data.push({
-                topicId: id,
-                id: 1
-            });
-            return dao.getGameByTopicId(id).then((game) => {
-                game._data.id.should.equal(0);
+        it('should proxy to getGameByAlias', () => {
+            const expected = Math.random();
+            dao.getGameByAlias.resolves(expected);
+            return dao.getGameByTopicId(42).then((result) => {
+                dao.getGameByAlias.should.be.calledWith('t_42').once;
+                result.should.equal(expected);
             });
         });
-        it('should resolve to an instance of MafiaGame', () => {
-            const id = Math.floor(Math.random() * 10000);
-            dao._data.push({
-                topicId: id
-            });
-            return dao.getGameByTopicId(id).then((game) => {
-                game.should.be.an.instanceOf(MafiaGame);
-            });
+    });
+    describe('getGameByChatId()', () => {
+        let dao = null;
+        beforeEach(() => {
+            dao = new MafiaDao();
+            dao._data = [];
+            dao.getGameByAlias = sinon.stub().resolves();
         });
-        it('should bind result to this dao', () => {
-            const id = Math.floor(Math.random() * 10000);
-            dao._data.push({
-                topicId: id
-            });
-            return dao.getGameByTopicId(id).then((game) => {
-                game._dao.should.equal(dao);
+        it('should proxy to getGameByAlias', () => {
+            const expected = Math.random();
+            dao.getGameByAlias.resolves(expected);
+            return dao.getGameByChatId(42).then((result) => {
+                dao.getGameByAlias.should.be.calledWith('c_42').once;
+                result.should.equal(expected);
             });
         });
     });
@@ -321,53 +304,70 @@ describe('nouveau dao', () => {
         let dao = null;
         beforeEach(() => {
             dao = new MafiaDao();
+            dao.getGameByAlias = sinon.stub().resolves();
+        });
+        it('should proxy to getGameByAlias()', () => {
+            const name = `alias ${Math.random()}`,
+                expected = `result${Math.random()}`;
+            dao.getGameByAlias.resolves(expected);
+            return dao.getGameByName(name).then((actual) => {
+                dao.getGameByAlias.should.be.calledOnce;
+                dao.getGameByAlias.should.be.calledWith(name).once;
+                actual.should.equal(expected);
+            });
+        });
+    });
+    describe('getGameByAlias()', () => {
+        let dao = null;
+        beforeEach(() => {
+            dao = new MafiaDao();
             dao._data = [];
         });
         it('should reject when there are no games', () => {
-            return dao.getGameByName('foobar').should.be.rejectedWith('E_NO_GAME');
+            return dao.getGameByAlias('foobar').should.be.rejectedWith('E_NO_GAME');
         });
         it('should reject when there are no matching games', () => {
             dao._data.push({
-                name: 'quux'
+                aliases: ['quux']
             });
-            return dao.getGameByName('foobar').should.be.rejectedWith('E_NO_GAME');
+            return dao.getGameByAlias('foobar').should.be.rejectedWith('E_NO_GAME');
         });
         it('should resolve when there is a matching game', () => {
             const name = `name name ${Math.random()}`;
             dao._data.push({
-                name: name
+                aliases: [name]
             });
-            return dao.getGameByName(name).should.be.fulfilled;
+            return dao.getGameByAlias(name).should.be.fulfilled;
         });
         it('should resolve to first matching game', () => {
             const name = `name name ${Math.random()}`;
             dao._data.push({
-                name: name,
+                aliases: [name],
                 id: 0
             });
             dao._data.push({
-                name: name,
+                aliases: [name],
                 id: 1
             });
-            return dao.getGameByName(name).then((game) => {
+            return dao.getGameByAlias(name).then((game) => {
                 game._data.id.should.equal(0);
             });
         });
         it('should resolve to an instance of MafiaGame', () => {
             const name = `name name ${Math.random()}`;
             dao._data.push({
-                name: name
+                aliases: [name]
             });
-            return dao.getGameByName(name).then((game) => {
+            return dao.getGameByAlias(name).then((game) => {
                 game.should.be.an.instanceOf(MafiaGame);
             });
         });
         it('should bind result to this dao', () => {
             const name = `name name ${Math.random()}`;
             dao._data.push({
-                name: name
+                aliases: [name]
             });
-            return dao.getGameByName(name).then((game) => {
+            return dao.getGameByAlias(name).then((game) => {
                 game._dao.should.equal(dao);
             });
         });
