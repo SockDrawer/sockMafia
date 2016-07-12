@@ -278,8 +278,24 @@ describe('nouveau dao', () => {
         it('should proxy to getGameByAlias', () => {
             const expected = Math.random();
             dao.getGameByAlias.resolves(expected);
-            return dao.getGameByTopicId(42).then((result)=>{
+            return dao.getGameByTopicId(42).then((result) => {
                 dao.getGameByAlias.should.be.calledWith('t_42').once;
+                result.should.equal(expected);
+            });
+        });
+    });
+    describe('getGameByChatId()', () => {
+        let dao = null;
+        beforeEach(() => {
+            dao = new MafiaDao();
+            dao._data = [];
+            dao.getGameByAlias = sinon.stub().resolves();
+        });
+        it('should proxy to getGameByAlias', () => {
+            const expected = Math.random();
+            dao.getGameByAlias.resolves(expected);
+            return dao.getGameByChatId(42).then((result) => {
+                dao.getGameByAlias.should.be.calledWith('c_42').once;
                 result.should.equal(expected);
             });
         });

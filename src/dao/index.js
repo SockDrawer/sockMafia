@@ -121,6 +121,16 @@ class MafiaDao {
     getGameByTopicId(topicId) {
         return this.getGameByAlias(`t_${topicId}`);
     }
+    
+    /**
+     * Retrieve a previously created game by chatId
+     *
+     * @param {number} chatId Chat identifier. Must be an integer
+     * @returns {Promise<MafiaGame>} Resolves to requested game, rejects when read error occurs or game not found
+     */
+    getGameByChatId(chatId) {
+        return this.getGameByAlias(`c_${chatId}`);
+    }
 
     /**
      * Retrieve a previously created game by topicId
