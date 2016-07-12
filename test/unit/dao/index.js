@@ -273,53 +273,14 @@ describe('nouveau dao', () => {
         beforeEach(() => {
             dao = new MafiaDao();
             dao._data = [];
+            dao.getGameByAlias = sinon.stub().resolves();
         });
-        it('should reject when there are no games', () => {
-            return dao.getGameByTopicId(42).should.be.rejectedWith('E_NO_GAME');
-        });
-        it('should reject when there are no matching games', () => {
-            dao._data.push({
-                topicId: 45
-            });
-            return dao.getGameByTopicId(42).should.be.rejectedWith('E_NO_GAME');
-        });
-        it('should resolve when there is a matching game', () => {
-            const id = Math.floor(Math.random() * 10000);
-            dao._data.push({
-                topicId: id
-            });
-            return dao.getGameByTopicId(id).should.be.fulfilled;
-        });
-        it('should resolve to first matching game', () => {
-            const id = Math.floor(Math.random() * 10000);
-            dao._data.push({
-                topicId: id,
-                id: 0
-            });
-            dao._data.push({
-                topicId: id,
-                id: 1
-            });
-            return dao.getGameByTopicId(id).then((game) => {
-                game._data.id.should.equal(0);
-            });
-        });
-        it('should resolve to an instance of MafiaGame', () => {
-            const id = Math.floor(Math.random() * 10000);
-            dao._data.push({
-                topicId: id
-            });
-            return dao.getGameByTopicId(id).then((game) => {
-                game.should.be.an.instanceOf(MafiaGame);
-            });
-        });
-        it('should bind result to this dao', () => {
-            const id = Math.floor(Math.random() * 10000);
-            dao._data.push({
-                topicId: id
-            });
-            return dao.getGameByTopicId(id).then((game) => {
-                game._dao.should.equal(dao);
+        it('should proxy to getGameByAlias', () => {
+            const expected = Math.random();
+            dao.getGameByAlias.resolves(expected);
+            return dao.getGameByTopicId(42).then((result)=>{
+                dao.getGameByAlias.should.be.calledWith('t_42').once;
+                result.should.equal(expected);
             });
         });
     });

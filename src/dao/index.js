@@ -119,15 +119,7 @@ class MafiaDao {
      * @returns {Promise<MafiaGame>} Resolves to requested game, rejects when read error occurs or game not found
      */
     getGameByTopicId(topicId) {
-        //Force number coercsion
-        topicId = parseInt(topicId, 10);
-        return this.load().then((data) => {
-            const game = data.filter((candidate) => candidate.topicId === topicId)[0];
-            if (!game) {
-                return Promise.reject('E_NO_GAME');
-            }
-            return new MafiaGame(game, this);
-        });
+        return this.getGameByAlias(`t_${topicId}`);
     }
 
     /**
@@ -155,6 +147,7 @@ class MafiaDao {
             return new MafiaGame(game, this);
         });
     }
+    
 
     /**
      * Load data from disk, once.
