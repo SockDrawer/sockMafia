@@ -392,10 +392,7 @@ class MafiaPlayerController {
 		let gameId, voter;
 		let voteNum = 1;
 
-
-		// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
-		// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
-		const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
+		const targetString = command.args[0] ? command.args[0].replace('@', '') : '';
 
 		return command.getTopic().then((topic) => {
 			gameId = topic.id;
@@ -476,10 +473,9 @@ class MafiaPlayerController {
 					return view.reportError(command, '', text);
 				});
 			}
+			
+			const targetString = command.args[0] ? command.args[0].replace('@', '') : '';
 
-			// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
-			// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
-			const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
 			logDebug('Received vote request from ' + voter + ' for ' + targetString + ' in game ' + gameId);
 
 			return this.doVote(gameId, post.id, voter, targetString, command.line, 1, command);
@@ -895,7 +891,7 @@ class MafiaPlayerController {
 	*/
 	targetHandler (command) {
 		let actor, target, game;
-		const targetString = command.args[1].replace('@', '');
+		const targetString = command.args[1] ? command.args[1].replace('@', '') : '';
 		const gameId = command.args[0];
 		const lookupFunc = parseInt(gameId) > 0 ? this.dao.getGameByTopicId : this.dao.getGameByName;
 

@@ -161,9 +161,7 @@ class MafiaModController {
      * @param {Sockbot.commands.command} command The command object
      */
 	setHandler (command) {
-		// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
-		// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
-		const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
+		const targetString = command.args[0] ? command.args[0].replace('@', '') : '';
 		const property = command.args[1];
 		let gameId, modName, game, mod, target;
 
@@ -362,9 +360,8 @@ class MafiaModController {
 	* @returns {Promise}        A promise that will resolve when the game is ready
 	*/
 	killHandler (command) {
-		// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
-		// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
-		const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
+		const targetString = command.args[0] ? command.args[0].replace('@', '') : '';
+
 		let gameId, modName, game, mod, target;
 
 			return command.getTopic().then((topic) => {
