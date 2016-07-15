@@ -433,20 +433,22 @@ class MafiaModController {
 			game = responses[0];
 			return game.getModerator(responses[1].username);
 		}).then((a) => {
-			const actions = game.getActions('target');
+			const actions = game.getActions('target').filter((action) => {
+				return action.isCurrent;
+			});
 			const data = {
 				scum2: {
 					show: false,
 					actions: []
-				}, 
+				},
 				scum: {
 					show: false,
 					actions: []
-				}, 
+				},
 				other: {
 					show: false,
 					actions: []
-				}, 
+				},
 			};
 			
 			for (let i = 0; i < actions.length; i++) {

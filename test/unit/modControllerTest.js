@@ -1115,7 +1115,8 @@ describe('mod controller', () => {
 				actor: mockUserList.margaret,
 				target: mockUserList.alex,
 				type: 'target',
-				token: 'scum'
+				token: 'scum',
+				isCurrent: true
 			};
 			
 			sandbox.stub(mockGame, 'getActions').returns([mockAction]);

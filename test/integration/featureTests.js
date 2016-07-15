@@ -1324,7 +1324,7 @@ describe('MafiaBot', function () {
 				})
 				.then(() => game.addPlayer('accalia'))
 				.then(() => game.addPlayer('dreikin'))
-				.then(() => game.addPlayer('tehninja'))
+				.then(() => game.addPlayer('tehNinja'))
 				.then(() => game.addModerator('God'))
 				.then(() => game.newDay())
 				.then(() => game.nextPhase()); //Make it night
@@ -1378,6 +1378,13 @@ describe('MafiaBot', function () {
 		});
 		
 		it('Should allow night actions by factions', () => {
+			
+			/* 
+				----------------------------------
+				Move 1: Scum targets Dreikin
+			 	----------------------------------
+			*/
+
 			let command = {
 				args: [3, '@dreikin'],
 				line: '!target 3 @dreikin',
@@ -1390,6 +1397,11 @@ describe('MafiaBot', function () {
 			sandbox.spy(game, 'registerAction');
 			return playerController.targetHandler(command).then(() => {
 
+			/* 
+				----------------------------------
+				Move 2: Scum2 targets Dreikin
+			 	----------------------------------
+			*/
 				command = {
 					args: [3, '@dreikin'],
 					line: '!target 3 @dreikin',
@@ -1402,6 +1414,11 @@ describe('MafiaBot', function () {
 				return playerController.targetHandler(command);
 			}).then(() => {
 
+			/* 
+				----------------------------------
+				Move 3: God lists actions
+			 	----------------------------------
+			*/
 				command = {
 					args: ['3'],
 					line: '!list-night-actions 3',
@@ -1417,6 +1434,11 @@ describe('MafiaBot', function () {
 				output.should.include('**Scum**: Target dreikin');
 				output.should.include('**Scum 2**: Target dreikin');
 				
+			/* 
+				----------------------------------
+				Move 4: TehNinja targets Accalia
+			 	----------------------------------
+			*/
 				command = {
 					args: [3, '@accalia'],
 					line: '!target 3 @accalia',
@@ -1428,6 +1450,12 @@ describe('MafiaBot', function () {
 				
 				return playerController.targetHandler(command);
 			}).then(() => {
+				
+			/* 
+				----------------------------------
+				Move 5: God lists actions
+			 	----------------------------------
+			*/
 				command = {
 					args: ['3'],
 					line: '!list-night-actions 3',
@@ -1441,6 +1469,43 @@ describe('MafiaBot', function () {
 			}).then(() => {
 				const output = command.reply.firstCall.args[0];
 				output.should.include('**Scum**: Target dreikin');
+				output.should.include('**Scum 2**: Target accalia');
+			/*
+				----------------------------------
+				Move 6: Scum targets TehNinja
+			 	----------------------------------
+			*/
+				command = {
+					args: [3, '@tehNinja'],
+					line: '!target 3 @tehNinja',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 3}),
+					getPost: () => Promise.resolve({id: 100}),
+					getUser: () => Promise.resolve({username: 'accalia'}),
+				};
+			
+				return playerController.targetHandler(command);
+			}).then(() => {
+					
+			/*
+				----------------------------------
+				Move 7: God lists actions
+			 	----------------------------------
+			*/
+				command = {
+					args: ['3'],
+					line: '!list-night-actions 3',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 3}),
+					getPost: () => Promise.resolve({id: 103}),
+					getUser: () => Promise.resolve({username: 'God'}),
+				};
+				
+				return modController.listNAHandler(command);
+			}).then(() => {
+				const output = command.reply.firstCall.args[0];
+				output.should.not.include('**Scum**: Target dreikin');
+				output.should.include('**Scum**: Target tehNinja');
 				output.should.include('**Scum 2**: Target accalia');
 			});
 		});
