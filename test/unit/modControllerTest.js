@@ -526,6 +526,152 @@ describe('mod controller', () => {
 		});
 	});
 
+	describe('add()', () => {
+		let mockGame, mockUser, mockdao, modController;
+		
+		beforeEach(() => {
+			mockUser = {
+				username: 'God',
+				getPlayerProperty: () => [],
+				isModerator: true
+			};
+
+			mockGame = {
+				addTopic :  () => Promise.resolve(),
+				addChat :  () => Promise.resolve(),
+				getModerator: () => Promise.resolve()
+			};
+
+
+			mockdao = {
+				getGameByTopicId: () => Promise.resolve(mockGame),
+				getGameByName: () => Promise.resolve(mockGame)
+			};
+
+			modController = new ModController(mockdao);
+		});
+		
+		it('Should reject non-mods', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: [
+					'thread',
+					'123',
+					'testMafia'
+				]
+			};
+
+			sandbox.stub(mockGame, 'getModerator').throws('E_NOMOD');
+
+
+			return modController.addHandler(command).then( () => {
+				view.reportError.calledWith(command).should.be.true;
+				const output = view.reportError.getCall(0).args[2].toString();
+
+				output.should.include('You are not a moderator');
+			});
+		});
+		
+		it('Should accept terse format', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: [
+					'thread',
+					'123',
+					'testMafia'
+				]
+			};
+			
+			sandbox.spy(mockdao, 'getGameByName');
+			
+			return modController.addHandler(command).then( () => {
+				mockdao.getGameByName.calledWith('testMafia').should.be.true;
+			});
+		});
+		
+		it('Should accept friendly format', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: [
+					'thread',
+					'123',
+					'in',
+					'testMafia'
+				]
+			};
+			
+			sandbox.spy(mockdao, 'getGameByName');
+			
+			return modController.addHandler(command).then( () => {
+				mockdao.getGameByName.calledWith('testMafia').should.be.true;
+			});
+		});
+		
+		it('Should add threads', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: [
+					'thread',
+					'123',
+					'testMafia'
+				]
+			};
+			
+			sandbox.spy(mockGame, 'addTopic');
+			
+			return modController.addHandler(command).then( () => {
+				mockGame.addTopic.called.should.be.true;
+			});
+		});
+		
+		it('Should add chats', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: [
+					'chat',
+					'123',
+					'testMafia'
+				]
+			};
+			
+			sandbox.spy(mockGame, 'addChat');
+			
+			return modController.addHandler(command).then( () => {
+				mockGame.addChat.called.should.be.true;
+			});
+		});
+		
+		it('Should not add cats', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: [
+					'cat',
+					'123',
+					'testMafia'
+				]
+			};
+			
+			sandbox.spy(mockGame, 'addChat');
+			sandbox.spy(mockGame, 'addTopic');
+			
+			return modController.addHandler(command).then( () => {
+				mockGame.addChat.called.should.be.false;
+				mockGame.addTopic.called.should.be.false;
+				
+				view.reportError.calledWith(command).should.be.true;
+				const output = view.reportError.getCall(0).args[2].toString();
+
+				output.should.include('I don\'t know how to add a "cat".');
+			});
+		});
+		
+	});
 	describe('set()', () => {
 
 		let mockGame, mockUser, mockTarget, mockdao, modController;

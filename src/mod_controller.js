@@ -120,7 +120,40 @@ class MafiaModController {
         forum.Commands.add('new-day', 'move on to a new day (mod only)', this.dayHandler.bind(this));
         forum.Commands.add('next-phase', 'move on to the next phase (mod only)', this.phaseHandler.bind(this));
         forum.Commands.add('list-night-actions', 'List night actions submitted (mod only)', this.listNAHandler.bind(this));
+        forum.Commands.add('add', 'Add a thread or chat to the game (mod only)', this.addHandler.bind(this));
     }
+    
+    addHandler (command) {
+		const type = command.args[0];
+		const num = command.args[1];
+		const name = command.args[2].toLowerCase() === 'in' ? command.args[3] : command.args[2];
+		
+		let game;
+		
+		return this.dao.getGameByName(name).then((g) => {
+			game = g;
+			return command.getUser();
+		}).then((user) => {
+			logDebug('Received add request from ' + user.username + ' for ' + num + ' in game ' + name);
+			try {
+				game.getModerator(user.username);
+			} catch (_) {
+				throw new Error('You are not a moderator!');
+			}
+		}).then(() => {
+			if (type.toLowerCase() === 'thread') {
+				game.addTopic(num);
+			} else if (type.toLowerCase() === 'chat') {
+				game.addChat(num);
+			} else {
+				throw new Error(`I don't know how to add a "${type}". Try a "thread" or a "chat"?`);
+			}
+		})
+		.catch((err) => {
+			logRecoveredError('Error when setting property: ' + err);
+			view.reportError(command, 'Error setting player property: ', err);
+		});
+	}
 
     /**
      * Set: set a prperty for a player.
