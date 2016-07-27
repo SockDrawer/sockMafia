@@ -401,6 +401,10 @@ class MafiaPlayerController {
 	voteHandler (command) {
 		let gameId, voter, game;
 		let voteNum = 1;
+		
+		if (command.args[0] && command.args[0].toLowerCase() === 'for') {
+			command.args.shift();
+		}
 
 		const targetString = command.args[0] ? command.args[0].replace('@', '') : '';
 

@@ -458,6 +458,40 @@ describe('player controller', () => {
 					args[6].should.deep.equal(command); //Command
 				});
 			});
+			
+			it('Should allow "vote for" syntax', () => {
+				const command = {
+					getTopic: () => Promise.resolve({
+						id: 200
+					}),
+					getUser: () => Promise.resolve(mockVoter),
+					getPost: () => Promise.resolve({
+						id: 5
+					}),
+					reply: () => Promise.resolve(),
+					args: ['for', 'Sadie'],
+					line: '!vote for Sadie'
+				};
+
+				const resolution = 'Some resolution value';
+
+				sandbox.stub(playerController, 'doVote').resolves(resolution);
+				sandbox.spy(command, 'reply');
+				return playerController.voteHandler(command).then((value) => {
+					value.should.equal(resolution);
+
+					playerController.doVote.called.should.be.true;
+					const args = playerController.doVote.firstCall.args;
+
+					args[0].should.equal(200); //Game ID
+					args[1].should.equal(5); //Post ID
+					args[2].should.equal('Lars'); //Voter
+					args[3].should.equal('Sadie'); //Target string
+					args[4].should.equal('!vote for Sadie'); //Input
+					args[5].should.equal(1); //Vote number
+					args[6].should.deep.equal(command); //Command
+				});
+			});
 
 			it('Should enable doublevotes', () => {
 				const command = {
