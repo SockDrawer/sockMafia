@@ -220,6 +220,18 @@ class MafiaPlayerController {
 		}
 		return Promise.resolve();
 	}
+	
+	getGame (command) {
+		return command.getTopic().then((topic) => {
+			if (topic.id === -1) {
+				//Command came from a chat
+				return this.dao.getGameByChatId(command.parent.ids[0]);
+			} else {
+				return this.dao.getGameByTopicId(topic.id);
+			}
+		});
+
+	}
 
 	/**
 	  * nolynch: Vote to not lynch this day
@@ -243,7 +255,15 @@ class MafiaPlayerController {
 
 
 		/*Validation*/
-		return command.getTopic().then((topic) => {
+		return this.getGame(command)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + game);
+			throw(E_NOGAME);
+		})
+		.then((g) => {
+			game = g;
+			return command.getTopic();
+		}).then((topic) => {
 			gameId = topic.id;
 			return command.getUser();
 		}).then((user) => {
@@ -252,13 +272,6 @@ class MafiaPlayerController {
 			return command.getPost();
 		}).then((p) => {
 			post = p.id;
-			return this.dao.getGameByTopicId(gameId).catch(() => {
-				logWarning('Ignoring message in nonexistant game thread ' + game);
-				throw(E_NOGAME);
-			});
-		})
-		.then((g) => {
-			game = g;
 			try {
 				voter = game.getPlayer(actor);
 			} catch (_) {
@@ -310,8 +323,13 @@ class MafiaPlayerController {
 
 		/*Validation*/
 
-		return command.getTopic().then((topic) => {
-			gameId = topic.id;
+		return this.getGame(command)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + game);
+			throw(E_NOGAME);
+		})
+		.then((g) => {
+			game = g;
 			return command.getUser();
 		}).then((user) => {
 			actor = user.username;
@@ -319,13 +337,6 @@ class MafiaPlayerController {
 			return command.getPost();
 		}).then((p) => {
 			post = p.id;
-			return this.dao.getGameByTopicId(gameId).catch(() => {
-				logWarning('Ignoring message in nonexistant game thread ' + game);
-				throw(E_NOGAME);
-			});
-		})
-		.then((g) => {
-			game = g;
 			try {
 				voter = game.getPlayer(actor);
 			} catch (_) {
@@ -389,18 +400,24 @@ class MafiaPlayerController {
 	* @returns {Promise}        A promise that will resolve when the game is ready
 	*/
 	voteHandler (command) {
-		let gameId, voter;
+		let gameId, voter, game;
 		let voteNum = 1;
 
 		const targetString = command.args[0] ? command.args[0].replace('@', '') : '';
 
-		return command.getTopic().then((topic) => {
+		return this.getGame(command)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + game);
+			throw (E_NOGAME);
+		})
+		.then((g) => {
+			game = g;
+			return command.getTopic();
+		}).then((topic) => {
 			gameId = topic.id;
 			return command.getUser();
 		}).then((user) => {
 			voter = user.username;
-			return this.dao.getGameByTopicId(gameId);
-		}).then((game) => {
 			return game.getPlayer(voter);
 		}).then((player) => {
 			if (player.hasProperty('doublevoter')) {
@@ -486,11 +503,11 @@ class MafiaPlayerController {
 	doVote (gameId, post, actor, target, input, voteNum, command) {
 		let voter, votee, game;
 
-		return this.dao.getGameByTopicId(gameId)
-			.catch(() => {
-				logWarning('Ignoring message in nonexistant game thread ' + gameId);
-				throw (E_NOGAME);
-			})
+		return this.getGame(command)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + game);
+			throw (E_NOGAME);
+		})
 		.then((g) => {
 			game = g;
 
@@ -558,41 +575,42 @@ class MafiaPlayerController {
 	joinHandler(command) {
 		let game, gameId, player;
 
-		return command.getTopic().then((topic) => {
-				gameId = topic.id;
-				return this.dao.getGameByTopicId(gameId).catch(() => {
-					logWarning('Ignoring message in nonexistant game thread ' + game);
-					throw (E_NOGAME);
-				});
-			})
-			.then((g) => {
-				game = g;
-				return command.getUser();
-			}).then((u) => {
-				player = u.username;
-				logDebug('Received join request from ' + player + ' in game ' + gameId);
+		return this.getGame(command)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + game);
+			throw (E_NOGAME);
+		})
+		.then((g) => {
+			game = g;
+			return command.getTopic();
+		}).then((topic) => {
+			gameId = topic.id;
+			return command.getUser();
+		}).then((u) => {
+			player = u.username;
+			logDebug('Received join request from ' + player + ' in game ' + gameId);
 
-				if (game.isActive) {
-					return Promise.reject('Cannot join game in progress.');
-				}
-				if (game.allPlayers.map((p) => p.username).indexOf(player) >= 0) {
-					return Promise.reject('You are already in this game, @' + player + '!');
-				}
-				return game.addPlayer(player);
-			})
-			.then(() => {
-				view.respond(command, 'Welcome to the game, @' + player);
-				logDebug('Added ' + player);
-				return true;
-			})
-			.catch((err) => {
-				if (err === E_NOGAME) {
-					return Promise.resolve();
-				}
+			if (game.isActive) {
+				return Promise.reject('Cannot join game in progress.');
+			}
+			if (game.allPlayers.map((p) => p.username).indexOf(player) >= 0) {
+				return Promise.reject('You are already in this game, @' + player + '!');
+			}
+			return game.addPlayer(player);
+		})
+		.then(() => {
+			view.respond(command, 'Welcome to the game, @' + player);
+			logDebug('Added ' + player);
+			return true;
+		})
+		.catch((err) => {
+			if (err === E_NOGAME) {
+				return Promise.resolve();
+			}
 
-				view.reportError(command, 'Error when adding to game: ', err);
-				logRecoveredError('Join failed ' + err);
-			});
+			view.reportError(command, 'Error when adding to game: ', err);
+			logRecoveredError('Join failed ' + err);
+		});
 	}
 
 	/**
@@ -610,55 +628,56 @@ class MafiaPlayerController {
 	listPlayersHandler (command) {
 		let game, id;
 
-		return command.getTopic().then((topic) => {
-				id = topic.id;
-				return this.dao.getGameByTopicId(id).catch(() => {
-					logWarning('Ignoring message in nonexistant game thread ' + game);
-					throw (E_NOGAME);
+		return this.getGame(command)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + game);
+			throw (E_NOGAME);
+		})
+		.then((g) => {
+			game = g;
+			logDebug('Received list request in game ' + id);
+			return command.getTopic();
+		}).then((topic) => {
+			id = topic.id;
+		
+			//Store a reference otherwise it'll shuffle every time we dip
+			const alive = game.livePlayers;
+			const mods =  game.moderators;
+
+			const numLiving = alive.length;
+			const numMods = mods.length;
+
+			let output = '## Player List\n';
+			output += '### Living:\n';
+			if (numLiving <= 0) {
+				output += 'Nobody! Aren\'t you special?\n';
+			} else {
+				for (let i = 0; i < numLiving; i++) {
+					output += '- ' + alive[i].username + '\n';
+				}
+			}
+
+			output += '### Mod(s):\n';
+			if (numMods <= 0) {
+				output += 'None. Weird.';
+			} else {
+				mods.forEach((mod) => {
+					output += '- ' + mod.username + '\n';
 				});
-			})
-			.then((g) => {
-				logDebug('Received list request in game ' + id);
-				game = g;
+			}
 
-				//Store a reference otherwise it'll shuffle every time we dip
-				const alive = game.livePlayers;
-				const mods =  game.moderators;
-
-				const numLiving = alive.length;
-				const numMods = mods.length;
-
-				let output = '## Player List\n';
-				output += '### Living:\n';
-				if (numLiving <= 0) {
-					output += 'Nobody! Aren\'t you special?\n';
-				} else {
-					for (let i = 0; i < numLiving; i++) {
-						output += '- ' + alive[i].username + '\n';
-					}
-				}
-
-				output += '### Mod(s):\n';
-				if (numMods <= 0) {
-					output += 'None. Weird.';
-				} else {
-					mods.forEach((mod) => {
-						output += '- ' + mod.username + '\n';
-					});
-				}
-
-				view.respond(command, output);
+			view.respond(command, output);
+			return Promise.resolve();
+		})
+		.catch((err) => {
+			if (err === E_NOGAME) {
 				return Promise.resolve();
-			})
-			.catch((err) => {
-				if (err === E_NOGAME) {
-					return Promise.resolve();
-				}
+			}
 
-				view.reportError(command, 'Error resolving list: ', err);
-				logRecoveredError('List failed ' + err);
-				return Promise.resolve();
-			});
+			view.reportError(command, 'Error resolving list: ', err);
+			logRecoveredError('List failed ' + err);
+			return Promise.resolve();
+		});
 	}
 
 	/**
@@ -677,65 +696,65 @@ class MafiaPlayerController {
 	listAllPlayersHandler(command) {
 		let game, id;
 
-		return command.getTopic().then((topic) => {
-				id = topic.id;
-				return this.dao.getGameByTopicId(id).catch(() => {
-					logWarning('Ignoring message in nonexistant game thread ' + game);
-					throw (E_NOGAME);
+		return this.getGame(command)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + game);
+			throw (E_NOGAME);
+		})
+		.then((g) => {
+			game = g;
+			logDebug('Received list request in game ' + id);
+			return command.getTopic();
+		}).then((topic) => {
+			id = topic.id;
+			//Store a reference otherwise it'll shuffle every time we dip
+			const alive = game.livePlayers;
+			const mods =  game.moderators;
+			const dead = game.deadPlayers;
+
+			const numLiving = alive.length;
+			const numDead = dead.length;
+			const numMods = mods.length;
+
+			let output = '## Player List\n';
+			output += '### Living:\n';
+			if (numLiving <= 0) {
+				output += 'Nobody! Aren\'t you special?\n';
+			} else {
+				for (let i = 0; i < numLiving; i++) {
+					output += '- ' + alive[i].username + '\n';
+				}
+			}
+
+			output += '\n### Dead:\n';
+			if (numDead <= 0) {
+				output += 'Nobody! Aren\'t you special?\n';
+			} else {
+				for (let i = 0; i < numDead; i++) {
+					output += '- ' + dead[i].username + '\n';
+				}
+			}
+
+			output += '### Mod(s):\n';
+			if (numMods <= 0) {
+				output += 'None. Weird.';
+			} else {
+				mods.forEach((mod) => {
+					output += '- ' + mod.username + '\n';
 				});
-			})
-			.then((g) => {
-				logDebug('Received list request in game ' + id);
-				game = g;
+			}
 
-				//Store a reference otherwise it'll shuffle every time we dip
-				const alive = game.livePlayers;
-				const mods =  game.moderators;
-				const dead = game.deadPlayers;
-
-				const numLiving = alive.length;
-				const numDead = dead.length;
-				const numMods = mods.length;
-
-				let output = '## Player List\n';
-				output += '### Living:\n';
-				if (numLiving <= 0) {
-					output += 'Nobody! Aren\'t you special?\n';
-				} else {
-					for (let i = 0; i < numLiving; i++) {
-						output += '- ' + alive[i].username + '\n';
-					}
-				}
-
-				output += '\n### Dead:\n';
-				if (numDead <= 0) {
-					output += 'Nobody! Aren\'t you special?\n';
-				} else {
-					for (let i = 0; i < numDead; i++) {
-						output += '- ' + dead[i].username + '\n';
-					}
-				}
-
-				output += '### Mod(s):\n';
-				if (numMods <= 0) {
-					output += 'None. Weird.';
-				} else {
-					mods.forEach((mod) => {
-						output += '- ' + mod.username + '\n';
-					});
-				}
-
-				view.respond(command, output);
+			view.respond(command, output);
+			return Promise.resolve();
+		})
+		.catch((err) => {
+			if (err === E_NOGAME) {
 				return Promise.resolve();
-			})
-			.catch((err) => {
-				if (err === E_NOGAME) {
-					return Promise.resolve();
-				}
+			}
 
-				view.reportError(command, 'Error resolving list: ', err);
-				logRecoveredError('List failed ' + err);
-			});
+			view.reportError(command, 'Error resolving list: ', err);
+			logRecoveredError('List failed ' + err);
+		});
 	}
 
 	/**
@@ -766,89 +785,97 @@ class MafiaPlayerController {
 
 
 		let game, id;
-		return command.getTopic().then((topic) => {
-				id = topic.id;
-				return this.dao.getGameByTopicId(id).catch(() => {
-					logWarning('Ignoring message in nonexistant game thread ' + game);
-					throw (E_NOGAME);
-				});
-			})
-			.then((g) => {
-				game = g;
-
-				logDebug('Received list request in game ' + id);
-
-				data.toExecute = this.getNumVotesRequired(game);
-				data.day = game.day;
-
-				const phaseEnd = game.getValue('phaseEnd');
-				if (phaseEnd) {
-					data.endTime = phaseEnd;
-					data.showEndTime = true;
-				} else {
-					data.showEndTime = false;
-				}
-
-				const actions = game.getActions(); //default settings are fine
-				const currentlyVoting = [];
-
-				actions.forEach((row) => {
-					if (row.action !== 'vote') {
-						return;
-					}
-
-					let votee = row.target ? row.target.username : undefined;
-					const voter = row.actor.username;
-
-					const mod = this.getVoteModifierForTarget(game, row.target);
-
-					if (!votee) {
-						votee = 'No lynch';
-					}
-					if (!data.votes.hasOwnProperty(votee)) {
-						data.votes[votee] = {
-							target: votee,
-							num: 0,
-							percent: 0,
-							votes: [],
-							mod: mod
-						};
-					}
-
-					if (row.isCurrent) {
-						data.votes[votee].num++;
-						data.votes[votee].percent = (data.votes[votee].num / data.toExecute) * 100;
-						currentlyVoting.push(voter);
-					}
-
-					/*data.votes[votee].votes.push({
-						voter: voter,
-						retracted: !row.isCurrent,
-						retractedAt: row.revokedId,
-						post: row.postId,
-						game: id
-					});*/
-
-					data.votes[votee].votes.push(row);
-				});
-
-				game.livePlayers.forEach((p) => {
-					if (currentlyVoting.indexOf(p.username) === -1) {
-						data.notVoting.push(p.username);
-						data.numNotVoting++;
-					}
-				});
-
-				data.numPlayers = game.livePlayers.length;
-				return view.respondWithTemplate('/templates/voteTemplate.handlebars', data, command);
-			})
-			.catch((err) => {
-				if (err === E_NOGAME) {
-					return Promise.resolve();
-				}
-				view.reportError(command, 'Error resolving list: ', err);
-				logRecoveredError('List failed ' + err);
+		return this.getGame(command)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + game);
+			throw (E_NOGAME);
+		})
+		.then((g) => {
+			game = g;
+			return command.getTopic();
+		}).then((topic) => {
+			id = topic.id;
+			return this.dao.getGameByTopicId(id).catch(() => {
+				logWarning('Ignoring message in nonexistant game thread ' + game);
+				throw (E_NOGAME);
 			});
+		})
+		.then((g) => {
+			game = g;
+
+			logDebug('Received list request in game ' + id);
+
+			data.toExecute = this.getNumVotesRequired(game);
+			data.day = game.day;
+
+			const phaseEnd = game.getValue('phaseEnd');
+			if (phaseEnd) {
+				data.endTime = phaseEnd;
+				data.showEndTime = true;
+			} else {
+				data.showEndTime = false;
+			}
+
+			const actions = game.getActions(); //default settings are fine
+			const currentlyVoting = [];
+
+			actions.forEach((row) => {
+				if (row.action !== 'vote') {
+					return;
+				}
+
+				let votee = row.target ? row.target.username : undefined;
+				const voter = row.actor.username;
+
+				const mod = this.getVoteModifierForTarget(game, row.target);
+
+				if (!votee) {
+					votee = 'No lynch';
+				}
+				if (!data.votes.hasOwnProperty(votee)) {
+					data.votes[votee] = {
+						target: votee,
+						num: 0,
+						percent: 0,
+						votes: [],
+						mod: mod
+					};
+				}
+
+				if (row.isCurrent) {
+					data.votes[votee].num++;
+					data.votes[votee].percent = (data.votes[votee].num / data.toExecute) * 100;
+					currentlyVoting.push(voter);
+				}
+
+				/*data.votes[votee].votes.push({
+					voter: voter,
+					retracted: !row.isCurrent,
+					retractedAt: row.revokedId,
+					post: row.postId,
+					game: id
+				});*/
+
+				data.votes[votee].votes.push(row);
+			});
+
+			game.livePlayers.forEach((p) => {
+				if (currentlyVoting.indexOf(p.username) === -1) {
+					data.notVoting.push(p.username);
+					data.numNotVoting++;
+				}
+			});
+
+			data.numPlayers = game.livePlayers.length;
+			return view.respondWithTemplate('/templates/voteTemplate.handlebars', data, command);
+		})
+		.catch((err) => {
+			if (err === E_NOGAME) {
+				return Promise.resolve();
+			}
+			view.reportError(command, 'Error resolving list: ', err);
+			logRecoveredError('List failed ' + err);
+		});
 	}
 
 	/**
@@ -893,13 +920,18 @@ class MafiaPlayerController {
 		let actor, target, game;
 		const targetString = command.args[1] ? command.args[1].replace('@', '') : '';
 		const gameId = command.args[0];
-		const lookupFunc = parseInt(gameId) > 0 ? this.dao.getGameByTopicId : this.dao.getGameByName;
 
-		return Promise.all([lookupFunc.call(this.dao, gameId), command.getUser()])
-		.then((data) => {
-			game = data[0]; 
+		return this.getGame(command)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + game);
+			throw (E_NOGAME);
+		})
+		.then((g) => {
+			game = g;
+			return command.getUser();
+		}).then((user) => {
 			try {
-				actor = game.getPlayer(data[1].username);
+				actor = game.getPlayer(user.username);
 			} catch (e) {
 				throw new Error('You are not playing in game ' + gameId);
 			}

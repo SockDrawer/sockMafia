@@ -29,6 +29,63 @@ describe('player controller', () => {
 		sandbox.restore();
 	});
 
+	describe('getGame', () => {
+		let mockGame, mockdao, playerController; 
+		
+		beforeEach(() => {
+			mockGame = {
+				getAllPlayers: () => 1,
+				killPlayer: () => 1,
+				nextPhase: () => 1,
+				registerAction: () => Promise.resolve('Ok'),
+				topicId: 12,
+				isActive: true,
+				isDay: true
+			};
+
+			mockdao = {
+				getGameByTopicId: () => Promise.resolve(mockGame),
+				getGameByChatId: () => Promise.resolve(mockGame)
+			};
+			
+			playerController = new PlayerController(mockdao, null);
+		});
+		
+		it('should get a game by chat id', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: -1}),
+				parent: {
+					ids: [12]
+				},
+				args: [
+				]
+			};
+			sandbox.spy(mockdao, 'getGameByTopicId');
+			sandbox.spy(mockdao, 'getGameByChatId');
+			return playerController.getGame(command).then((game) => {
+				game.should.deep.equal(mockGame);
+				mockdao.getGameByChatId.calledWith(12).should.be.true;
+			});
+		});
+		
+		it('should get a game by topic id', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 1234}),
+				parent: {
+					ids: [12]
+				},
+				args: [
+				]
+			};
+			sandbox.spy(mockdao, 'getGameByTopicId');
+			sandbox.spy(mockdao, 'getGameByChatId');
+			return playerController.getGame(command).then((game) => {
+				game.should.deep.equal(mockGame);
+				mockdao.getGameByTopicId.calledWith(1234).should.be.true;
+			});
+		});
+		
+	});
 
 	describe('Vote helpers', () => {
 		let mockGame, mockUser, mockTarget, playerController;
@@ -436,7 +493,10 @@ describe('player controller', () => {
 				};
 
 				command = {
-					reply: sandbox.stub()
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({
+						id: 200
+					})
 				};
 
 				playerController = new PlayerController(mockdao, null);
@@ -1595,37 +1655,10 @@ describe('player controller', () => {
 				input: '!target @noLunch'
 			};
 				
-			sandbox.spy(mockdao, 'getGameByTopicId');
-			sandbox.spy(mockdao, 'getGameByName');
-			
+			sandbox.spy(playerController, 'getGame');
+
 			return playerController.targetHandler(command).then(() => {
-				mockdao.getGameByName.called.should.be.false;
-				mockdao.getGameByTopicId.called.should.be.true;
-				mockdao.getGameByTopicId.calledWith('123').should.be.true;
-			});
-		});
-		
-		it('Should search for the game by name', () => {
-			const command = {
-				getTopic: () => Promise.resolve({
-					id: 12345
-				}),
-				getPost: () => Promise.resolve({
-					id: 42
-				}),
-				getUser: () => Promise.resolve({
-					username: 'tehNinja'
-				}),
-				args: ['testMafia', '@noLunch'],
-				input: '!target @noLunch'
-			};
-				
-			sandbox.spy(mockdao, 'getGameByTopicId');
-			sandbox.spy(mockdao, 'getGameByName');
-			return playerController.targetHandler(command).then(() => {
-				mockdao.getGameByName.called.should.be.true;
-				mockdao.getGameByTopicId.called.should.be.false;
-				mockdao.getGameByName.calledWith('testMafia').should.be.true;
+				playerController.getGame.called.should.be.true;
 			});
 		});
 		
