@@ -97,6 +97,14 @@ function advance(game, type, endTime, command) {
 }
 
 /**
+ * isNumeric
+ * @returns true if the input is a number, false if not
+ */
+function isNumeric(input) {
+	return /^\d+$/.test(input);
+};
+
+/**
  * The controller class for Mafiabot
  */
 class MafiaModController {
@@ -124,10 +132,6 @@ class MafiaModController {
     }
     
     getGame (command) {
-		const isNumeric = (input) => {
-			return /^\d+$/.test(input);
-		};
-		
 		//First check for 'in soandso' syntax
 		for (let i = 0; i < command.args.length; i++) {
 			if (command.args[i].toLowerCase() === 'in' && command.args[i + 1]) {
@@ -151,36 +155,82 @@ class MafiaModController {
 	}
     
     addHandler (command) {
-		const type = command.args[0];
-		const num = command.args[1];
-		const name = command.args[2].toLowerCase() === 'to' ? command.args[3] : command.args[2];
+		if (command.args.length < 2) {
+			const text = 'Incorrect syntax. Usage: !add [thread|chat] 123 testMafia or !add [thread|chat] 123 to testMafia or !add this to testMafia';
+			logRecoveredError('Error when setting property: ' + text);
+			view.reportError(command, 'Error setting player property: ', text);
+			return Promise.resolve();
+		}
+	
+		/*
+		Terse mode:					Terse this mode:
+		args = {					args = {
+			'thread',					'this',
+			'123',						'testMafia'
+			'testMafia'				}
+		}
 		
+		Verbose mode:				Verbose this mode:
+		args = {					args = {
+			'thread',					'this',
+			'123',						'to',
+			'to'						'testMafia'
+			'testMafia'				}
+		}
+		*/
+	
 		let game;
+		const thisMode = command.args[0].toLowerCase() === 'this';
+		const itemId = thisMode ? '' : command.args[1];
+		let gameId, user;
+
+		if (thisMode) {
+			gameId = command.args[1];
+			if (gameId.toLowerCase() === 'to') {
+				gameId = command.args[2];
+			}
+		} else {
+			gameId = command.args[2];
+			if (gameId.toLowerCase() === 'to') {
+				gameId = command.args[3];
+			}
+		}
 		
-		return this.dao.getGameByName(name).then((g) => {
+		return command.getUser().then((u) => {
+			user = u;
+			
+			if (isNumeric(gameId)) {
+				return this.dao.getGameByTopicId(gameId);
+			} else {
+				return this.dao.getGameByName(gameId);
+			}
+		}).then((g) => {
 			game = g;
-			return command.getUser();
-		}).then((user) => {
-			logDebug('Received add request from ' + user.username + ' for ' + num + ' in game ' + name);
+			logDebug('Received add thread/chat request in ' + game.name + ' from ' + user.username);
 			try {
 				game.getModerator(user.username);
 			} catch (_) {
 				throw new Error('You are not a moderator!');
 			}
+			
 		}).then(() => {
-			if (type.toLowerCase() === 'thread') {
-				game.addTopic(num);
-			} else if (type.toLowerCase() === 'chat') {
-				game.addChat(num);
-			} else if (type.toLowerCase() === 'this') {
-				return command.getTopic().then((topic) => {
-					if (topic.id === -1) {
-						//Command came from a chat
-						game.addChat(command.parent.ids[0]);
-					} else {
-						game.addTopic(topic.id);
-					}
-				});
+			
+			if (thisMode) {
+				const topicId = command.parent.ids.topic;
+				
+				if (topicId === -1) {
+					//Command came from a chat
+					return game.addChat(command.parent.ids.chat);
+				} else {
+					return game.addTopic(topicId);
+				}
+			}
+		
+			const type = command.args[0];
+			if ( type === 'thread') {
+				game.addTopic(itemId);
+			} else if ( type === 'chat') {
+				game.addChat(itemId);
 			} else {
 				throw new Error(`I don't know how to add a "${type}". Try a "thread" or a "chat"?`);
 			}
@@ -222,6 +272,10 @@ class MafiaModController {
 				return mod.isModerator ? Promise.resolve() : Promise.reject('You are not a moderator');
 			})
 			.then(() => {
+				if (command.args.length < 2) {
+					throw new Error('Incorrect syntax. Usage: !set [playerName] [property] or !set [playername] [property] in testMafia');
+				}
+			
 				if (!Utils.Enums.validProperties.contains(property.toLowerCase())) {
 					return Promise.reject('Property not valid.\n Valid properties: ' + Utils.Enums.validProperties.join(', '));
 				}
@@ -405,6 +459,10 @@ class MafiaModController {
 				return mod.isModerator ? Promise.resolve() : Promise.reject('You are not a moderator');
 			})
 			.then(() => {
+				if (targetString === '') {
+					throw new Error('Please select a target to kill');
+				}
+				
 				try {
 					target = game.getPlayer(targetString);
 				} catch (_) {

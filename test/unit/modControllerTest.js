@@ -166,6 +166,23 @@ describe('mod controller', () => {
 			});
 		});
 
+		it('Should require 1 arg', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: []
+			};
+
+			sandbox.spy(mockGame, 'killPlayer');
+
+			return modController.killHandler(command).then( () => {
+				mockGame.killPlayer.called.should.be.false;
+				view.reportError.called.should.be.true;
+				const output = view.reportError.getCall(0).args[2];
+				output.toString().should.include('Please select a target to kill');
+			});
+		});
+		
 		it('Should not kill dead players', () => {
 			const command = {
 				getTopic: () => Promise.resolve({id: 12345}),
@@ -655,6 +672,20 @@ describe('mod controller', () => {
 			});
 		});
 		
+		it('Should require 3 arguments', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: ['huh?']
+			};
+			
+			sandbox.spy(mockdao, 'getGameByName');
+			
+			return modController.addHandler(command).then( () => {
+				view.reportError.called.should.be.true;
+			});
+		});
+		
 		it('Should accept terse format', () => {
 			const command = {
 				getTopic: () => Promise.resolve({id: 12345}),
@@ -759,9 +790,13 @@ describe('mod controller', () => {
 				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
 					'this',
-					'123',
 					'testMafia'
-				]
+				],
+				parent : {
+					ids: {
+						topic: 12345
+					}
+				}
 			};
 			
 			sandbox.spy(mockGame, 'addChat');
@@ -776,14 +811,67 @@ describe('mod controller', () => {
 			const command = {
 				getTopic: () => Promise.resolve({id: -1}),
 				getUser: () => Promise.resolve({username: 'God'}),
-				parent: {
-					ids: [12]	
+				parent : {
+					ids: {
+						topic: -1,
+						chat: 12
+					}
 				},
 				args: [
 					'this',
-					'123',
 					'testMafia'
 				]
+			};
+			
+			sandbox.spy(mockGame, 'addChat');
+			sandbox.spy(mockGame, 'addTopic');
+			
+			return modController.addHandler(command).then( () => {
+				mockGame.addChat.called.should.be.true;
+				
+				mockGame.addChat.firstCall.args[0].should.equal(12);
+			});
+		});
+		
+		it('Should add "this" when requested from a thread (natural syntax)', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: [
+					'this',
+					'to',
+					'testMafia'
+				],
+				parent : {
+					ids: {
+						topic: 12345
+					}
+				}
+			};
+			
+			sandbox.spy(mockGame, 'addChat');
+			sandbox.spy(mockGame, 'addTopic');
+			
+			return modController.addHandler(command).then( () => {
+				mockGame.addTopic.calledWith(12345).should.be.true;
+			});
+		});
+		
+		it('Should add "this" when requested from a chat (natural syntax)', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: -1}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: [
+					'this',
+					'to',
+					'testMafia'
+				],
+				parent : {
+					ids: {
+						topic: -1,
+						chat: 12
+					}
+				}
 			};
 			
 			sandbox.spy(mockGame, 'addChat');
@@ -877,6 +965,21 @@ describe('mod controller', () => {
 				const output = view.reportError.getCall(0).args[2].toString();
 
 				output.should.include('Target not in game');
+			});
+		});
+		
+		it('Should require 2 arguments', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: []
+			};
+
+			return modController.setHandler(command).then( () => {
+				view.reportError.calledWith(command).should.be.true;
+				const output = view.reportError.getCall(0).args[2].toString();
+
+				output.should.include('Incorrect syntax');
 			});
 		});
 
