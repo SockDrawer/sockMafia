@@ -339,6 +339,13 @@ describe('nouveau dao', () => {
             });
             return dao.getGameByAlias(name).should.be.fulfilled;
         });
+        it('should resolve when there is a case safematching game', () => {
+            const name = `name name ${Math.random()}`;
+            dao._data.push({
+                aliases: [name]
+            });
+            return dao.getGameByAlias(name.toUpperCase()).should.be.fulfilled;
+        });
         it('should resolve to first matching game', () => {
             const name = `name name ${Math.random()}`;
             dao._data.push({
