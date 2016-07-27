@@ -1386,8 +1386,8 @@ describe('MafiaBot', function () {
 			*/
 
 			let command = {
-				args: [3, '@dreikin'],
-				line: '!target 3 @dreikin',
+				args: ['@dreikin', 'in', '3'],
+				line: '!target @dreikin in 3',
 				reply: sandbox.stub(),
 				getTopic: () => Promise.resolve({id: 3}),
 				getPost: () => Promise.resolve({id: 100}),
@@ -1403,8 +1403,8 @@ describe('MafiaBot', function () {
 			 	----------------------------------
 			*/
 				command = {
-					args: [3, '@dreikin'],
-					line: '!target 3 @dreikin',
+					args: ['@dreikin', 'in', '3'],
+					line: '!target @dreikin in 3',
 					reply: sandbox.stub(),
 					getTopic: () => Promise.resolve({id: 3}),
 					getPost: () => Promise.resolve({id: 102}),
@@ -1421,7 +1421,7 @@ describe('MafiaBot', function () {
 			*/
 				command = {
 					args: ['3'],
-					line: '!list-night-actions 3',
+					line: '!list-night-actions in testMafia',
 					reply: sandbox.stub(),
 					getTopic: () => Promise.resolve({id: 3}),
 					getPost: () => Promise.resolve({id: 103}),
@@ -1440,8 +1440,8 @@ describe('MafiaBot', function () {
 			 	----------------------------------
 			*/
 				command = {
-					args: [3, '@accalia'],
-					line: '!target 3 @accalia',
+					args: ['@accalia', 'in', '3'],
+					line: '!target @accalia in 3',
 					reply: sandbox.stub(),
 					getTopic: () => Promise.resolve({id: 3}),
 					getPost: () => Promise.resolve({id: 102}),
@@ -1457,8 +1457,8 @@ describe('MafiaBot', function () {
 			 	----------------------------------
 			*/
 				command = {
-					args: ['3'],
-					line: '!list-night-actions 3',
+					args: ['in', '3'],
+					line: '!list-night-actions in 3',
 					reply: sandbox.stub(),
 					getTopic: () => Promise.resolve({id: 3}),
 					getPost: () => Promise.resolve({id: 103}),
@@ -1476,8 +1476,8 @@ describe('MafiaBot', function () {
 			 	----------------------------------
 			*/
 				command = {
-					args: [3, '@tehNinja'],
-					line: '!target 3 @tehNinja',
+					args: ['@tehNinja', 'in', '3'],
+					line: '!target @tehNinja in 3',
 					reply: sandbox.stub(),
 					getTopic: () => Promise.resolve({id: 3}),
 					getPost: () => Promise.resolve({id: 100}),
@@ -1493,8 +1493,8 @@ describe('MafiaBot', function () {
 			 	----------------------------------
 			*/
 				command = {
-					args: ['3'],
-					line: '!list-night-actions 3',
+					args: ['in', '3'],
+					line: '!list-night-actions in 3',
 					reply: sandbox.stub(),
 					getTopic: () => Promise.resolve({id: 3}),
 					getPost: () => Promise.resolve({id: 103}),

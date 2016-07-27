@@ -475,7 +475,6 @@ class MafiaPlayerController {
 			voter = user.username;
 			return command.getPost();
 		}).then((post) => {
-
 			if (command.args.length <= 0) {
 				return this.getVotingErrorText('No target specified', voter, '')
 				.then((text) => {
@@ -917,8 +916,7 @@ class MafiaPlayerController {
 	*/
 	targetHandler (command) {
 		let actor, target, game;
-		const targetString = command.args[1] ? command.args[1].replace('@', '') : '';
-		const gameId = command.args[0];
+		const targetString = command.args[0] ? command.args[0].replace('@', '') : '';
 
 		return this.getGame(command)
 		.catch(() => {
@@ -932,7 +930,7 @@ class MafiaPlayerController {
 			try {
 				actor = game.getPlayer(user.username);
 			} catch (e) {
-				throw new Error('You are not playing in game ' + gameId);
+				throw new Error('You are not playing in ' + game.name);
 			}
 			
 			

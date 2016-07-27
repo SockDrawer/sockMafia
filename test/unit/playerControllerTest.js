@@ -300,6 +300,26 @@ describe('player controller', () => {
 				sandbox.spy(view, 'reportError');
 
 			});
+			
+			it('Should require 1 arg', () => {
+				const command = {
+					getTopic: () => Promise.resolve({
+						id: 200
+					}),
+					getUser: () => Promise.resolve(mockVoter),
+					getPost: () => Promise.resolve({
+						id: 5
+					}),
+					args: [],
+					line: '!for Sadie',
+					reply: () => Promise.resolve()
+				};
+				sandbox.stub(playerController, 'doVote').resolves();
+				return playerController.forHandler(command).then((value) => {
+					playerController.doVote.called.should.be.false;
+					view.reportError.called.should.be.true;
+				});
+			});
 
 			it('Should call DoVote()', () => {
 				const command = {
@@ -383,6 +403,26 @@ describe('player controller', () => {
 				sandbox.spy(view, 'respond');
 				sandbox.spy(view, 'reportError');
 
+			});
+			
+			it('Should require 1 arg', () => {
+				const command = {
+					getTopic: () => Promise.resolve({
+						id: 200
+					}),
+					getUser: () => Promise.resolve(mockVoter),
+					getPost: () => Promise.resolve({
+						id: 5
+					}),
+					args: [],
+					line: '!for Sadie',
+					reply: () => Promise.resolve()
+				};
+				sandbox.stub(playerController, 'doVote').resolves();
+				return playerController.voteHandler(command).then((value) => {
+					playerController.doVote.called.should.be.false;
+					view.reportError.called.should.be.true;
+				});
 			});
 
 			it('Should call DoVote()', () => {
@@ -1619,6 +1659,28 @@ describe('player controller', () => {
 			sandbox.stub(view, 'respondWithTemplate').resolves();
 		});
 		
+		it('Should require 1 arg', () => {
+			const command = {
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getPost: () => Promise.resolve({
+					id: 42
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
+				args: [],
+				input: '!target @noLunch'
+			};
+				
+			sandbox.spy(mockGame, 'registerAction');
+			return playerController.targetHandler(command).then(() => {
+				mockGame.registerAction.called.should.be.false;
+				view.reportError.called.should.be.true;
+			});
+		});
+		
 		it('Should register actions', () => {
 			const command = {
 				getTopic: () => Promise.resolve({
@@ -1630,7 +1692,7 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
-				args: ['123', '@noLunch'],
+				args: ['@noLunch'],
 				input: '!target @noLunch'
 			};
 				
@@ -1651,7 +1713,7 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
-				args: ['123', '@noLunch'],
+				args: ['@noLunch'],
 				input: '!target @noLunch'
 			};
 				
@@ -1673,7 +1735,7 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
-				args: ['123', '@noLunch'],
+				args: ['@noLunch'],
 				input: '!target @noLunch'
 			};
 				
@@ -1697,7 +1759,7 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
-				args: ['123', '@noLunch'],
+				args: ['@noLunch'],
 				input: '!target @noLunch'
 			};
 				
@@ -1721,7 +1783,7 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
-				args: ['123', '@noLunch'],
+				args: ['@noLunch'],
 				input: '!target @noLunch'
 			};
 				
