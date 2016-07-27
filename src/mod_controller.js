@@ -145,6 +145,15 @@ class MafiaModController {
 				game.addTopic(num);
 			} else if (type.toLowerCase() === 'chat') {
 				game.addChat(num);
+			} else if (type.toLowerCase() === 'this') {
+				return command.getTopic().then((topic) => {
+					if (topic.id === -1) {
+						//Command came from a chat
+						game.addChat(command.parent.ids[0]);
+					} else {
+						game.addTopic(topic.id);
+					}
+				});
 			} else {
 				throw new Error(`I don't know how to add a "${type}". Try a "thread" or a "chat"?`);
 			}

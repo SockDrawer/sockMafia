@@ -671,6 +671,48 @@ describe('mod controller', () => {
 			});
 		});
 		
+		it('Should add "this" when requested from a thread', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				args: [
+					'this',
+					'123',
+					'testMafia'
+				]
+			};
+			
+			sandbox.spy(mockGame, 'addChat');
+			sandbox.spy(mockGame, 'addTopic');
+			
+			return modController.addHandler(command).then( () => {
+				mockGame.addTopic.calledWith(12345).should.be.true;
+			});
+		});
+		
+		it('Should add "this" when requested from a chat', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: -1}),
+				getUser: () => Promise.resolve({username: 'God'}),
+				parent: {
+					ids: [12]	
+				},
+				args: [
+					'this',
+					'123',
+					'testMafia'
+				]
+			};
+			
+			sandbox.spy(mockGame, 'addChat');
+			sandbox.spy(mockGame, 'addTopic');
+			
+			return modController.addHandler(command).then( () => {
+				mockGame.addChat.called.should.be.true;
+				
+				mockGame.addChat.firstCall.args[0].should.equal(12);
+			});
+		});
 	});
 	describe('set()', () => {
 
