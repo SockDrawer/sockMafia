@@ -230,7 +230,6 @@ class MafiaPlayerController {
 				return this.dao.getGameByTopicId(topic.id);
 			}
 		});
-
 	}
 
 	/**

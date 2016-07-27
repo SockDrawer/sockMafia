@@ -123,10 +123,37 @@ class MafiaModController {
         forum.Commands.add('add', 'Add a thread or chat to the game (mod only)', this.addHandler.bind(this));
     }
     
+    getGame (command) {
+		const isNumeric = (input) => {
+			return /^\d+$/.test(input);
+		};
+		
+		//First check for 'in soandso' syntax
+		for (let i = 0; i < command.args.length; i++) {
+			if (command.args[i].toLowerCase() === 'in' && command.args[i + 1]) {
+				const target = command.args.slice(i + 1, command.args.length).join(' ');
+				if (isNumeric(target)) {
+					return this.dao.getGameByTopicId(target);
+				} else {
+					return this.dao.getGameByName(target);
+				}
+			}
+		}
+		
+		return command.getTopic().then((topic) => {
+			if (topic.id === -1) {
+				//Command came from a chat
+				return this.dao.getGameByChatId(command.parent.ids[0]);
+			} else {
+				return this.dao.getGameByTopicId(topic.id);
+			}
+		});
+	}
+    
     addHandler (command) {
 		const type = command.args[0];
 		const num = command.args[1];
-		const name = command.args[2].toLowerCase() === 'in' ? command.args[3] : command.args[2];
+		const name = command.args[2].toLowerCase() === 'to' ? command.args[3] : command.args[2];
 		
 		let game;
 		
@@ -174,29 +201,13 @@ class MafiaModController {
 		const property = command.args[1];
 		let gameId, modName, game, mod, target;
 
-		const isNumeric = (input) => {
-			return /^\d+$/.test(input);
-		};
-		
-		const processArgs = () => {
-			if (command.args[2] === 'in' && command.args[3]) {
-				if (!isNumeric(command.args[3])) {
-					return this.dao.getGameByName(command.args.slice(3).join(' '));
-				} else {
-					gameId = command.args[3];
-				}
-			}
-			
-			return this.dao.getGameByTopicId(gameId);
-		};
-
 		return command.getTopic().then((topic) => {
 				gameId = topic.id;
 				return command.getUser();
 			}).then((user) => {
 				modName = user.username;
 				logDebug('Received set property request from ' + modName + ' for ' + targetString + ' in thread ' + gameId);
-				return processArgs();
+				return this.getGame(command);
 			})
 			.then((g) => {
 				game = g;
@@ -271,7 +282,7 @@ class MafiaModController {
 			}).then((user) => {
 				modName = user.username;
 				logDebug('Received next phase request from ' + modName + ' in thread ' + gameId);
-				return this.dao.getGameByTopicId(gameId);
+				return this.getGame(command);
 			})
 			.then((g) => {
 				game = g;
@@ -333,7 +344,7 @@ class MafiaModController {
 			}).then((user) => {
 				modName = user.username;
 				logDebug('Received new day request from ' + modName + ' in thread ' + game);
-				return this.dao.getGameByTopicId(gameId);
+				return this.getGame(command);
 			})
 			.then((g) => {
 				game = g;
@@ -379,7 +390,7 @@ class MafiaModController {
 			}).then((user) => {
 				modName = user.username;
 				logDebug('Received kill request from ' + modName + 'for ' + target + ' in thread ' + gameId);
-				return this.dao.getGameByTopicId(gameId);
+				return this.getGame(command);
 			})
 			.then((g) => {
 				game = g;
@@ -432,9 +443,8 @@ class MafiaModController {
 		let game;
 		const gameId = command.args[0];
 		debug('Listing night actions for ' + gameId);
-		const lookupFunc = parseInt(gameId) > 0 ? this.dao.getGameByTopicId : this.dao.getGameByName;
 
-		return Promise.all([lookupFunc.call(this.dao, gameId), command.getUser()])
+		return Promise.all([this.getGame(command), command.getUser()])
 		.then((responses) => {
 			game = responses[0];
 			return game.getModerator(responses[1].username);

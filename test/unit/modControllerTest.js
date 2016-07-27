@@ -29,6 +29,88 @@ describe('mod controller', () => {
 	afterEach(() => {
 		sandbox.restore();
 	});
+	
+	describe('getGame', () => {
+		let mockGame, mockdao, modController; 
+		
+		beforeEach(() => {
+			mockGame = {
+				getAllPlayers: () => 1,
+				killPlayer: () => 1,
+				nextPhase: () => 1,
+				registerAction: () => Promise.resolve('Ok'),
+				topicId: 12,
+				isActive: true,
+				isDay: true
+			};
+
+			mockdao = {
+				getGameByTopicId: () => Promise.resolve(mockGame),
+				getGameByChatId: () => Promise.resolve(mockGame),
+				getGameByName: () => Promise.resolve(mockGame)
+			};
+			
+			modController = new ModController(mockdao, null);
+		});
+		
+		it('should get a game by chat id', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: -1}),
+				parent: {
+					ids: [12]
+				},
+				args: [
+				]
+			};
+			sandbox.spy(mockdao, 'getGameByTopicId');
+			sandbox.spy(mockdao, 'getGameByChatId');
+			return modController.getGame(command).then((game) => {
+				game.should.deep.equal(mockGame);
+				mockdao.getGameByChatId.calledWith(12).should.be.true;
+			});
+		});
+		
+		it('should get a game by topic id', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 1234}),
+				parent: {
+					ids: [12]
+				},
+				args: [
+				]
+			};
+			sandbox.spy(mockdao, 'getGameByTopicId');
+			sandbox.spy(mockdao, 'getGameByChatId');
+			return modController.getGame(command).then((game) => {
+				game.should.deep.equal(mockGame);
+				mockdao.getGameByTopicId.calledWith(1234).should.be.true;
+			});
+		});
+		
+		it('should get a game by name', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 1234}),
+				parent: {
+					ids: [12]
+				},
+				args: [
+					'set',
+					'accalia',
+					'loved',
+					'in',
+					'testMafia'
+				]
+			};
+			sandbox.spy(mockdao, 'getGameByTopicId');
+			sandbox.spy(mockdao, 'getGameByChatId');
+			sandbox.spy(mockdao, 'getGameByName');
+			return modController.getGame(command).then((game) => {
+				game.should.deep.equal(mockGame);
+				mockdao.getGameByName.calledWith('testMafia').should.be.true;
+			});
+		});
+		
+	});
 
 	describe('kill()', () => {
 		let mockGame, mockUser, mockTarget, mockdao, modController;
@@ -598,7 +680,7 @@ describe('mod controller', () => {
 				args: [
 					'thread',
 					'123',
-					'in',
+					'to',
 					'testMafia'
 				]
 			};
@@ -1112,6 +1194,7 @@ describe('mod controller', () => {
 				getTopic: () => Promise.resolve({id: 12345}),
 				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
+					'in',
 					'123'
 				]
 			};
@@ -1130,6 +1213,7 @@ describe('mod controller', () => {
 				getTopic: () => Promise.resolve({id: 12345}),
 				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
+					'in',
 					'testMafia'
 				]
 			};
@@ -1148,6 +1232,7 @@ describe('mod controller', () => {
 				getTopic: () => Promise.resolve({id: 12345}),
 				getUser: () => Promise.resolve({username: 'God'}),
 				args: [
+					'in',
 					'123'
 				]
 			};
