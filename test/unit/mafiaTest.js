@@ -188,33 +188,4 @@ describe('mafia', () => {
 			});
 		});
 	});*/
-
-	describe('echo()', () => {
-
-		it('should echo what is passed in', () => {
-			const command = {
-				post: {
-					'topic_id': 12345,
-					'post_number': 98765,
-					cleaned: 'squeaky!'
-				},
-				input: 'this is input',
-				command: 'a command',
-				args: 'a b c',
-				mention: 'mention'
-			};
-			
-			const expected = 'topic: 12345\npost: 98765\ninput: `this is input`\ncommand: `a command`\nargs: `a b c`\n' +
-					'mention: `mention`\npost:\n[quote]\nsqueaky!\n[/quote]';
-
-			sandbox.stub(view, 'respond');
-			mafia.internals.browser = browser;
-
-			return mafia.echoHandler(command).then(() => {
-				view.respond.calledWith(command).should.be.true;
-				const output = view.respond.firstCall.args[1];
-				output.should.equal(expected);
-			});
-		});
-	});
 });
