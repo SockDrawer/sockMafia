@@ -149,6 +149,7 @@ class MafiaDao {
      * @returns {Promise<MafiaGame>} Resolves to requested game, rejects when read error occurs or game not found
      */
     getGameByAlias(alias) {
+        alias = alias.toLowerCase();
         return this.load().then((data) => {
             const game = data.filter((candidate) => candidate.aliases.some((gamealias) => gamealias === alias))[0];
             if (!game) {
