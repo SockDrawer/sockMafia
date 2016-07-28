@@ -31,7 +31,7 @@ function logRecoveredError(error) {
 
 function logDebug(statement) {
 	debug(statement);
-	
+
 	if (eventLogger && eventLogger.emit) {
 		eventLogger.emit('logExtended', 5, statement);
 	}
@@ -41,13 +41,12 @@ class MafiaPlayerController {
 	/**
 	* The constructor
 	* @param  {sockmafia.src.dao.MafiaDao} d      The dao to use to persist the data
-	* @param  {Object} config The parsed configuration file pertaining to this instance of the plugin
 	*/
-    constructor(d, config) {
+    constructor(d) {
         this.dao = d;
         this.formatter = undefined;
     }
-    
+
     /**
      * Activation function for the plugin
      * @param   {Forum} forum The forum object to activate for
@@ -56,17 +55,26 @@ class MafiaPlayerController {
 		//Set name
 		myName = forum.username;
 		this.formatter = forum.Format;
-		
+
 		//Register commandss
         forum.Commands.add('list-players', 'list all players still alive', this.listPlayersHandler.bind(this));
+        forum.Commands.addAlias('listplayers', this.listPlayersHandler.bind(this));
+        
         forum.Commands.add('list-all-players', 'list all players, dead and alive', this.listAllPlayersHandler.bind(this));
+        forum.Commands.addAlias('listallplayers', this.listAllPlayersHandler.bind(this));
+        
         forum.Commands.add('join', 'join current mafia game', this.joinHandler.bind(this));
         forum.Commands.add('for', 'vote for a player to be executed', this.forHandler.bind(this));
         forum.Commands.add('vote', 'vote for a player to be executed (alt. form)', this.voteHandler.bind(this));
+        
         forum.Commands.add('list-votes', 'list all votes from the day\'s start', this.listVotesHandler.bind(this));
+        forum.Commands.addAlias('listvotes', this.listVotesHandler.bind(this));
+        
         forum.Commands.add('unvote', 'rescind your vote', this.unvoteHandler.bind(this));
         forum.Commands.add('nolynch', 'vote for noone to be lynched', this.nolynchHandler.bind(this));
-        forum.Commands.add('no-lynch', 'vote for noone to be lynched', this.nolynchHandler.bind(this));
+        forum.Commands.addAlias('no-lynch', this.nolynchHandler.bind(this));
+        
+        forum.Commands.add('target', 'Target a player with any night action you may have', this.targetHandler.bind(this));
     }
 
 	/**
@@ -94,16 +102,16 @@ class MafiaPlayerController {
 	/*Voting helpers*/
 
 	/**
-	 * Get the number of votes required to lynch a player
-	 *
-	 * Game rules:
-	 * - A single player must obtain a simple majority of votes in order to be lynched
-	 * - Loved and Hated players are exceptions to this rule. 
-	 * 
-	 * @param   {sockmafia.src.dao.MafiaGame} game   The game in which the votes are being tabulated
-	 * @param   {sockmafia.src.dao.MafiaUser} target The target's name
-	 * @returns {number}        The number needed to lynch
-	 */
+	* Get the number of votes required to lynch a player
+	*
+	* Game rules:
+	* - A single player must obtain a simple majority of votes in order to be lynched
+	* - Loved and Hated players are exceptions to this rule.
+	*
+	* @param   {sockmafia.src.dao.MafiaGame} game   The game in which the votes are being tabulated
+	* @param   {sockmafia.src.dao.MafiaUser} target The target's name
+	* @returns {number}        The number needed to lynch
+	*/
 	getNumVotesRequired(game, target) {
 		const numPlayers = game.livePlayers.length;
 		let numToLynch = Math.ceil((numPlayers + 1) / 2);
@@ -116,33 +124,32 @@ class MafiaPlayerController {
 	}
 
 	/**
-	 * Get the vote modifier for a given target.
-	 *
-	 * Game rules:
-	 * - A loved player requires one extra vote to lynch
-	 * - A hated player requires one fewer vote to lynch
-	 * @param   {sockmafia.src.dao.MafiaGame} game   The game in which the votes are being tabulated
-	 * @param   {sockmafia.src.dao.MafiaUser} target The user to tabulate for
-	 * @returns {Number}        A modifier. +1 means that the user is loved, -1 means they are hated
-	 */
+	* Get the vote modifier for a given target.
+	*
+	* Game rules:
+	* - A loved player requires one extra vote to lynch
+	* - A hated player requires one fewer vote to lynch
+	* @param   {sockmafia.src.dao.MafiaGame} game   The game in which the votes are being tabulated
+	* @param   {sockmafia.src.dao.MafiaUser} target The user to tabulate for
+	* @returns {Number}        A modifier. +1 means that the user is loved, -1 means they are hated
+	*/
 	getVoteModifierForTarget(game, target) {
 		if (!target) {
 			return 0;
 		}
-		
-		const properties = target.getProperties();
-		if (properties.indexOf('loved') > -1) {
+
+		if (target.hasProperty('loved')) {
 			return 1;
 		}
-		if (properties.indexOf('hated') > -1) {
+		if (target.hasProperty('hated')) {
 			return -1;
 		}
 		return 0;
 	}
-	
+
 	getVoteAttemptText(actor, action, thread, post, input) {
 		const url = this.formatter.urlForPost(post);
-	
+
 		const text = `@${actor} ${action} in post <a href="${url}">${post}</a>`
 				+ '\n\n'
 				+ `Original input:\n ${this.formatter.quoteText(input, actor, url)}\n`;
@@ -174,6 +181,11 @@ class MafiaPlayerController {
 
 	checkForAutoLynch(game, target) {
 		const todaysVotes = game.getActions();
+
+		if (target.hasProperty('lynchproof')) {
+			return Promise.resolve();
+		}
+
 		let numVotesForTarget = 0;
 		for (let i = 0; i < todaysVotes.length; i++) {
 			const voteTarget = todaysVotes[i].target && todaysVotes[i].target.userslug;
@@ -208,6 +220,15 @@ class MafiaPlayerController {
 		}
 		return Promise.resolve();
 	}
+	
+	getGame (command) {
+		if (command.parent.ids.topic === -1) {
+			//Command came from a chat
+			return this.dao.getGameByChatId(command.parent.ids.chat);
+		} else {
+			return this.dao.getGameByTopicId(command.parent.ids.topic);
+		}
+	}
 
 	/**
 	  * nolynch: Vote to not lynch this day
@@ -229,9 +250,17 @@ class MafiaPlayerController {
 	nolynchHandler (command) {
 		let gameId, post, actor, voter, votee, game;
 
-		
+
 		/*Validation*/
-		return command.getTopic().then((topic) => {
+		return this.getGame(command)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + game);
+			throw(E_NOGAME);
+		})
+		.then((g) => {
+			game = g;
+			return command.getTopic();
+		}).then((topic) => {
 			gameId = topic.id;
 			return command.getUser();
 		}).then((user) => {
@@ -240,13 +269,6 @@ class MafiaPlayerController {
 			return command.getPost();
 		}).then((p) => {
 			post = p.id;
-			return this.dao.getGameByTopicId(gameId).catch(() => {
-				logWarning('Ignoring message in nonexistant game thread ' + game);
-				throw(E_NOGAME);
-			});
-		})
-		.then((g) => {
-			game = g;
 			try {
 				voter = game.getPlayer(actor);
 			} catch (_) {
@@ -297,23 +319,25 @@ class MafiaPlayerController {
 		}
 
 		/*Validation*/
-		
-		return command.getTopic().then((topic) => {
-			gameId = topic.id;
+
+		return this.getGame(command)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + game);
+			throw(E_NOGAME);
+		})
+		.then((g) => {
+			game = g;
+			
+			if (command.parent.ids.topic === -1) {
+				throw new Error('Hey1 No secret unvoting! Use a public thread.');
+			}
 			return command.getUser();
 		}).then((user) => {
 			actor = user.username;
 			logDebug('Received unvote request from ' + actor + ' in game ' + gameId);
 			return command.getPost();
 		}).then((p) => {
-			post = p.id;	
-			return this.dao.getGameByTopicId(gameId).catch(() => {
-				logWarning('Ignoring message in nonexistant game thread ' + game);
-				throw(E_NOGAME);
-			});
-		})
-		.then((g) => {
-			game = g;
+			post = p.id;
 			try {
 				voter = game.getPlayer(actor);
 			} catch (_) {
@@ -332,7 +356,8 @@ class MafiaPlayerController {
 
 			return this.verifyVotePreconditions(game, voter, votee);
 		})
-		.then(() =>	game.revokeAction(post, actor, target, 'vote'))
+		.then(() =>	game.revokeAction(post, actor, target, 'vote', 'vote'))
+		.then(() =>	game.revokeAction(post, actor, target, 'vote', 'doubleVote')) //Just in case
 		.then(() => {
 			const text = this.getVoteAttemptText(actor, 'unvoted', gameId, post, command.line);
 			view.respond(command, text);
@@ -376,54 +401,87 @@ class MafiaPlayerController {
 	* @returns {Promise}        A promise that will resolve when the game is ready
 	*/
 	voteHandler (command) {
-		let gameId, voter;
+		let gameId, voter, game;
+		let voteNum = 1;
+		
+		if (command.args[0] && command.args[0].toLowerCase() === 'for') {
+			command.args.shift();
+		}
 
-		return command.getTopic().then((topic) => {
+		const targetString = command.args[0] ? command.args[0].replace('@', '') : '';
+		
+		if (command.parent.ids.topic === -1) {
+			return view.reportError(command, '', 'You cannot vote in private!');
+		}
+
+		return this.getGame(command)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + game);
+			throw (E_NOGAME);
+		})
+		.then((g) => {
+			game = g;
+			return command.getTopic();
+		}).then((topic) => {
 			gameId = topic.id;
 			return command.getUser();
 		}).then((user) => {
 			voter = user.username;
+			return game.getPlayer(voter);
+		}).then((player) => {
+			if (player.hasProperty('doublevoter')) {
+				voteNum = 2;
+			}
 			return command.getPost();
 		}).then((post) => {
 			if (command.args.length <= 0) {
 				return this.getVotingErrorText('No target specified', voter, '')
 				.then((text) => {
-					
+
 					text += '\n<hr />\n';
 					text += this.getVoteAttemptText(voter, 'tried to vote', gameId, post.id, command.line);
-		
+
 					//Log error
 					logRecoveredError('Vote failed: No target specified');
-					
+
 					return view.reportError(command, '', text);
 				});
 			}
-			
-			// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
-			// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
-			const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
+
 			logDebug('Received vote request from ' + voter + ' for ' + targetString + ' in game ' + gameId);
 
-			return this.doVote(gameId, post.id, voter, targetString, command.line, 1, command);
-		}).catch((err) => {
-			debug(err);
-			throw err;
+
+			return this.doVote(gameId, post.id, voter, targetString, command.line, voteNum, command);
+		}).catch((reason) => {
+			if (reason === E_NOGAME) {
+				return Promise.resolve();
+			}
+
+
+			/*Error handling*/
+			return command.getPost().then((post) => {
+				return this.getVotingErrorText(reason, voter, targetString)
+				.then((text) => {
+
+					text += '\n<hr />\n';
+					text += this.getVoteAttemptText(voter, 'tried to vote for @' + targetString, gameId, post, command.line);
+
+					//Log error
+					logRecoveredError('Vote failed: ' + reason);
+
+					return view.reportError(command, '', text);
+				});
+			});
 		});
-
-		//TODO: make doublevoter work
-	/*	let target = game.getPlayer(targetString);
-		let properties = target.getPlayerProperty();
-
-		if (properties.indexOf('doublevoter') > -1) {
-			return doVote(game, post, voter, target, command.input, 2);
-		} else {
-			return doVote(game, post, voter, target, command.input, 1);
-		}*/
 	}
-	
+
 	forHandler (command) {
 		let gameId, voter;
 
+		if (command.parent.ids.topic === -1) {
+			return view.reportError(command, '', 'You cannot vote in private!');
+		}
+			
 		return command.getTopic().then((topic) => {
 			gameId = topic.id;
 			return command.getUser();
@@ -431,48 +489,40 @@ class MafiaPlayerController {
 			voter = user.username;
 			return command.getPost();
 		}).then((post) => {
-			
 			if (command.args.length <= 0) {
 				return this.getVotingErrorText('No target specified', voter, '')
 				.then((text) => {
-					
+
 					text += '\n<hr />\n';
 					text += this.getVoteAttemptText(voter, 'tried to vote', gameId, post.id, command.line);
-		
+
 					//Log error
 					logRecoveredError('Vote failed: No target specified');
-		
+
 					return view.reportError(command, '', text);
 				});
 			}
 			
-			// The following regex strips a preceding @ and captures up to either the end of input or one of [.!?, ].
-			// I need to check the rules for names.  The latter part may work just by using `(\w*)` after the `@?`.
-			const targetString = command.args[0].replace(/^@?(.*?)[.!?, ]?/, '$1');
+			const targetString = command.args[0] ? command.args[0].replace('@', '') : '';
+
 			logDebug('Received vote request from ' + voter + ' for ' + targetString + ' in game ' + gameId);
-		
+
 			return this.doVote(gameId, post.id, voter, targetString, command.line, 1, command);
 		});
 	}
 
 
 	doVote (gameId, post, actor, target, input, voteNum, command) {
-		let action, voter, votee, game;
-		/*if (voteNum === 2) {
-			action = dao.action.dblVote;
-		} else {
-			action = dao.action.vote;
-		}*/
-		
+		let voter, votee, game;
 
-		return this.dao.getGameByTopicId(gameId)
-			.catch(() => {
-				logWarning('Ignoring message in nonexistant game thread ' + gameId);
-				throw (E_NOGAME);
-			})
+		return this.getGame(command)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + game);
+			throw (E_NOGAME);
+		})
 		.then((g) => {
 			game = g;
-			
+
 			try {
 				voter = game.getPlayer(actor);
 			} catch (_) {
@@ -489,11 +539,11 @@ class MafiaPlayerController {
 				throw new Error('No target specified');
 			}
 			return this.verifyVotePreconditions(game, voter, votee);
-			
+
 		})
 		.then(() => {
-			return game.registerAction(post, actor, target, 'vote');
-		})
+			return game.registerAction(post, actor, target, 'vote', voteNum > 1 ? 'doubleVote' : 'vote');
+			})
 		.then(() => {
 			const text = this.getVoteAttemptText(actor, 'voted for @' + target, gameId, post, input);
 			logDebug('Vote succeeded');
@@ -509,7 +559,7 @@ class MafiaPlayerController {
 			/*Error handling*/
 			return this.getVotingErrorText(reason, actor, target)
 			.then((text) => {
-				
+
 				text += '\n<hr />\n';
 				text += this.getVoteAttemptText(actor, 'tried to vote for @' + target, gameId, post, input);
 
@@ -535,43 +585,41 @@ class MafiaPlayerController {
 	* @returns {Promise}        A promise that will resolve when the game is ready
 	*/
 	joinHandler(command) {
-		let game, gameId, player;
-		
-		return command.getTopic().then((topic) => {
-				gameId = topic.id;
-				return this.dao.getGameByTopicId(gameId).catch(() => {
-					logWarning('Ignoring message in nonexistant game thread ' + game);
-					throw (E_NOGAME);
-				});
-			})
-			.then((g) => {
-				game = g;
-				return command.getUser();
-			}).then((u) => {
-				player = u.username;
-				logDebug('Received join request from ' + player + ' in game ' + gameId);
+		let game, player;
 
-				if (game.isActive) {
-					return Promise.reject('Cannot join game in progress.');
-				}
-				if (game.allPlayers.map((p) => p.username).indexOf(player) >= 0) {
-					return Promise.reject('You are already in this game, @' + player + '!');
-				}
-				return game.addPlayer(player);
-			})
-			.then(() => {
-				view.respond(command, 'Welcome to the game, @' + player);
-				logDebug('Added ' + player);
-				return true;
-			})
-			.catch((err) => {
-				if (err === E_NOGAME) {
-					return Promise.resolve();
-				}
+		return this.getGame(command)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread');
+			throw (E_NOGAME);
+		})
+		.then((g) => {
+			game = g;
+			return command.getUser();
+		}).then((u) => {
+			player = u.username;
+			logDebug('Received join request from ' + player + ' to ' + game.name);
 
-				view.reportError(command, 'Error when adding to game: ', err);
-				logRecoveredError('Join failed ' + err);
-			});
+			if (game.isActive) {
+				return Promise.reject('Cannot join game in progress.');
+			}
+			if (game.allPlayers.map((p) => p.username).indexOf(player) >= 0) {
+				return Promise.reject('You are already in this game, @' + player + '!');
+			}
+			return game.addPlayer(player);
+		})
+		.then(() => {
+			view.respond(command, 'Welcome to the game, @' + player);
+			logDebug('Added ' + player);
+			return true;
+		})
+		.catch((err) => {
+			if (err === E_NOGAME) {
+				return Promise.resolve();
+			}
+
+			view.reportError(command, 'Error when adding to game: ', err);
+			logRecoveredError('Join failed ' + err);
+		});
 	}
 
 	/**
@@ -587,57 +635,55 @@ class MafiaPlayerController {
 	* @returns {Promise}        A promise that will resolve when the game is ready
 	*/
 	listPlayersHandler (command) {
-		let game, id;
+		let game;
 
-		return command.getTopic().then((topic) => {
-				id = topic.id;
-				return this.dao.getGameByTopicId(id).catch(() => {
-					logWarning('Ignoring message in nonexistant game thread ' + game);
-					throw (E_NOGAME);
+		return this.getGame(command)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread');
+			throw (E_NOGAME);
+		})
+		.then((g) => {
+			game = g;
+			logDebug('Received list request in game ' + game.name);
+		
+			//Store a reference otherwise it'll shuffle every time we dip
+			const alive = game.livePlayers;
+			const mods =  game.moderators;
+
+			const numLiving = alive.length;
+			const numMods = mods.length;
+
+			let output = '## Player List\n';
+			output += '### Living:\n';
+			if (numLiving <= 0) {
+				output += 'Nobody! Aren\'t you special?\n';
+			} else {
+				for (let i = 0; i < numLiving; i++) {
+					output += '- ' + alive[i].username + '\n';
+				}
+			}
+
+			output += '### Mod(s):\n';
+			if (numMods <= 0) {
+				output += 'None. Weird.';
+			} else {
+				mods.forEach((mod) => {
+					output += '- ' + mod.username + '\n';
 				});
-			})
-			.then((g) => {
-				logDebug('Received list request in game ' + id);
-				game = g;
+			}
 
-				//Store a reference otherwise it'll shuffle every time we dip
-				const alive = game.livePlayers;
-				const mods =  game.moderators;
-				
-				const numLiving = alive.length;
-				const numMods = mods.length;
-
-				let output = '## Player List\n';
-				output += '### Living:\n';
-				if (numLiving <= 0) {
-					output += 'Nobody! Aren\'t you special?\n';
-				} else {
-					for (let i = 0; i < numLiving; i++) {
-						output += '- ' + alive[i].username + '\n';
-					}
-				}
-
-				output += '### Mod(s):\n';
-				if (numMods <= 0) {
-					output += 'None. Weird.';
-				} else {
-					mods.forEach((mod) => {
-						output += '- ' + mod.username + '\n';
-					});
-				}
-
-				view.respond(command, output);
+			view.respond(command, output);
+			return Promise.resolve();
+		})
+		.catch((err) => {
+			if (err === E_NOGAME) {
 				return Promise.resolve();
-			})
-			.catch((err) => {
-				if (err === E_NOGAME) {
-					return Promise.resolve();
-				}
+			}
 
-				view.reportError(command, 'Error resolving list: ', err);
-				logRecoveredError('List failed ' + err);
-				return Promise.resolve();
-			});
+			view.reportError(command, 'Error resolving list: ', err);
+			logRecoveredError('List failed ' + err);
+			return Promise.resolve();
+		});
 	}
 
 	/**
@@ -654,67 +700,64 @@ class MafiaPlayerController {
 	* @returns {Promise}        A promise that will resolve when the game is ready
 	*/
 	listAllPlayersHandler(command) {
-		let game, id;
-		
-		return command.getTopic().then((topic) => {
-				id = topic.id;
-				return this.dao.getGameByTopicId(id).catch(() => {
-					logWarning('Ignoring message in nonexistant game thread ' + game);
-					throw (E_NOGAME);
+		let game;
+
+		return this.getGame(command)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread');
+			throw (E_NOGAME);
+		})
+		.then((g) => {
+			game = g;
+			logDebug('Received list request in game ' + game.name);
+			//Store a reference otherwise it'll shuffle every time we dip
+			const alive = game.livePlayers;
+			const mods =  game.moderators;
+			const dead = game.deadPlayers;
+
+			const numLiving = alive.length;
+			const numDead = dead.length;
+			const numMods = mods.length;
+
+			let output = '## Player List\n';
+			output += '### Living:\n';
+			if (numLiving <= 0) {
+				output += 'Nobody! Aren\'t you special?\n';
+			} else {
+				for (let i = 0; i < numLiving; i++) {
+					output += '- ' + alive[i].username + '\n';
+				}
+			}
+
+			output += '\n### Dead:\n';
+			if (numDead <= 0) {
+				output += 'Nobody! Aren\'t you special?\n';
+			} else {
+				for (let i = 0; i < numDead; i++) {
+					output += '- ' + dead[i].username + '\n';
+				}
+			}
+
+			output += '### Mod(s):\n';
+			if (numMods <= 0) {
+				output += 'None. Weird.';
+			} else {
+				mods.forEach((mod) => {
+					output += '- ' + mod.username + '\n';
 				});
-			})
-			.then((g) => {
-				logDebug('Received list request in game ' + id);
-				game = g;
+			}
 
-				//Store a reference otherwise it'll shuffle every time we dip
-				const alive = game.livePlayers;
-				const mods =  game.moderators;
-				const dead = game.deadPlayers;
-				
-				const numLiving = alive.length;
-				const numDead = dead.length;
-				const numMods = mods.length;
-
-				let output = '## Player List\n';
-				output += '### Living:\n';
-				if (numLiving <= 0) {
-					output += 'Nobody! Aren\'t you special?\n';
-				} else {
-					for (let i = 0; i < numLiving; i++) {
-						output += '- ' + alive[i].username + '\n';
-					}
-				}
-
-				output += '\n### Dead:\n';
-				if (numDead <= 0) {
-					output += 'Nobody! Aren\'t you special?\n';
-				} else {
-					for (let i = 0; i < numDead; i++) {
-						output += '- ' + dead[i].username + '\n';
-					}
-				}
-
-				output += '### Mod(s):\n';
-				if (numMods <= 0) {
-					output += 'None. Weird.';
-				} else {
-					mods.forEach((mod) => {
-						output += '- ' + mod.username + '\n';
-					});
-				}
-
-				view.respond(command, output);
+			view.respond(command, output);
+			return Promise.resolve();
+		})
+		.catch((err) => {
+			if (err === E_NOGAME) {
 				return Promise.resolve();
-			})
-			.catch((err) => {
-				if (err === E_NOGAME) {
-					return Promise.resolve();
-				}
+			}
 
-				view.reportError(command, 'Error resolving list: ', err);
-				logRecoveredError('List failed ' + err);
-			});
+			view.reportError(command, 'Error resolving list: ', err);
+			logRecoveredError('List failed ' + err);
+		});
 	}
 
 	/**
@@ -742,92 +785,90 @@ class MafiaPlayerController {
 			notVoting: [],
 			toExecute: 0
 		};
-		
+
 
 		let game, id;
-		return command.getTopic().then((topic) => {
-				id = topic.id;
-				return this.dao.getGameByTopicId(id).catch(() => {
-					logWarning('Ignoring message in nonexistant game thread ' + game);
-					throw (E_NOGAME);
-				});
-			})
-			.then((g) => {
-				game = g;
-				
-				logDebug('Received list request in game ' + id);
-				
-				data.toExecute = this.getNumVotesRequired(game);
-				data.day = game.day;
-				
-				const phaseEnd = game.getValue('phaseEnd');
-				if (phaseEnd) {
-					data.endTime = phaseEnd;
-					data.showEndTime = true;
-				} else {
-					data.showEndTime = false;
+		return this.getGame(command)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + game);
+			throw (E_NOGAME);
+		})
+		.then((g) => {
+			game = g;
+
+			logDebug('Received list request in game ' + game.name);
+
+			data.toExecute = this.getNumVotesRequired(game);
+			data.day = game.day;
+
+			const phaseEnd = game.getValue('phaseEnd');
+			if (phaseEnd) {
+				data.endTime = phaseEnd;
+				data.showEndTime = true;
+			} else {
+				data.showEndTime = false;
+			}
+
+			const actions = game.getActions(); //default settings are fine
+			const currentlyVoting = [];
+
+			actions.forEach((row) => {
+				if (row.action !== 'vote') {
+					return;
 				}
 
-				const actions = game.getActions(); //default settings are fine
-				const currentlyVoting = [];
+				let votee = row.target ? row.target.username : undefined;
+				const voter = row.actor.username;
 
-				actions.forEach((row) => {
-					if (row.action !== 'vote') {
-						return;
-					}
-					
-					let votee = row.target ? row.target.username : undefined;
-					const voter = row.actor.username;
+				const mod = this.getVoteModifierForTarget(game, row.target);
 
-					const mod = this.getVoteModifierForTarget(game, row.target);
-
-					if (!votee) {
-						votee = 'No lynch';
-					}
-					if (!data.votes.hasOwnProperty(votee)) {
-						data.votes[votee] = {
-							target: votee,
-							num: 0,
-							percent: 0,
-							votes: [],
-							mod: mod
-						};
-					}
-
-					if (row.isCurrent) {
-						data.votes[votee].num++;
-						data.votes[votee].percent = (data.votes[votee].num / data.toExecute) * 100;
-						currentlyVoting.push(voter);
-					}
-
-					/*data.votes[votee].votes.push({
-						voter: voter,
-						retracted: !row.isCurrent,
-						retractedAt: row.revokedId,
-						post: row.postId,
-						game: id
-					});*/
-
-					data.votes[votee].votes.push(row);
-				});
-
-				game.livePlayers.forEach((p) => {
-					if (currentlyVoting.indexOf(p.username) === -1) {
-						data.notVoting.push(p.username);
-						data.numNotVoting++;
-					}
-				});
-
-				data.numPlayers = game.livePlayers.length;
-				return view.respondWithTemplate('/templates/voteTemplate.handlebars', data, command);
-			})
-			.catch((err) => {
-				if (err === E_NOGAME) {
-					return Promise.resolve();
+				if (!votee) {
+					votee = 'No lynch';
 				}
-				view.reportError(command, 'Error resolving list: ', err);
-				logRecoveredError('List failed ' + err);
+				if (!data.votes.hasOwnProperty(votee)) {
+					data.votes[votee] = {
+						target: votee,
+						num: 0,
+						percent: 0,
+						votes: [],
+						mod: mod
+					};
+				}
+
+				if (row.isCurrent) {
+					data.votes[votee].num++;
+					data.votes[votee].percent = (data.votes[votee].num / data.toExecute) * 100;
+					currentlyVoting.push(voter);
+				}
+
+				/*data.votes[votee].votes.push({
+					voter: voter,
+					retracted: !row.isCurrent,
+					retractedAt: row.revokedId,
+					post: row.postId,
+					game: id
+				});*/
+
+				data.votes[votee].votes.push(row);
 			});
+
+			game.livePlayers.forEach((p) => {
+				if (currentlyVoting.indexOf(p.username) === -1) {
+					data.notVoting.push(p.username);
+					data.numNotVoting++;
+				}
+			});
+
+			data.numPlayers = game.livePlayers.length;
+			return view.respondWithTemplate('/templates/voteTemplate.handlebars', data, command);
+		})
+		.catch((err) => {
+			if (err === E_NOGAME) {
+				return Promise.resolve();
+			}
+			view.reportError(command, 'Error resolving list: ', err);
+			logRecoveredError('List failed ' + err);
+		});
 	}
 
 	/**
@@ -851,6 +892,85 @@ class MafiaPlayerController {
 		logDebug('Received list all votes request from ' + command.post.username + ' in game ' + command.post.topic_id);
 		logDebug('List all votes is not yet implemented.');
 		return Promise.resolve();
+	}
+	
+	/**
+	* Target: target another player as the recipient of a night action.
+	*
+	* Game rules:
+	* - A target selection by any member of a scum faction counts for the whole faction,
+	*	and revokes any previous target action
+	* - Only the cult leader can target a member of the cult
+	* - Any other type of player's target action should revoke any previous action by that player
+	*
+	* @example !target 123 yamikuronue
+	* @example !target testMafia yamikuronue
+	*
+	* @param  {commands.command} command The command that was passed in.
+	* @returns {Promise}        A promise that will resolve when the game is ready
+	*/
+	targetHandler (command) {
+		let actor, target, game;
+		const targetString = command.args[0] ? command.args[0].replace('@', '') : '';
+
+		return this.getGame(command)
+		.catch(() => {
+			logWarning('Ignoring message in nonexistant game thread ' + game);
+			throw (E_NOGAME);
+		})
+		.then((g) => {
+			game = g;
+			return command.getUser();
+		}).then((user) => {
+			try {
+				actor = game.getPlayer(user.username);
+			} catch (e) {
+				throw new Error('You are not playing in ' + game.name);
+			}
+			
+			
+			try {
+				target = game.getPlayer(targetString);
+			} catch (e) {
+				throw new Error('Target is invalid');
+			}
+
+			return command.getPost();
+		}).then((post) => {
+			let actionToken = 'target';
+			
+			/* Group types*/
+			if (actor.hasProperty('scum') || actor.hasProperty('mafia')) {
+				//Revoke previous scum action
+				const prevAction = game.getActionOfType('target', null, 'scum');
+				if (prevAction) {
+					prevAction.revoke(post.id);
+				}
+				actionToken = 'scum';
+			}
+			
+			if (actor.hasProperty('scum2')) {
+				//Revoke previous scum action
+				const prevAction = game.getActionOfType('target', null, 'scum2');
+				if (prevAction) {
+					prevAction.revoke(post.id);
+				}
+				actionToken = 'scum2';
+			}
+			
+			if (actor.hasProperty('cultLeader')) {
+				actionToken = 'cult';
+			}
+			return game.registerAction(post.id, actor.username, target.username, 'target', actionToken);
+		}).then(() => command.reply('Action recorded.'))
+		.catch((err) => {
+			if (err === E_NOGAME) {
+				return Promise.resolve();
+			}
+
+			view.reportError(command, 'Error recording action: ', err);
+			logRecoveredError('List failed ' + err);
+		});
 	}
 }
 

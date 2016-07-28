@@ -9,13 +9,9 @@ require('sinon-as-promised');
 require('chai-as-promised');
 
 chai.should();
-const expect = chai.expect;
 
 const mafia = require('../../src/mafiabot');
-const mafiaDAO = require('../../src/dao');
 const view = require('../../src/view.js');
-const modController = require('../../src/mod_controller');
-const playerController = require('../../src/player_controller');
 
 const fakeConfig = {
 	mergeObjects: sinon.stub().returns({
@@ -33,12 +29,10 @@ const browser = {
 
 describe('mafia', () => {
 
-	let sandbox, notificationSpy, commandSpy;
+	let sandbox;
 	beforeEach(() => {
 		sandbox = sinon.sandbox.create();
 		mafia.createDB = sandbox.stub();
-		notificationSpy = sinon.spy();
-		commandSpy = sinon.spy();
 		browser.createPost.reset();
 	});
 	afterEach(() => {
@@ -194,33 +188,4 @@ describe('mafia', () => {
 			});
 		});
 	});*/
-
-	describe('echo()', () => {
-
-		it('should echo what is passed in', () => {
-			const command = {
-				post: {
-					'topic_id': 12345,
-					'post_number': 98765,
-					input: 'this is input',
-					command: 'a command',
-					args: 'a b c',
-					mention: 'mention',
-					post: {
-						cleaned: 'squeaky!'
-					}
-				}
-			};
-
-			sandbox.stub(view, 'respond');
-			mafia.internals.browser = browser;
-
-			return mafia.echoHandler(command).then(() => {
-				view.respond.calledWith(command,
-					'topic: ' + command.post.topic_id + '\n' + 'post: ' + command.post.post_number + '\n' + 'input: `' + command.input + '`\n' + 'command: `' + command.command + '`\n' + 'args: `' + command.args + '`\n' +
-					'mention: `' + command.mention + '`\n' + 'post:\n[quote]\n' + command.post.cleaned + '\n[/quote]'
-				).should.be.true;
-			});
-		});
-	});
 });

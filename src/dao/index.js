@@ -43,7 +43,7 @@ function readData(filename) {
  * @returns {Promise} Resolves when data has been written, rejects on serialization or file access error
  */
 function saveData(filename, data) {
-    if (filename === ':memory:'){
+    if (filename === ':memory:') {
         return Promise.resolve(data);
     }
     return new Promise((resolve, reject) => {
@@ -74,11 +74,13 @@ class MafiaDao {
     /**
      * Create a new MafiaGame and store it in this DAO
      *
-     * @param {number} topicId Game topic
+     * @param {number} topicId Game topic. Must be an integer
      * @param {string} [name] Custom name for the game
      * @returns {Promise<MafiaGame>} Resolves to created game, rejects if preconditions or save state fails
      */
     createGame(topicId, name) {
+        //Force number coercsion
+        topicId = parseInt(topicId, 10);
         return this.load().then((data) => {
             const conflicts = data.filter((candidate) => {
                 return candidate.topicId === topicId || candidate.name === name;
@@ -96,19 +98,38 @@ class MafiaDao {
     }
 
     /**
+     * Retrieve a previously created game by topicId or name
+     *
+     * @param {number|string} game Game identifier.
+     * @returns {Promise<MafiaGame>} Resolves to requested game, rejects when read error occurs or game not found
+     */
+    getGame(game) {
+        return this.getGameByTopicId(game).catch((err) => {
+            if (err.message !== 'E_NO_GAME') {
+                throw err;
+            }
+            return this.getGameByName(game);
+        });
+    }
+
+    /**
      * Retrieve a previously created game by topicId
      *
-     * @param {number} topicId Game Topic identifier
+     * @param {number} topicId Game Topic identifier. Must be an integer
      * @returns {Promise<MafiaGame>} Resolves to requested game, rejects when read error occurs or game not found
      */
     getGameByTopicId(topicId) {
-        return this.load().then((data) => {
-            const game = data.filter((candidate) => candidate.topicId === topicId)[0];
-            if (!game) {
-                return Promise.reject('E_NO_GAME');
-            }
-            return new MafiaGame(game, this);
-        });
+        return this.getGameByAlias(`t_${topicId}`);
+    }
+    
+    /**
+     * Retrieve a previously created game by chatId
+     *
+     * @param {number} chatId Chat identifier. Must be an integer
+     * @returns {Promise<MafiaGame>} Resolves to requested game, rejects when read error occurs or game not found
+     */
+    getGameByChatId(chatId) {
+        return this.getGameByAlias(`c_${chatId}`);
     }
 
     /**
@@ -118,14 +139,26 @@ class MafiaDao {
      * @returns {Promise<MafiaGame>} Resolves to requested game, rejects when read error occurs or game not found
      */
     getGameByName(name) {
+        return this.getGameByAlias(name);
+    }
+
+    /**
+     * Retrieve a previously created game by alias
+     *
+     * @param {string} alias Custom game alias
+     * @returns {Promise<MafiaGame>} Resolves to requested game, rejects when read error occurs or game not found
+     */
+    getGameByAlias(alias) {
+        alias = alias.toLowerCase();
         return this.load().then((data) => {
-            const game = data.filter((candidate) => candidate.name === name)[0];
+            const game = data.filter((candidate) => candidate.aliases.some((gamealias) => gamealias === alias))[0];
             if (!game) {
                 return Promise.reject('E_NO_GAME');
             }
             return new MafiaGame(game, this);
         });
     }
+    
 
     /**
      * Load data from disk, once.

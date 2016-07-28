@@ -82,7 +82,6 @@ exports.activate = function activate() {
 	dao = new MafiaDao(plugConfig.db);
 	modController = new MafiaModController(dao, plugConfig);
 	playerController = new MafiaPlayerController(dao, plugConfig);
-	internals.forum.Commands.add('echo', 'echo a bunch of post info (for diagnostic purposes)', exports.echoHandler);
 
 	view.activate(internals.forum);
 	playerController.activate(internals.forum);
@@ -164,23 +163,6 @@ function registerPlayers(game, players) {
 /*eslint-enable no-console*/
 
 // Open commands
-
-/**
- * Echo: Echo diagnostic information
- * @example !echo
- *
- * @param  {commands.command} command The command that was passed in.
- * @returns {Promise}        A promise that will resolve when the game is ready
- */
-exports.echoHandler = function (command) {
-	const text = 'topic: ' + command.post.topic_id + '\n' + 'post: ' +
-		command.post.post_number + '\n' + 'input: `' + command.input + '`\n' +
-		'command: `' + command.command + '`\n' + 'args: `' + command.args + '`\n' +
-		'mention: `' + command.mention + '`\n' + 'post:\n[quote]\n' + command.post.cleaned +
-		'\n[/quote]';
-	view.respond(command, text);
-	return Promise.resolve();
-};
 
 /**
  * Create the game from the configuration file

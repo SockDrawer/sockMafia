@@ -110,6 +110,7 @@ class MafiaGame {
         data.moderators = setDefault(data.moderators, {});
         data.actions = setDefault(data.actions, []);
         data.values = setDefault(data.values, {});
+        data.aliases = setDefault(data.aliases, [data.name.toLowerCase(), `t_${data.topicId}`]);
         this._data = data;
         this._dao = dao;
     }
@@ -226,6 +227,15 @@ class MafiaGame {
     }
 
     /**
+     * Get a list of the aliases for this game
+     *
+     * @returns {Array<string>} A list of aliases for this game.
+     */
+    get aliases() {
+        return this._data.aliases.slice();
+    }
+
+    /**
      * Save game data to disk
      *
      * @returns {Promise<MafiaGame>} Resolves to self on completion.
@@ -291,7 +301,7 @@ class MafiaGame {
         }
         return getUser(this, this._data.deadPlayers, user);
     }
-    
+
     /**
      * Get a game moderator
      *
@@ -427,6 +437,41 @@ class MafiaGame {
     }
 
     /**
+     * Get latest game action of the given type
+     *
+     * @param {string} [type='vote'] Action type of the requested action
+     * @param {string|MafiaUser} [target] Target for the requested action
+     * @param {string} [actionToken] ActionToken of the requested action
+     * @param {number} [day=this.day] Day of the game for the requested action
+     * @param {boolean} [includeRevokedActions=false] If true include actions that have been revoked
+     * @returns {MafiaAction} Action matching the provided query, null if no action matched query
+     */
+    getActionOfType(type, target, actionToken, day, includeRevokedActions) {
+        target = getUserSlug(target);
+        type = type || 'vote';
+        day = day || this.day;
+        let actions = this._data.actions.filter((action) => {
+            return action.day === day &&
+                action.action === type &&
+                (
+                    includeRevokedActions ||
+                    !action.revokedId
+                );
+        });
+        if (target) {
+            actions = actions.filter((action) => action.target === target);
+        }
+        if (actionToken) {
+            actions = actions.filter((action) => action.token === actionToken);
+        }
+        if (!actions.length) {
+            return null;
+        }
+        return new MafiaAction(actions[actions.length - 1], this);
+    }
+
+
+    /**
      * Get actions for a particular day of a particular type
      *
      * @param {string} [type='vote'] Action type to retrieve
@@ -535,6 +580,85 @@ class MafiaGame {
         const oldVal = this._data.values[key];
         this._data.values[key] = data;
         return this.save().then(() => oldVal);
+    }
+
+    /**
+     * Add an alias to this game
+     *
+     * @param {string} alias Alias to add to the game
+     * @returns {Promise} Resolves when alias has been added, Rejects if alias would conflict.
+     */
+    addAlias(alias) {
+        alias = alias.toLowerCase();
+        if (this._data.aliases.some((existing) => existing === alias)) {
+            return Promise.resolve(this); // Alias already owned by this game
+        }
+        return this._dao.getGameByAlias(alias).then(() => {
+            return Promise.reject('E_ALIAS_EXISTS');
+        }, (reason) => {
+            if (reason.message !== 'E_NO_GAME'
+            && reason !== 'E_NO_GAME') {
+                return Promise.reject(reason);
+            }
+            this._data.aliases.push(alias);
+            return this.save();
+        });
+    }
+
+    /**
+     * Remove an alias from this game
+     *
+     * @param {string} alias Alias to remove from the game
+     * @returns {Promise<boolean>} Resolves true if alias existed, false otherwise
+     */
+    removeAlias(alias) {
+        alias = alias.toLowerCase();
+        if (this._data.aliases.some((existing) => existing === alias)) {
+            this._data.aliases = this._data.aliases.filter((existing) => existing !== alias);
+            return this.save().then(() => true);
+        } else {
+            return Promise.resolve(false);
+        }
+    }
+
+    /**
+     * Add a topic to this game
+     *
+     * @param {number} topicId ID of topic to add to the game
+     * @returns {Promise} Resolves when topic has been added, Rejects if topic would conflict.
+     */
+    addTopic(topicId) {
+        return this.addAlias(`t_${topicId}`);
+    }
+
+    /**
+     * Remove a topic from this game
+     *
+     * @param {number} topicId ID of topic to remove from the game
+     * @returns {Promise<boolean>} Resolves true if topic was member of game, false otherwise.
+     */
+    removeTopic(topicId) {
+        return this.removeAlias(`t_${topicId}`);
+    }
+
+    /**
+     * Add a chat thread to this game
+     *
+     * @param {number} chatId ID of chat to add to the game
+     * @returns {Promise} Resolves when chat has been added, Rejects if chat would conflict.
+     */
+    addChat(chatId) {
+        return this.addAlias(`c_${chatId}`);
+    }
+
+    /**
+     * Remove a chat from this game
+     *
+     * @param {number} chatId ID of chat to remove from the game
+     * @returns {Promise<boolean>} Resolves true if chat was member of game, false otherwise.
+     */
+    removeChat(chatId) {
+        return this.removeAlias(`c_${chatId}`);
     }
 
     /**

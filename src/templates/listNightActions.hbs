@@ -1,0 +1,20 @@
+## Faction Actions
+
+{{#if scum.show}}
+{{#each scum.actions}}
+ - **Scum**: Target {{target.username}}
+{{/each}}
+{{/if}}
+
+{{#if scum2.show}}
+{{#each scum2.actions}}
+ - **Scum 2**: Target {{target.username}}
+{{/each}}
+{{/if}}
+
+## Other Actions
+{{#if other.show}}
+{{#each other.actions}}
+ - **{{actor.username}}**: Target {{target.username}}
+{{/each}}
+{{/if}}

@@ -76,6 +76,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 1}),
 				getPost: () => Promise.resolve({id: 4}),
 				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
 			};
 
 			//Spies
@@ -98,6 +103,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 1}),
 				getPost: () => Promise.resolve({id: 5}),
 				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
 			};
 
 			//Spies
@@ -118,6 +128,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 1}),
 				getPost: () => Promise.resolve({id: 6}),
 				getUser: () => Promise.resolve({username: 'banana'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
 			};
 
 			//Spies
@@ -135,6 +150,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 1}),
 				getPost: () => Promise.resolve({id: 7}),
 				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
 			};
 
 			//Spies
@@ -153,6 +173,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 1}),
 				getPost: () => Promise.resolve({id: 8}),
 				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
 			};
 
 			//Spies
@@ -172,6 +197,12 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 1}),
 				getPost: () => Promise.resolve({id: 9}),
 				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
+				
 			};
 
 			//Spies
@@ -191,6 +222,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 1}),
 				getPost: () => Promise.resolve({id: 10}),
 				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
 			};
 
 			//Spies
@@ -218,6 +254,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 1}),
 				getPost: () => Promise.resolve({id: 11}),
 				getUser: () => Promise.resolve({username: 'tehninja'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
 			};
 
 			//Spies
@@ -244,6 +285,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 1}),
 				getPost: () => Promise.resolve({id: 12}),
 				getUser: () => Promise.resolve({username: 'tehninja'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
 			};
 
 
@@ -267,6 +313,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 1}),
 				getPost: () => Promise.resolve({id: 13}),
 				getUser: () => Promise.resolve({username: 'accalia'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
 			};
 			//Spies
 			sandbox.spy(game, 'registerAction');
@@ -317,6 +368,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 2}),
 				getPost: () => Promise.resolve({id: 1}),
 				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
 			};
 
 			//Spies
@@ -337,6 +393,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 2}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 			//Then, unvote
@@ -356,6 +417,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 3}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 			//Vote for the same person again
@@ -376,6 +442,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 4}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 			//Then unvote
@@ -394,6 +465,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 5}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 				view.respond.reset();
@@ -419,6 +495,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 2}),
 				getPost: () => Promise.resolve({id: 6}),
 				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				parent: {
+					ids: {
+						topic: 2
+					}
+				}
 			};
 
 			//Spies
@@ -440,6 +521,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 7}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 			//Then, nolynch
@@ -459,6 +545,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 8}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 			//Vote for the same person again
@@ -479,6 +570,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 9}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 			//Then unvote
@@ -497,6 +593,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 10}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 				view.respond.reset();
@@ -552,6 +653,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 2}),
 				getPost: () => Promise.resolve({id: 1}),
 				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				parent: {
+					ids: {
+						topic: 2
+					}
+				}
 			};
 
 			//Spies
@@ -572,6 +678,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 2}),
 					getUser: () => Promise.resolve({username: 'dreikin'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 			//Then, nolynch
@@ -591,6 +702,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 3}),
 					getUser: () => Promise.resolve({username: 'tehninja'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 			//Vote for the original
@@ -658,6 +774,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 2}),
 				getPost: () => Promise.resolve({id: 1}),
 				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 			};
 
 			//Spies
@@ -673,6 +794,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 2}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 				view.reportError.reset();
@@ -696,6 +822,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 2}),
 				getPost: () => Promise.resolve({id: 3}),
 				getUser: () => Promise.resolve({username: 'dreikin'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 			};
 
 			//Spies
@@ -711,6 +842,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 4}),
 					getUser: () => Promise.resolve({username: 'dreikin'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 				view.reportError.reset();
@@ -735,6 +871,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 2}),
 				getPost: () => Promise.resolve({id: 5}),
 				getUser: () => Promise.resolve({username: 'dreikin'}),
+				parent: {
+					ids: {
+						topic: 2
+					}
+				}
 			};
 
 			//Spies
@@ -750,6 +891,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 6}),
 					getUser: () => Promise.resolve({username: 'dreikin'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 				view.reportError.reset();
@@ -1040,10 +1186,10 @@ describe('MafiaBot', function () {
 	});
 	*/
 
-	/*
+
 	describe('Special voting', () => {
 		let dao, playerController, game;
-
+		
 		describe('Doublevoting', () => {
 			before(() => {
 				//Set up the database
@@ -1053,8 +1199,8 @@ describe('MafiaBot', function () {
 					urlForPost: () => '',
 					quoteText: (input) => input
 				};
-
-
+				
+	
 				return dao.createGame(2, 'Game 2')
 					.then((g) => {
 						game = g;
@@ -1068,11 +1214,11 @@ describe('MafiaBot', function () {
 					.then((ninja) => ninja.addProperty('doublevoter'))
 					.then(() => game.newDay());
 			});
-
+	
 			after(() => {
 				dao.getGameByTopicId.restore();
 			});
-
+			
 			it('Should allow two votes', () => {
 				let command = {
 					args: ['@accalia'],
@@ -1081,16 +1227,21 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 4}),
 					getPost: () => Promise.resolve({id: 1}),
 					getUser: () => Promise.resolve({username: 'tehNinja'}),
+					parent: {
+						ids: {
+							topic: 4
+						}
+					}
 				};
-
+				
 				sandbox.spy(game, 'registerAction');
-
+			
 				return playerController.forHandler(command).then(() => {
 					game.registerAction.called.should.equal(true);
-
+	
 					command.reply.called.should.equal(true);
 					command.reply.firstCall.args[0].should.include('@tehNinja voted for @accalia');
-
+					
 					command = {
 						args: ['@dreikin'],
 						input: '!vote @dreikin',
@@ -1098,18 +1249,23 @@ describe('MafiaBot', function () {
 						getTopic: () => Promise.resolve({id: 4}),
 						getPost: () => Promise.resolve({id: 2}),
 						getUser: () => Promise.resolve({username: 'tehNinja'}),
+						parent: {
+							ids: {
+								topic: 4
+							}
+						}
 					};
-
+		
 					view.respond.reset();
 					view.reportError.reset();
 					game.registerAction.reset();
 					return playerController.voteHandler(command);
 				}).then(() => {
 					game.registerAction.called.should.equal(true);
-
+	
 					command.reply.called.should.equal(true);
 					command.reply.firstCall.args[0].should.include('@tehNinja voted for @dreikin');
-
+					
 					command = {
 						args: [''],
 						input: '!list-votes',
@@ -1117,8 +1273,13 @@ describe('MafiaBot', function () {
 						getTopic: () => Promise.resolve({id: 4}),
 						getPost: () => Promise.resolve({id: 3}),
 						getUser: () => Promise.resolve({username: 'tehNinja'}),
+						parent: {
+							ids: {
+								topic: 4
+							}
+						}
 					};
-
+					
 					view.respond.reset();
 					view.reportError.reset();
 					game.registerAction.reset();
@@ -1126,7 +1287,7 @@ describe('MafiaBot', function () {
 				}).then(() => {
 					view.reportError.called.should.be.false;
 					command.reply.called.should.be.true;
-
+					
 					//List both votes
 					const output = command.reply.firstCall.args[0];
 					output.should.include('<td><b>accalia');
@@ -1134,7 +1295,7 @@ describe('MafiaBot', function () {
 					output.should.include('<a href="/p/2"><b>tehNinja</b></a>');
 				});
 			});
-
+			
 			it('Should retract one of the votes', () => {
 				let command = {
 					args: ['@dreikin'],
@@ -1143,13 +1304,18 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 4}),
 					getPost: () => Promise.resolve({id: 5}),
 					getUser: () => Promise.resolve({username: 'tehNinja'}),
+						parent: {
+							ids: {
+								topic: 4
+							}
+						}
 				};
-
+				
 				sandbox.spy(game, 'registerAction');
-
+			
 				return playerController.forHandler(command).then(() => {
 					game.registerAction.called.should.equal(true);
-
+	
 					command.reply.called.should.equal(true);
 					command.reply.firstCall.args[0].should.include('@tehNinja voted for @dreikin');
 					command = {
@@ -1159,8 +1325,13 @@ describe('MafiaBot', function () {
 						getTopic: () => Promise.resolve({id: 4}),
 						getPost: () => Promise.resolve({id: 6}),
 						getUser: () => Promise.resolve({username: 'tehNinja'}),
+						parent: {
+							ids: {
+								topic: 4
+							}
+						}
 					};
-
+					
 					view.respond.reset();
 					view.reportError.reset();
 					game.registerAction.reset();
@@ -1168,7 +1339,7 @@ describe('MafiaBot', function () {
 				}).then(() => {
 					view.reportError.called.should.be.false;
 					command.reply.called.should.be.true;
-
+					
 					//List both votes
 					const output = command.reply.firstCall.args[0];
 					output.should.include('<td><b>accalia');
@@ -1176,7 +1347,7 @@ describe('MafiaBot', function () {
 					output.should.include('<a href="/p/1"><s>tehNinja</s></a> <a href="/p/5">[X]</a>'); //retracted vote
 				});
 			});
-
+			
 			it('Should allow two votes for the same person', () => {
 				let command = {
 					args: ['@yamikuronue'],
@@ -1185,16 +1356,21 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 4}),
 					getPost: () => Promise.resolve({id: 7}),
 					getUser: () => Promise.resolve({username: 'tehNinja'}),
+					parent: {
+						ids: {
+							topic: 4
+						}
+					}
 				};
-
+				
 				sandbox.spy(game, 'registerAction');
-
+			
 				return playerController.forHandler(command).then(() => {
 					game.registerAction.called.should.equal(true);
-
+	
 					command.reply.called.should.equal(true);
 					command.reply.firstCall.args[0].should.include('@tehNinja voted for @yamikuronue');
-
+					
 					command = {
 						args: ['@yamikuronue'],
 						input: '!vote @yamikuronue',
@@ -1202,18 +1378,23 @@ describe('MafiaBot', function () {
 						getTopic: () => Promise.resolve({id: 4}),
 						getPost: () => Promise.resolve({id: 8}),
 						getUser: () => Promise.resolve({username: 'tehNinja'}),
+						parent: {
+							ids: {
+								topic: 4
+							}
+						}
 					};
-
+		
 					view.respond.reset();
 					view.reportError.reset();
 					game.registerAction.reset();
 					return playerController.voteHandler(command);
 				}).then(() => {
 					game.registerAction.called.should.equal(true);
-
+	
 					command.reply.called.should.equal(true);
 					command.reply.firstCall.args[0].should.include('@tehNinja voted for @yamikuronue');
-
+					
 					command = {
 						args: [''],
 						input: '!list-votes',
@@ -1221,8 +1402,13 @@ describe('MafiaBot', function () {
 						getTopic: () => Promise.resolve({id: 4}),
 						getPost: () => Promise.resolve({id: 9}),
 						getUser: () => Promise.resolve({username: 'tehNinja'}),
+						parent: {
+							ids: {
+								topic: 4
+							}
+						}
 					};
-
+					
 					view.respond.reset();
 					view.reportError.reset();
 					game.registerAction.reset();
@@ -1230,7 +1416,7 @@ describe('MafiaBot', function () {
 				}).then(() => {
 					view.reportError.called.should.be.false;
 					command.reply.called.should.be.true;
-
+					
 					//List all votes
 					const output = command.reply.firstCall.args[0];
 					output.should.include('<td><b>yamikuronue');
@@ -1241,7 +1427,7 @@ describe('MafiaBot', function () {
 					output.should.include('<a href="/p/8"><b>tehNinja</b></a>');
 				});
 			});
-
+			
 			it('Should unvote everything', () => {
 				let command = {
 					args: [''],
@@ -1250,16 +1436,21 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 4}),
 					getPost: () => Promise.resolve({id: 10}),
 					getUser: () => Promise.resolve({username: 'tehNinja'}),
+						parent: {
+							ids: {
+								topic: 4
+							}
+						}
 				};
-
+				
 				sandbox.spy(game, 'registerAction');
 				sandbox.spy(game, 'revokeAction');
-
+			
 				return playerController.unvoteHandler(command).then(() => {
 					game.revokeAction.called.should.equal(true);
-
+	
 					command.reply.called.should.equal(true);
-
+					
 					command = {
 						args: [''],
 						input: '!list-votes',
@@ -1267,8 +1458,13 @@ describe('MafiaBot', function () {
 						getTopic: () => Promise.resolve({id: 4}),
 						getPost: () => Promise.resolve({id: 11}),
 						getUser: () => Promise.resolve({username: 'tehNinja'}),
+						parent: {
+							ids: {
+								topic: 4
+							}
+						}
 					};
-
+		
 					view.respond.reset();
 					view.reportError.reset();
 					game.registerAction.reset();
@@ -1276,7 +1472,7 @@ describe('MafiaBot', function () {
 				}).then(() => {
 					view.reportError.called.should.be.false;
 					command.reply.called.should.be.true;
-
+					
 					//List all votes
 					const output = command.reply.firstCall.args[0];
 					output.should.include('<td><b>yamikuronue');
@@ -1289,10 +1485,10 @@ describe('MafiaBot', function () {
 			});
 		});
 	});
-
+	
 	describe('Night Actions', () => {
 		let dao, playerController, modController, game, fakeFormatter;
-
+		
 		before(() => {
 			//Set up the database
 			dao = new DAO(':memory:');
@@ -1301,9 +1497,9 @@ describe('MafiaBot', function () {
 				urlForPost: () => '',
 				quoteText: (input) => input
 			};
-
+			
 			modController = new ModController(dao, testConfig);
-
+			
 			fakeFormatter = {
 				urlForTopic: (topicId, slug, postId) => {
 					return '/t/' + slug + '/' + topicId + '/' + postId;
@@ -1312,23 +1508,24 @@ describe('MafiaBot', function () {
 					return '/p/' + postId;
 				}
 			};
-
+			
 			view.activate({Format: fakeFormatter});
 
 			return dao.createGame(3, 'Game 3')
 				.then((g) => {
 					game = g;
 					sinon.stub(dao, 'getGameByTopicId').resolves(game);
+					sinon.stub(dao, 'getGameByName').resolves(game);
 					return game.addPlayer('yamikuronue');
 				})
 				.then(() => game.addPlayer('accalia'))
 				.then(() => game.addPlayer('dreikin'))
-				.then(() => game.addPlayer('tehninja'))
+				.then(() => game.addPlayer('tehNinja'))
 				.then(() => game.addModerator('God'))
 				.then(() => game.newDay())
 				.then(() => game.nextPhase()); //Make it night
 		});
-
+		
 		it('Should allow setting of properties', () => {
 			let command = {
 				args: ['accalia', 'scum', 'in', '3'],
@@ -1337,11 +1534,16 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 12}),
 				getPost: () => Promise.resolve({id: 1}),
 				getUser: () => Promise.resolve({username: 'God'}),
+				parent: {
+					ids: {
+						topic: 12
+					}
+				}
 			};
-
+		
 			return modController.setHandler(command).then(() => {
 				game.getPlayer('accalia').hasProperty('scum').should.be.true;
-
+				
 				command = {
 					args: ['@yamikuronue', 'scum2', 'in', '3'],
 					line: '!set @yamikuronue scum2 in 3',
@@ -1349,16 +1551,209 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 12}),
 					getPost: () => Promise.resolve({id: 2}),
 					getUser: () => Promise.resolve({username: 'God'}),
+					parent: {
+						ids: {
+							topic: 12
+						}
+					}
 				};
-
+		
 				view.respond.reset();
 				view.reportError.reset();
 				return modController.setHandler(command);
 			}).then(() => {
 				game.getPlayer('yamikuronue').hasProperty('scum2').should.be.true;
 				game.getPlayer('yamikuronue').hasProperty('scum').should.be.false;
+				
+				command = {
+					args: ['@tehninja', 'scum2', 'in', '3'],
+					line: '!set @tehninja scum2 in 3',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 12}),
+					getPost: () => Promise.resolve({id: 2}),
+					getUser: () => Promise.resolve({username: 'God'}),
+					parent: {
+						ids: {
+							topic: 12
+						}
+					}
+				};
+				
+				view.respond.reset();
+				view.reportError.reset();
+				return modController.setHandler(command);
+			}).then(() => {
+				game.getPlayer('tehninja').hasProperty('scum2').should.be.true;
+				game.getPlayer('tehninja').hasProperty('scum').should.be.false;
+			});
+		});
+		
+		it('Should allow night actions by factions', () => {
+			
+			/* 
+				----------------------------------
+				Move 1: Scum targets Dreikin
+			 	----------------------------------
+			*/
+
+			let command = {
+				args: ['@dreikin', 'in', '3'],
+				line: '!target @dreikin in 3',
+				reply: sandbox.stub(),
+				getTopic: () => Promise.resolve({id: 3}),
+				getPost: () => Promise.resolve({id: 100}),
+				getUser: () => Promise.resolve({username: 'accalia'}),
+				parent: {
+					ids: {
+						topic: 3
+					}
+				}
+			};
+			
+			sandbox.spy(game, 'registerAction');
+			return playerController.targetHandler(command).then(() => {
+
+			/* 
+				----------------------------------
+				Move 2: Scum2 targets Dreikin
+			 	----------------------------------
+			*/
+				command = {
+					args: ['@dreikin', 'in', '3'],
+					line: '!target @dreikin in 3',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 3}),
+					getPost: () => Promise.resolve({id: 102}),
+					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 3
+						}
+					}
+				};
+				
+				return playerController.targetHandler(command);
+			}).then(() => {
+
+			/* 
+				----------------------------------
+				Move 3: God lists actions
+			 	----------------------------------
+			*/
+				command = {
+					args: ['3'],
+					line: '!list-night-actions in testMafia',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 3}),
+					getPost: () => Promise.resolve({id: 103}),
+					getUser: () => Promise.resolve({username: 'God'}),
+					parent: {
+						ids: {
+							topic: 3
+						}
+					}
+				};
+				
+				return modController.listNAHandler(command);
+			}).then(() => {
+				const output = command.reply.firstCall.args[0];
+				output.should.include('**Scum**: Target dreikin');
+				output.should.include('**Scum 2**: Target dreikin');
+				
+			/* 
+				----------------------------------
+				Move 4: TehNinja targets Accalia
+			 	----------------------------------
+			*/
+				command = {
+					args: ['@accalia', 'in', '3'],
+					line: '!target @accalia in 3',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 3}),
+					getPost: () => Promise.resolve({id: 102}),
+					getUser: () => Promise.resolve({username: 'tehninja'}),
+					parent: {
+						ids: {
+							topic: 3
+						}
+					}
+				};
+				
+				return playerController.targetHandler(command);
+			}).then(() => {
+				
+			/* 
+				----------------------------------
+				Move 5: God lists actions
+			 	----------------------------------
+			*/
+				command = {
+					args: ['in', '3'],
+					line: '!list-night-actions in 3',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 3}),
+					getPost: () => Promise.resolve({id: 103}),
+					getUser: () => Promise.resolve({username: 'God'}),
+					parent: {
+						ids: {
+							topic: 3
+						}
+					}
+				};
+				
+				return modController.listNAHandler(command);
+			}).then(() => {
+				const output = command.reply.firstCall.args[0];
+				output.should.include('**Scum**: Target dreikin');
+				output.should.include('**Scum 2**: Target accalia');
+			/*
+				----------------------------------
+				Move 6: Scum targets TehNinja
+			 	----------------------------------
+			*/
+				command = {
+					args: ['@tehNinja', 'in', '3'],
+					line: '!target @tehNinja in 3',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 3}),
+					getPost: () => Promise.resolve({id: 100}),
+					getUser: () => Promise.resolve({username: 'accalia'}),
+					parent: {
+						ids: {
+							topic: 3
+						}
+					}
+				};
+			
+				return playerController.targetHandler(command);
+			}).then(() => {
+					
+			/*
+				----------------------------------
+				Move 7: God lists actions
+			 	----------------------------------
+			*/
+				command = {
+					args: ['in', '3'],
+					line: '!list-night-actions in 3',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 3}),
+					getPost: () => Promise.resolve({id: 103}),
+					getUser: () => Promise.resolve({username: 'God'}),
+					parent: {
+						ids: {
+							topic: 3
+						}
+					}
+				};
+				
+				return modController.listNAHandler(command);
+			}).then(() => {
+				const output = command.reply.firstCall.args[0];
+				output.should.not.include('**Scum**: Target dreikin');
+				output.should.include('**Scum**: Target tehNinja');
+				output.should.include('**Scum 2**: Target accalia');
 			});
 		});
 	});
-	*/
 });

@@ -351,7 +351,7 @@ describe('nouveau dao/MafiaGame', () => {
             game.moderators.should.eql([]);
         });
         it('should be generate new array for each access', () => {
-            game.moderators.should.not.equal(game.livePlayers);
+            game.moderators.should.not.equal(game.moderators);
         });
         it('should be an array of `MafiaUser`s', () => {
             game._data.moderators = Array.apply(null, Array(20)).map((_, i) => {
@@ -373,6 +373,27 @@ describe('nouveau dao/MafiaGame', () => {
             firstResult.should.equal(expected);
             const secondResult = game.moderators.map(player => player.username).join(' ');
             secondResult.should.equal(firstResult);
+        });
+    });
+    describe('getter aliases', () => {
+        let game = null;
+        beforeEach(() => game = new MafiaGame({}));
+        it('should include game name', () => {
+            const name = `name is the name ${Math.random()}`,
+                thegame = new MafiaGame({
+                    name: name
+                });
+            thegame.aliases.should.contain(name);
+        });
+        it('should include game topic', () => {
+            const topicId = Math.random(),
+                thegame = new MafiaGame({
+                    topicId: topicId
+                });
+            thegame.aliases.should.contain(`t_${topicId}`);
+        });
+        it('should be generate new array for each access', () => {
+            game.aliases.should.not.equal(game.aliases);
         });
     });
     describe('save()', () => {
@@ -616,6 +637,44 @@ describe('nouveau dao/MafiaGame', () => {
                 username: name
             });
             chai.expect(game._getPlayer(user)).to.be.null;
+        });
+    });
+    describe('getModerator()', () => {
+        let game = null;
+        beforeEach(() => game = new MafiaGame({}));
+        it('should throw exception for no moderators', () => {
+            const name = `nale${Math.random()}`;
+            chai.expect(() => game.getModerator(name)).to.throw('E_MODERATOR_NOT_EXIST');
+        });
+        it('should return moderator user', () => {
+            const name = `nale${Math.random()}`;
+            game._data.moderators[name.replace('.', '')] = {
+                username: name
+            };
+            const player = game.getModerator(name);
+            player.should.be.an.instanceOf(MafiaUser);
+            player.username.should.equal(name);
+        });
+        it('should return moderator via userslug', () => {
+            const name = `nale${Math.random()}`;
+            game._data.moderators[name.replace('.', '')] = {
+                username: name
+            };
+            const player = game.getModerator(name.toUpperCase());
+            player.should.be.an.instanceOf(MafiaUser);
+            player.username.should.equal(name);
+        });
+        it('should return moderator for MafiaUser', () => {
+            const name = `nale${Math.random()}`;
+            game._data.moderators[name.replace('.', '')] = {
+                username: name
+            };
+            const user = new MafiaUser({
+                username: name
+            });
+            const player = game.getModerator(user);
+            player.should.be.an.instanceOf(MafiaUser);
+            player.username.should.equal(name);
         });
     });
     describe('getPlayer()', () => {
@@ -876,7 +935,8 @@ describe('nouveau dao/MafiaGame', () => {
             actions.push({
                 actor: 'foobar',
                 day: 1,
-                action: 'vote'
+                action: 'vote',
+                revokedId: 19
             });
             game.getAction('foobar').should.be.an.instanceOf(MafiaAction);
         });
@@ -947,6 +1007,155 @@ describe('nouveau dao/MafiaGame', () => {
                 token: 'abc'
             });
             chai.expect(game.getAction('foobar', undefined, undefined, 'cde')).to.be.null;
+        });
+    });
+    describe('getActionOfType()', () => {
+        let game = null,
+            actions = null;
+        beforeEach(() => {
+            game = new MafiaGame({});
+            actions = game._data.actions;
+        });
+        it('should return null when no action matches', () => {
+            actions.push({
+                actor: 'foo',
+                day: 1,
+                action: 'vote'
+            });
+            chai.expect(game.getActionOfType('foobar')).to.be.null;
+        });
+        it('should default action type to `vote`', () => {
+            actions.push({
+                actor: 'foo',
+                day: 1,
+                action: 'vote',
+                token: 4
+            });
+            actions.push({
+                actor: 'foo',
+                day: 1,
+                action: 'bar'
+            });
+            game.getActionOfType().token.should.equal(4);
+        });
+        it('should return action when includeRevokedActions is set', () => {
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                revokedId: 50
+            });
+            game.getActionOfType('vote', undefined, undefined, undefined, true).should.be.an.instanceOf(MafiaAction);
+        });
+        it('should not return action when includeRevokedActions is unset', () => {
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                revokedId: 50
+            });
+            chai.expect(game.getActionOfType('vote', undefined, undefined, undefined, false)).to.be.null;
+        });
+        it('should default includeRevokedActions to unset', () => {
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                revokedId: 50
+            });
+            chai.expect(game.getActionOfType('vote')).to.be.null;
+        });
+        it('should return latest matching action when actions matches', () => {
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                token: 1
+            });
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                token: 2
+            });
+            game.getActionOfType('vote').token.should.equal(2);
+        });
+        it('should return latest unrevoked matching action when actions matches', () => {
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                token: 1
+            });
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                token: 2
+            });
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                token: 3,
+                revokedId: 99
+            });
+            game.getActionOfType('vote').token.should.equal(2);
+        });
+        it('should not choose action for non filter day', () => {
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote'
+            });
+            chai.expect(game.getActionOfType('vote', undefined, undefined, 2)).to.be.null;
+        });
+        it('should not choose action for non filter type', () => {
+            actions.push({
+                actor: 'foobar',
+                day: 2,
+                action: 'vote'
+            });
+            chai.expect(game.getActionOfType('fish')).to.be.null;
+        });
+        it('should not choose action for non filter target', () => {
+            actions.push({
+                actor: 'foobar',
+                target: 'hexadecimal',
+                day: 1,
+                action: 'vote'
+            });
+            chai.expect(game.getActionOfType('vote', 'ocatal')).to.be.null;
+        });
+        it('should not choose action for non filter action token', () => {
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                token: 'abc'
+            });
+            chai.expect(game.getActionOfType('vote', undefined, 'cde')).to.be.null;
+        });
+        it('should not choose action for non filter action token', () => {
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                token: 'abc'
+            });
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                token: 'def'
+            });
+            actions.push({
+                actor: 'foobar',
+                day: 1,
+                action: 'vote',
+                token: 'xyz'
+            });
+            chai.expect(game.getActionOfType('vote', undefined, 'def')).to.not.be.null;
         });
     });
     describe('getActions()', () => {
@@ -1328,6 +1537,147 @@ describe('nouveau dao/MafiaGame', () => {
             values[name] = expected;
             return game.setValue(name, 'foobar').then((oldvalue) => {
                 oldvalue.should.equal(expected);
+            });
+        });
+    });
+    describe('addAlias()', () => {
+        let game = null,
+            getGameByAlias = null;
+        beforeEach(() => {
+            getGameByAlias = sinon.stub().resolves();
+            game = new MafiaGame({}, {
+                getGameByAlias: getGameByAlias
+            });
+            game.save = sinon.stub().resolves(game);
+        });
+        it('should resolve when alias already owned by game', () => {
+            const alias = `sekret name ${Math.random()}`;
+            game._data.aliases.push(alias);
+            return game.addAlias(alias).then(() => {
+                getGameByAlias.should.not.be.called;
+            });
+        });
+        it('should resolve to self when alias already owned by game', () => {
+            const alias = `sekret name ${Math.random()}`;
+            game._data.aliases.push(alias);
+            return game.addAlias(alias).should.become(game);
+        });
+        it('should resolve when case safe alias already owned by game', () => {
+            const alias = `sekret name ${Math.random()}`;
+            game._data.aliases.push(alias);
+            return game.addAlias(alias.toUpperCase()).then(() => {
+                getGameByAlias.should.not.be.called;
+            });
+        });
+        it('should resolve to self when case safe alias already owned by game', () => {
+            const alias = `sekret name ${Math.random()}`;
+            game._data.aliases.push(alias);
+            return game.addAlias(alias.toUpperCase()).should.become(game);
+        });
+        it('should reject when alias has already been assigned to another game', () => {
+            getGameByAlias.resolves({});
+            game.addAlias(`cthulu4prez${Math.random()}`).should.be.rejectedWith('E_ALIAS_EXISTS');
+        });
+        it('should reject when getGameByAlias rejects with non E_NO_GAME reason', () => {
+            getGameByAlias.rejects('E_DIRTY_DIRTY_GIRL');
+            return game.addAlias('foobar').should.be.rejected;
+        });
+        it('should add alias to aliases list when aliase is available', () => {
+            getGameByAlias.rejects('E_NO_GAME');
+            const alias = `sekret name ${Math.random()}`;
+            game._data.aliases.should.not.contain(alias);
+            return game.addAlias(alias).then(() => {
+                game._data.aliases.should.contain(alias);
+                game.save.should.be.calledOnce;
+            });
+        });
+        it('should add case safe alias to aliases list when aliase is available', () => {
+            getGameByAlias.rejects('E_NO_GAME');
+            const alias = `sekret name ${Math.random()}`;
+            game._data.aliases.should.not.contain(alias);
+            return game.addAlias(alias.toUpperCase()).then(() => {
+                game._data.aliases.should.contain(alias);
+                game.save.should.be.calledOnce;
+            });
+        });
+    });
+    describe('removeAlias()', () => {
+        let game = null;
+        beforeEach(() => {
+            game = new MafiaGame({});
+            game.save = sinon.stub().resolves(game);
+        });
+        it('should resolve to false when alias is not owned by game', () => {
+            const alias = `some alias ${Math.random()}`;
+            return game.removeAlias(alias).should.become(false);
+        });
+        it('should not save when alias is not owned by game', () => {
+            const alias = `some alias ${Math.random()}`;
+            return game.removeAlias(alias).then(() => {
+                game.save.should.not.be.called;
+            });
+        });
+        it('should resolve to true when alias is owned by game', () => {
+            const alias = `some alias ${Math.random()}`;
+            game._data.aliases.push(alias);
+            return game.removeAlias(alias).should.become.true;
+        });
+        it('should save when alias is owned by game', () => {
+            const alias = `some alias ${Math.random()}`;
+            game._data.aliases.push(alias);
+            return game.removeAlias(alias).then(() => {
+                game.save.should.be.called;
+            });
+        });
+        it('should remove alias from game', () => {
+            const alias = `some alias ${Math.random()}`;
+            game._data.aliases.push(alias);
+            return game.removeAlias(alias).then(() => {
+                game._data.aliases.should.not.contain(alias);
+            });
+        });
+    });
+    describe('alias proxies', () => {
+        let game = null;
+        beforeEach(() => {
+            game = new MafiaGame({});
+            game.addAlias = sinon.stub().resolves();
+            game.removeAlias = sinon.stub().resolves(false);
+        });
+        it('should alias `addTopic()` to `addAlias()`', () => {
+            const topic = Math.random(),
+                expected = Math.random();
+            game.addAlias.resolves(expected);
+            return game.addTopic(topic).then((actual) => {
+                actual.should.equal(expected);
+                game.addAlias.should.be.calledWith(`t_${topic}`).once;
+            });
+        });
+        it('should alias `addChat()` to `addAlias()`', () => {
+            const chat = Math.random(),
+                expected = Math.random();
+            game.addAlias.resolves(expected);
+            return game.addChat(chat).then((actual) => {
+                actual.should.equal(expected);
+                game.addAlias.should.be.calledWith(`c_${chat}`).once;
+            });
+        });
+        it('should alias `removeTopic()` to `removeAlias()`', () => {
+            const topic = Math.random(),
+                expected = Math.random();
+            game.removeAlias.resolves(expected);
+            return game.removeTopic(topic).then((actual) => {
+                actual.should.equal(expected);
+                game.removeAlias.should.be.calledWith(`t_${topic}`).once;
+            });
+        });
+        it('should alias `removeChat()` to `removeAlias()`', () => {
+            const chat = Math.random(),
+                expected = Math.random();
+            game.removeAlias.resolves(expected);
+            return game.removeChat(chat).then((actual) => {
+                actual.should.equal(expected);
+                game.removeAlias.should.be.calledWith(`c_${chat}`).once;
             });
         });
     });
