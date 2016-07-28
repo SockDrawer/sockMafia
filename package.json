@@ -12,7 +12,9 @@
     "dao_tests": "istanbul cover node_modules/mocha/bin/_mocha --print both -- ./test/unit/dao --recursive -R dot ",
     "unit_tests": "istanbul cover node_modules/mocha/bin/_mocha --print both -- ./test/unit --recursive -R dot ",
     "integration_tests": "mocha ./test/integration/*.js",
-    "integration_coverage": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/integration/*.js"
+    "integration_coverage": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/integration/*.js",
+    "publish-please": "publish-please",
+    "prepublish": "publish-please guard"
   },
   "repository": {
     "type": "git",
