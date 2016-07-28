@@ -49,7 +49,7 @@ exports.respondInChat = function(chatId, output) {
 		return Promise.reject('Cannot output to chat; provider does not support it.');
 	}
 	
-	return chat.get(chatId).then((chatroom) => chatroom.reply(output));
+	return chat.get(chatId).then((chatroom) => chatroom.send(output));
 };
 
 exports.respondInThread = function(thread, output) {
