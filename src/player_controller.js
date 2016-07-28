@@ -409,6 +409,10 @@ class MafiaPlayerController {
 		}
 
 		const targetString = command.args[0] ? command.args[0].replace('@', '') : '';
+		
+		if (command.parent.ids.topic === -1) {
+			return view.reportError(command, '', 'You cannot vote in private!');
+		}
 
 		return this.getGame(command)
 		.catch(() => {
@@ -417,9 +421,6 @@ class MafiaPlayerController {
 		})
 		.then((g) => {
 			game = g;
-			if (command.parent.ids.topic === -1) {
-				throw new Error('You cannot vote in private!');
-			}
 			return command.getTopic();
 		}).then((topic) => {
 			gameId = topic.id;
