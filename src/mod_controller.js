@@ -143,15 +143,12 @@ class MafiaModController {
 				}
 			}
 		}
-		
-		return command.getTopic().then((topic) => {
-			if (topic.id === -1) {
-				//Command came from a chat
-				return this.dao.getGameByChatId(command.parent.ids[0]);
-			} else {
-				return this.dao.getGameByTopicId(topic.id);
-			}
-		});
+		if (command.parent.ids.topic === -1) {
+			//Command came from a chat
+			return this.dao.getGameByChatId(command.parent.ids.chat);
+		} else {
+			return this.dao.getGameByTopicId(command.parent.ids.topic);
+		}
 	}
     
     addHandler (command) {
