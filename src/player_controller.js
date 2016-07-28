@@ -167,6 +167,13 @@ class MafiaPlayerController {
 		return text;
 	}
 
+	/**
+	* Get the flavor-ized error text when a vote errors. For standardization across voting methods
+	* @param   {Error} reason   The reason to process
+	* @param   {String} voter   The voter's name
+	* @param   {String} target  Who they tried to vote for
+	* @returns {Promise}        A promise that resolves to the text
+	*/
 	getVotingErrorText(reason, voter, target) {
 		let text = ':wtf:';
 		if (reason.toString().indexOf('Voter not in game') > -1) {
@@ -189,7 +196,17 @@ class MafiaPlayerController {
 		return Promise.resolve(text);
 	}
 
-
+	/**
+	* Check to see if a lynch should happen. 
+	* Game rules:
+	*  - If a simple majority of players vote for a single player:
+	*    - The game enters the night phase
+	*    - That player's information is revealed
+	*    
+	* @param   {MafiaGame}   game   The game 
+	* @param   {MafiaPlayer} target The person why may be lynched
+	* @returns {Promise}        A promise that resolves when the lynch is done or not required
+	*/
 	checkForAutoLynch(game, target) {
 		const todaysVotes = game.getActions();
 
@@ -401,9 +418,8 @@ class MafiaPlayerController {
 	*  - A vote can only be registered by a living player
 	*  - A vote can only be registered for a player in the game
 	*  - A vote cna only be registered for a living player
-	*  - If a simple majority of players vote for a single player:
-	*    - The game enters the night phase
-	*    - That player's information is revealed
+	*  - If a voter is not a doublevoter, this does not differ from For. If they are, this is a separate vote
+	*  - After a vote, a lynch may be required
 	*
 	* @example !vote playerName
 	* @example !for playerName
@@ -486,6 +502,25 @@ class MafiaPlayerController {
 		});
 	}
 
+	/**
+	* For: Vote to lynch a player
+	* Must be used in the game thread. Expects one argument
+	*
+	* Game rules:
+	*  - A vote can only be registered by a player in the game
+	*  - A vote can only be registered by a living player
+	*  - A vote can only be registered for a player in the game
+	*  - A vote cna only be registered for a living player
+	*  - If a simple majority of players vote for a single player:
+	*    - The game enters the night phase
+	*    - That player's information is revealed
+	*
+	* @example !vote playerName
+	* @example !for playerName
+	* 
+	* @param  {commands.command} command The command that was passed in.
+	* @returns {Promise}        A promise that will resolve when the game is ready
+	*/
 	forHandler (command) {
 		let gameId, voter;
 
@@ -521,7 +556,6 @@ class MafiaPlayerController {
 			return this.doVote(gameId, post.id, voter, targetString, command.line, 1, command);
 		});
 	}
-
 
 	doVote (gameId, post, actor, target, input, voteNum, command) {
 		let voter, votee, game;
