@@ -155,7 +155,7 @@ class MafiaModController {
 	}
     
     addHandler (command) {
-		if (command.args.length < 2) {
+		function notEnoughArgs() {
 			const text = 'Incorrect syntax. Usage: !add [thread|chat] 123 testMafia or !add [thread|chat] 123 to testMafia or !add this to testMafia';
 			logRecoveredError('Error when setting property: ' + text);
 			view.reportError(command, 'Error setting player property: ', text);
@@ -185,11 +185,17 @@ class MafiaModController {
 		let gameId, user;
 
 		if (thisMode) {
+			if (command.args.length < 2) {
+				return notEnoughArgs();
+			}
 			gameId = command.args[1];
 			if (gameId.toLowerCase() === 'to') {
 				gameId = command.args[2];
 			}
 		} else {
+			if (command.args.length < 3) {
+				return notEnoughArgs();
+			}
 			gameId = command.args[2];
 			if (gameId.toLowerCase() === 'to') {
 				gameId = command.args[3];
