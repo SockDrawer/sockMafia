@@ -206,15 +206,15 @@ class MafiaModController {
 			}
 		}).then((g) => {
 			game = g;
-			logDebug('Received add thread/chat request in ' + game.name + ' from ' + user.username);
+			
 			try {
 				game.getModerator(user.username);
 			} catch (_) {
 				throw new Error('You are not a moderator!');
 			}
+			logDebug('Received add thread/chat request in ' + game.name + ' from ' + user.username);
 			
 		}).then(() => {
-			
 			if (thisMode) {
 				const topicId = command.parent.ids.topic;
 				
@@ -236,8 +236,8 @@ class MafiaModController {
 			}
 		})
 		.catch((err) => {
-			logRecoveredError('Error when setting property: ' + err);
-			view.reportError(command, 'Error setting player property: ', err);
+			logRecoveredError('Error adding thread/chat: ' + err);
+			view.reportError(command, 'Error adding thread/chat: ', err);
 		});
 	}
 
