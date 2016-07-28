@@ -131,6 +131,15 @@ class MafiaModController {
         forum.Commands.add('add', 'Add a thread or chat to the game (mod only)', this.addHandler.bind(this));
     }
     
+    /**
+	* Get the game. Will figure out what game this was meant to be run in from context
+	* Rules:
+	*   - ending the command with "in gameName" will do a game lookup by name
+	*   - ending the command with "in [int]" will do a game lookup by thread
+	*   - If none of the above are true, a game lookup will be executed for the current thread or chat
+	* @param  {Command} command The command being executed
+	* @returns {Promise}        A promise that will resolve when the command is complete
+	*/
     getGame (command) {
 		//First check for 'in soandso' syntax
 		for (let i = 0; i < command.args.length; i++) {
@@ -151,6 +160,19 @@ class MafiaModController {
 		}
 	}
     
+    /**
+	* Add a thread or chat to the game so that commands can be executed in it. 
+	* Examples:
+	*  - !add thread 123 testmafia 
+	*  - !add thread 123 to testMafia
+	*  - !add chat 123 testMafia
+	*  - !add chat 123 to testMafia
+	*  - !add this testMafia
+	*  - !add this to testMafia
+	* 
+	* @param  {Command} command The command being executed
+	* @returns {Promise}        A promise that will resolve when the command is complete
+	*/
     addHandler (command) {
 		function notEnoughArgs() {
 			const text = 'Incorrect syntax. Usage: !add [thread|chat] 123 testMafia or !add [thread|chat] 123 to testMafia or !add this to testMafia';
@@ -260,6 +282,7 @@ class MafiaModController {
      * Set: set a prperty for a player.
      * No game rules; this sets up rules for voting
      * @param {Sockbot.commands.command} command The command object
+     * @returns {Promise}        A promise that will resolve when the command is complete
      */
 	setHandler (command) {
 		const targetString = command.args[0] ? command.args[0].replace('@', '') : '';

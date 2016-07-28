@@ -147,6 +147,17 @@ class MafiaPlayerController {
 		return 0;
 	}
 
+	/**
+	* Get the text for a voting attempt. A helper method, no game rules.
+	*
+	* @param   {String} actor   Who is voting
+	* @param   {String} action  Did they vote, unvote, et cetera
+	* @param   {String} thread  Where did they vote
+	* @param   {String} post    the postID where the action took place
+	* @param   {String} input   their ogiginal input
+	*
+	* @returns	{String} The text to output
+	*/
 	getVoteAttemptText(actor, action, thread, post, input) {
 		const url = this.formatter.urlForPost(post);
 
