@@ -214,7 +214,7 @@ class MafiaModController {
 			try {
 				game.getModerator(user.username);
 			} catch (_) {
-				throw new Error('You are not a moderator!');
+				return Promise.reject('You are not a moderator');
 			}
 			logDebug('Received add thread/chat request in ' + game.name + ' from ' + user.username);
 			
@@ -280,7 +280,7 @@ class MafiaModController {
 				try {
 					mod = game.getModerator(modName);
 				} catch (_) {
-					throw new Error('You are not a moderator!');
+					return Promise.reject('You are not a moderator');
 				}
 				return mod.isModerator ? Promise.resolve() : Promise.reject('You are not a moderator');
 			})
@@ -497,14 +497,19 @@ class MafiaModController {
 	* @returns {Promise}        A promise that will resolve when the game is ready
 	*/
 	listNAHandler(command) {
-		let game;
+		let game, mod;
 		const gameId = command.args[0];
 		debug('Listing night actions for ' + gameId);
 
 		return Promise.all([this.getGame(command), command.getUser()])
 		.then((responses) => {
 			game = responses[0];
-			return game.getModerator(responses[1].username);
+			try {
+				mod = game.getModerator(responses[1].username);
+			} catch (_) {
+				return Promise.reject('You are not a moderator');
+			}
+			return mod.isModerator ? Promise.resolve() : Promise.reject('You are not a moderator');
 		}).then((a) => {
 			const actions = game.getActions('target').filter((action) => {
 				return action.isCurrent;
@@ -539,9 +544,6 @@ class MafiaModController {
 			
 			return view.respondWithTemplate('templates/listNightActions.hbs', data, command);
 		}).catch((err) => {
-			if (err.toString() === 'E_MODERATOR_NOT_EXIST') {
-				err = 'You are not a moderator!';
-			}
 			logRecoveredError('Error listing night actions: ' + err);
 			view.reportError(command, 'Error listing night actions: ', err);
 		});
