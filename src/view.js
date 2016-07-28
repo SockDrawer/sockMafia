@@ -21,11 +21,14 @@ let formatter = {
 	}
 };
 
+let chat;
+
 let readFile = require('fs-readfile-promise');
 
 exports.activate = function(forum, rf) {
 	debug('activating view');
 	post = forum ? forum.Post : post;
+	chat = forum ? forum.Chat : undefined;
 	formatter = forum ? forum.Format : formatter;
 	readFile = rf || require('fs-readfile-promise');
 
@@ -39,6 +42,14 @@ exports.activate = function(forum, rf) {
 exports.respond = function(command, output) {
 	command.reply(output);
 	return Promise.resolve();
+};
+
+exports.respondInChat = function(chatId, output) {
+	if (!chat) {
+		return Promise.reject('Cannot output to chat; provider does not support it.');
+	}
+	
+	return chat.get(chatId).then((chatroom) => chatroom.reply(output));
 };
 
 exports.respondInThread = function(thread, output) {

@@ -181,8 +181,9 @@ class MafiaModController {
 	
 		let game;
 		const thisMode = command.args[0].toLowerCase() === 'this';
-		const itemId = thisMode ? '' : command.args[1];
+		let itemId = thisMode ? '' : command.args[1];
 		let gameId, user;
+		let chat = false;
 
 		if (thisMode) {
 			if (command.args.length < 2) {
@@ -223,12 +224,14 @@ class MafiaModController {
 		}).then(() => {
 			if (thisMode) {
 				const topicId = command.parent.ids.topic;
-				
 				if (topicId === -1) {
 					//Command came from a chat
-					return game.addChat(command.parent.ids.chat);
+					chat = true;
+					itemId = command.parent.ids.chat;
+					return game.addChat(itemId);
 				} else {
-					return game.addTopic(topicId);
+					itemId = topicId;
+					return game.addTopic(itemId);
 				}
 			}
 		
@@ -236,9 +239,18 @@ class MafiaModController {
 			if ( type === 'thread') {
 				return game.addTopic(itemId);
 			} else if ( type === 'chat') {
+				chat = true;
 				return game.addChat(itemId);
 			} else {
 				throw new Error(`I don't know how to add a "${type}". Try a "thread" or a "chat"?`);
+			}
+		})
+		.then(() => {
+			view.respond(command, 'Sucess! That thread/chat is now part of the game.');
+			if (chat) {
+				view.respondInChat(itemId, 'This thread is now sanctioned as part of ' + game.name);
+			} else {
+				view.respondInThread(itemId, 'This thread is now sanctioned as part of ' + game.name);
 			}
 		})
 		.catch((err) => {
