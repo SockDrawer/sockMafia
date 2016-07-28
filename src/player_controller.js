@@ -222,14 +222,12 @@ class MafiaPlayerController {
 	}
 	
 	getGame (command) {
-		return command.getTopic().then((topic) => {
-			if (topic.id === -1) {
-				//Command came from a chat
-				return this.dao.getGameByChatId(command.parent.ids[0]);
-			} else {
-				return this.dao.getGameByTopicId(topic.id);
-			}
-		});
+		if (command.parent.ids.topic === -1) {
+			//Command came from a chat
+			return this.dao.getGameByChatId(command.parent.ids.chat);
+		} else {
+			return this.dao.getGameByTopicId(command.parent.ids.topic);
+		}
 	}
 
 	/**
@@ -329,6 +327,10 @@ class MafiaPlayerController {
 		})
 		.then((g) => {
 			game = g;
+			
+			if (command.parent.ids.topic === -1) {
+				throw new Error('Hey1 No secret unvoting! Use a public thread.');
+			}
 			return command.getUser();
 		}).then((user) => {
 			actor = user.username;
@@ -415,6 +417,9 @@ class MafiaPlayerController {
 		})
 		.then((g) => {
 			game = g;
+			if (command.parent.ids.topic === -1) {
+				throw new Error('You cannot vote in private!');
+			}
 			return command.getTopic();
 		}).then((topic) => {
 			gameId = topic.id;
@@ -472,6 +477,10 @@ class MafiaPlayerController {
 	forHandler (command) {
 		let gameId, voter;
 
+		if (command.parent.ids.topic === -1) {
+			return view.reportError(command, '', 'You cannot vote in private!');
+		}
+			
 		return command.getTopic().then((topic) => {
 			gameId = topic.id;
 			return command.getUser();
@@ -575,22 +584,19 @@ class MafiaPlayerController {
 	* @returns {Promise}        A promise that will resolve when the game is ready
 	*/
 	joinHandler(command) {
-		let game, gameId, player;
+		let game, player;
 
 		return this.getGame(command)
 		.catch(() => {
-			logWarning('Ignoring message in nonexistant game thread ' + game);
+			logWarning('Ignoring message in nonexistant game thread');
 			throw (E_NOGAME);
 		})
 		.then((g) => {
 			game = g;
-			return command.getTopic();
-		}).then((topic) => {
-			gameId = topic.id;
 			return command.getUser();
 		}).then((u) => {
 			player = u.username;
-			logDebug('Received join request from ' + player + ' in game ' + gameId);
+			logDebug('Received join request from ' + player + ' to ' + game.name);
 
 			if (game.isActive) {
 				return Promise.reject('Cannot join game in progress.');
@@ -628,19 +634,16 @@ class MafiaPlayerController {
 	* @returns {Promise}        A promise that will resolve when the game is ready
 	*/
 	listPlayersHandler (command) {
-		let game, id;
+		let game;
 
 		return this.getGame(command)
 		.catch(() => {
-			logWarning('Ignoring message in nonexistant game thread ' + game);
+			logWarning('Ignoring message in nonexistant game thread');
 			throw (E_NOGAME);
 		})
 		.then((g) => {
 			game = g;
-			logDebug('Received list request in game ' + id);
-			return command.getTopic();
-		}).then((topic) => {
-			id = topic.id;
+			logDebug('Received list request in game ' + game.name);
 		
 			//Store a reference otherwise it'll shuffle every time we dip
 			const alive = game.livePlayers;
@@ -696,19 +699,16 @@ class MafiaPlayerController {
 	* @returns {Promise}        A promise that will resolve when the game is ready
 	*/
 	listAllPlayersHandler(command) {
-		let game, id;
+		let game;
 
 		return this.getGame(command)
 		.catch(() => {
-			logWarning('Ignoring message in nonexistant game thread ' + game);
+			logWarning('Ignoring message in nonexistant game thread');
 			throw (E_NOGAME);
 		})
 		.then((g) => {
 			game = g;
-			logDebug('Received list request in game ' + id);
-			return command.getTopic();
-		}).then((topic) => {
-			id = topic.id;
+			logDebug('Received list request in game ' + game.name);
 			//Store a reference otherwise it'll shuffle every time we dip
 			const alive = game.livePlayers;
 			const mods =  game.moderators;
@@ -794,18 +794,8 @@ class MafiaPlayerController {
 		})
 		.then((g) => {
 			game = g;
-			return command.getTopic();
-		}).then((topic) => {
-			id = topic.id;
-			return this.dao.getGameByTopicId(id).catch(() => {
-				logWarning('Ignoring message in nonexistant game thread ' + game);
-				throw (E_NOGAME);
-			});
-		})
-		.then((g) => {
-			game = g;
 
-			logDebug('Received list request in game ' + id);
+			logDebug('Received list request in game ' + game.name);
 
 			data.toExecute = this.getNumVotesRequired(game);
 			data.day = game.day;

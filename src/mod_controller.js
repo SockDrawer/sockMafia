@@ -267,14 +267,12 @@ class MafiaModController {
 	setHandler (command) {
 		const targetString = command.args[0] ? command.args[0].replace('@', '') : '';
 		const property = command.args[1];
-		let gameId, modName, game, mod, target;
+		let modName, game, mod, target;
 
-		return command.getTopic().then((topic) => {
-				gameId = topic.id;
-				return command.getUser();
-			}).then((user) => {
+		return command.getUser()
+			.then((user) => {
 				modName = user.username;
-				logDebug('Received set property request from ' + modName + ' for ' + targetString + ' in thread ' + gameId);
+				logDebug('Received set property request from ' + modName + ' for ' + targetString);
 				return this.getGame(command);
 			})
 			.then((g) => {
@@ -316,6 +314,7 @@ class MafiaModController {
 			})
 			.catch((err) => {
 				logRecoveredError('Error when setting property: ' + err);
+				debug(err.stack);
 				view.reportError(command, 'Error setting player property: ', err);
 			});
 	}
@@ -335,25 +334,16 @@ class MafiaModController {
 	* @returns {Promise}        A promise that will resolve when the game is ready
 	*/
 	phaseHandler (command) {
-		const data = {
-			numPlayers: 0,
-			toExecute: 0,
-			day: 0,
-			names: []
-		};
-		let gameId, modName, game, mod, endTime;
+		let modName, game, mod, endTime;
 		
 		if (command.args[0] === 'ends' && command.args[1]) {
 			command.args.shift();
 			endTime = command.args.join(' ');
 		}
 
-		return command.getTopic().then((topic) => {
-				gameId = topic.id;
-				return command.getUser();
-			}).then((user) => {
+		return command.getUser().then((user) => {
 				modName = user.username;
-				logDebug('Received next phase request from ' + modName + ' in thread ' + gameId);
+				logDebug('Received next phase request from ' + modName);
 				return this.getGame(command);
 			})
 			.then((g) => {
@@ -403,19 +393,16 @@ class MafiaModController {
 			day: 0,
 			names: []
 		};
-		let gameId, modName, game, mod, endTime;
+		let  modName, game, mod, endTime;
 		
 		if (command.args[0] === 'ends' && command.args[1]) {
 			command.args.shift();
 			endTime = command.args.join(' ');
 		}
 
-		return command.getTopic().then((topic) => {
-				gameId = topic.id;
-				return command.getUser();
-			}).then((user) => {
+		return command.getUser().then((user) => {
 				modName = user.username;
-				logDebug('Received new day request from ' + modName + ' in thread ' + game);
+				logDebug('Received new day request from ' + modName);
 				return this.getGame(command);
 			})
 			.then((g) => {
@@ -454,14 +441,11 @@ class MafiaModController {
 	killHandler (command) {
 		const targetString = command.args[0] ? command.args[0].replace('@', '') : '';
 
-		let gameId, modName, game, mod, target;
+		let modName, game, mod, target;
 
-			return command.getTopic().then((topic) => {
-				gameId = topic.id;
-				return command.getUser();
-			}).then((user) => {
+			return command.getUser().then((user) => {
 				modName = user.username;
-				logDebug('Received kill request from ' + modName + 'for ' + target + ' in thread ' + gameId);
+				logDebug('Received kill request from ' + modName + 'for ' + target);
 				return this.getGame(command);
 			})
 			.then((g) => {

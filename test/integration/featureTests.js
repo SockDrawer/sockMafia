@@ -76,6 +76,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 1}),
 				getPost: () => Promise.resolve({id: 4}),
 				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
 			};
 
 			//Spies
@@ -98,6 +103,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 1}),
 				getPost: () => Promise.resolve({id: 5}),
 				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
 			};
 
 			//Spies
@@ -118,6 +128,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 1}),
 				getPost: () => Promise.resolve({id: 6}),
 				getUser: () => Promise.resolve({username: 'banana'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
 			};
 
 			//Spies
@@ -135,6 +150,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 1}),
 				getPost: () => Promise.resolve({id: 7}),
 				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
 			};
 
 			//Spies
@@ -153,6 +173,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 1}),
 				getPost: () => Promise.resolve({id: 8}),
 				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
 			};
 
 			//Spies
@@ -172,6 +197,12 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 1}),
 				getPost: () => Promise.resolve({id: 9}),
 				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
+				
 			};
 
 			//Spies
@@ -191,6 +222,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 1}),
 				getPost: () => Promise.resolve({id: 10}),
 				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
 			};
 
 			//Spies
@@ -218,6 +254,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 1}),
 				getPost: () => Promise.resolve({id: 11}),
 				getUser: () => Promise.resolve({username: 'tehninja'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
 			};
 
 			//Spies
@@ -244,6 +285,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 1}),
 				getPost: () => Promise.resolve({id: 12}),
 				getUser: () => Promise.resolve({username: 'tehninja'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
 			};
 
 
@@ -267,6 +313,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 1}),
 				getPost: () => Promise.resolve({id: 13}),
 				getUser: () => Promise.resolve({username: 'accalia'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
 			};
 			//Spies
 			sandbox.spy(game, 'registerAction');
@@ -317,6 +368,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 2}),
 				getPost: () => Promise.resolve({id: 1}),
 				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				parent: {
+					ids: {
+						topic: 1
+					}
+				}
 			};
 
 			//Spies
@@ -337,6 +393,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 2}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 			//Then, unvote
@@ -356,6 +417,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 3}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 			//Vote for the same person again
@@ -376,6 +442,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 4}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 			//Then unvote
@@ -394,6 +465,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 5}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 				view.respond.reset();
@@ -419,6 +495,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 2}),
 				getPost: () => Promise.resolve({id: 6}),
 				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				parent: {
+					ids: {
+						topic: 2
+					}
+				}
 			};
 
 			//Spies
@@ -440,6 +521,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 7}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 			//Then, nolynch
@@ -459,6 +545,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 8}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 			//Vote for the same person again
@@ -479,6 +570,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 9}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 			//Then unvote
@@ -497,6 +593,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 10}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 				view.respond.reset();
@@ -552,6 +653,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 2}),
 				getPost: () => Promise.resolve({id: 1}),
 				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+				parent: {
+					ids: {
+						topic: 2
+					}
+				}
 			};
 
 			//Spies
@@ -572,6 +678,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 2}),
 					getUser: () => Promise.resolve({username: 'dreikin'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 			//Then, nolynch
@@ -591,6 +702,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 3}),
 					getUser: () => Promise.resolve({username: 'tehninja'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 			//Vote for the original
@@ -658,6 +774,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 2}),
 				getPost: () => Promise.resolve({id: 1}),
 				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 			};
 
 			//Spies
@@ -673,6 +794,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 2}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 				view.reportError.reset();
@@ -696,6 +822,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 2}),
 				getPost: () => Promise.resolve({id: 3}),
 				getUser: () => Promise.resolve({username: 'dreikin'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 			};
 
 			//Spies
@@ -711,6 +842,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 4}),
 					getUser: () => Promise.resolve({username: 'dreikin'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 				view.reportError.reset();
@@ -735,6 +871,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 2}),
 				getPost: () => Promise.resolve({id: 5}),
 				getUser: () => Promise.resolve({username: 'dreikin'}),
+				parent: {
+					ids: {
+						topic: 2
+					}
+				}
 			};
 
 			//Spies
@@ -750,6 +891,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 2}),
 					getPost: () => Promise.resolve({id: 6}),
 					getUser: () => Promise.resolve({username: 'dreikin'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
 				};
 
 				view.reportError.reset();
@@ -1081,6 +1227,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 4}),
 					getPost: () => Promise.resolve({id: 1}),
 					getUser: () => Promise.resolve({username: 'tehNinja'}),
+					parent: {
+						ids: {
+							topic: 4
+						}
+					}
 				};
 				
 				sandbox.spy(game, 'registerAction');
@@ -1098,6 +1249,11 @@ describe('MafiaBot', function () {
 						getTopic: () => Promise.resolve({id: 4}),
 						getPost: () => Promise.resolve({id: 2}),
 						getUser: () => Promise.resolve({username: 'tehNinja'}),
+						parent: {
+							ids: {
+								topic: 4
+							}
+						}
 					};
 		
 					view.respond.reset();
@@ -1117,6 +1273,11 @@ describe('MafiaBot', function () {
 						getTopic: () => Promise.resolve({id: 4}),
 						getPost: () => Promise.resolve({id: 3}),
 						getUser: () => Promise.resolve({username: 'tehNinja'}),
+						parent: {
+							ids: {
+								topic: 4
+							}
+						}
 					};
 					
 					view.respond.reset();
@@ -1143,6 +1304,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 4}),
 					getPost: () => Promise.resolve({id: 5}),
 					getUser: () => Promise.resolve({username: 'tehNinja'}),
+						parent: {
+							ids: {
+								topic: 4
+							}
+						}
 				};
 				
 				sandbox.spy(game, 'registerAction');
@@ -1159,6 +1325,11 @@ describe('MafiaBot', function () {
 						getTopic: () => Promise.resolve({id: 4}),
 						getPost: () => Promise.resolve({id: 6}),
 						getUser: () => Promise.resolve({username: 'tehNinja'}),
+						parent: {
+							ids: {
+								topic: 4
+							}
+						}
 					};
 					
 					view.respond.reset();
@@ -1185,6 +1356,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 4}),
 					getPost: () => Promise.resolve({id: 7}),
 					getUser: () => Promise.resolve({username: 'tehNinja'}),
+					parent: {
+						ids: {
+							topic: 4
+						}
+					}
 				};
 				
 				sandbox.spy(game, 'registerAction');
@@ -1202,6 +1378,11 @@ describe('MafiaBot', function () {
 						getTopic: () => Promise.resolve({id: 4}),
 						getPost: () => Promise.resolve({id: 8}),
 						getUser: () => Promise.resolve({username: 'tehNinja'}),
+						parent: {
+							ids: {
+								topic: 4
+							}
+						}
 					};
 		
 					view.respond.reset();
@@ -1221,6 +1402,11 @@ describe('MafiaBot', function () {
 						getTopic: () => Promise.resolve({id: 4}),
 						getPost: () => Promise.resolve({id: 9}),
 						getUser: () => Promise.resolve({username: 'tehNinja'}),
+						parent: {
+							ids: {
+								topic: 4
+							}
+						}
 					};
 					
 					view.respond.reset();
@@ -1250,6 +1436,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 4}),
 					getPost: () => Promise.resolve({id: 10}),
 					getUser: () => Promise.resolve({username: 'tehNinja'}),
+						parent: {
+							ids: {
+								topic: 4
+							}
+						}
 				};
 				
 				sandbox.spy(game, 'registerAction');
@@ -1267,6 +1458,11 @@ describe('MafiaBot', function () {
 						getTopic: () => Promise.resolve({id: 4}),
 						getPost: () => Promise.resolve({id: 11}),
 						getUser: () => Promise.resolve({username: 'tehNinja'}),
+						parent: {
+							ids: {
+								topic: 4
+							}
+						}
 					};
 		
 					view.respond.reset();
@@ -1338,6 +1534,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 12}),
 				getPost: () => Promise.resolve({id: 1}),
 				getUser: () => Promise.resolve({username: 'God'}),
+				parent: {
+					ids: {
+						topic: 12
+					}
+				}
 			};
 		
 			return modController.setHandler(command).then(() => {
@@ -1350,6 +1551,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 12}),
 					getPost: () => Promise.resolve({id: 2}),
 					getUser: () => Promise.resolve({username: 'God'}),
+					parent: {
+						ids: {
+							topic: 12
+						}
+					}
 				};
 		
 				view.respond.reset();
@@ -1366,6 +1572,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 12}),
 					getPost: () => Promise.resolve({id: 2}),
 					getUser: () => Promise.resolve({username: 'God'}),
+					parent: {
+						ids: {
+							topic: 12
+						}
+					}
 				};
 				
 				view.respond.reset();
@@ -1392,6 +1603,11 @@ describe('MafiaBot', function () {
 				getTopic: () => Promise.resolve({id: 3}),
 				getPost: () => Promise.resolve({id: 100}),
 				getUser: () => Promise.resolve({username: 'accalia'}),
+				parent: {
+					ids: {
+						topic: 3
+					}
+				}
 			};
 			
 			sandbox.spy(game, 'registerAction');
@@ -1409,6 +1625,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 3}),
 					getPost: () => Promise.resolve({id: 102}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 3
+						}
+					}
 				};
 				
 				return playerController.targetHandler(command);
@@ -1426,6 +1647,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 3}),
 					getPost: () => Promise.resolve({id: 103}),
 					getUser: () => Promise.resolve({username: 'God'}),
+					parent: {
+						ids: {
+							topic: 3
+						}
+					}
 				};
 				
 				return modController.listNAHandler(command);
@@ -1446,6 +1672,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 3}),
 					getPost: () => Promise.resolve({id: 102}),
 					getUser: () => Promise.resolve({username: 'tehninja'}),
+					parent: {
+						ids: {
+							topic: 3
+						}
+					}
 				};
 				
 				return playerController.targetHandler(command);
@@ -1463,6 +1694,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 3}),
 					getPost: () => Promise.resolve({id: 103}),
 					getUser: () => Promise.resolve({username: 'God'}),
+					parent: {
+						ids: {
+							topic: 3
+						}
+					}
 				};
 				
 				return modController.listNAHandler(command);
@@ -1482,6 +1718,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 3}),
 					getPost: () => Promise.resolve({id: 100}),
 					getUser: () => Promise.resolve({username: 'accalia'}),
+					parent: {
+						ids: {
+							topic: 3
+						}
+					}
 				};
 			
 				return playerController.targetHandler(command);
@@ -1499,6 +1740,11 @@ describe('MafiaBot', function () {
 					getTopic: () => Promise.resolve({id: 3}),
 					getPost: () => Promise.resolve({id: 103}),
 					getUser: () => Promise.resolve({username: 'God'}),
+					parent: {
+						ids: {
+							topic: 3
+						}
+					}
 				};
 				
 				return modController.listNAHandler(command);
