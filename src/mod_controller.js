@@ -228,9 +228,9 @@ class MafiaModController {
 		
 			const type = command.args[0];
 			if ( type === 'thread') {
-				game.addTopic(itemId);
+				return game.addTopic(itemId);
 			} else if ( type === 'chat') {
-				game.addChat(itemId);
+				return game.addChat(itemId);
 			} else {
 				throw new Error(`I don't know how to add a "${type}". Try a "thread" or a "chat"?`);
 			}
