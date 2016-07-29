@@ -15,7 +15,7 @@ The recommended installation steps are as follows:
 
 1. Install Sockbot globally using `npm install -g sockbot`
 2. Install Sockbot-mafia globally using `npm install -g sockbot-mafia`
-3. *Optionally* Install Randomizer if you want help assigning roles and picking players: `npm install -g sockbot-plugin-randomizer`
+3. *Optionally* Install [Randomizer](https://github.com/AccaliaDeElementia/sockbot-plugin-randomizer) if you want help assigning roles and picking players: `npm install -g sockbot-plugin-randomizer`
 4. Create a configuration file (see below)
 5. Run sockbot with the configuration file: `sockbot config.yml`
 
@@ -50,7 +50,7 @@ plugins:
 
 Detailed config information can be found in the reference below. 
 
-Recommended randomizer settings are:
+Recommended [randomizer](https://github.com/AccaliaDeElementia/sockbot-plugin-randomizer) settings are:
 
 ```
   sockbot-plugin-randomizer:
@@ -59,7 +59,7 @@ Recommended randomizer settings are:
     decide: true
 ```
 
-This will let you pick one player out of the group for things like random events, shuffle the players so you can assign them roles, and decide yes or no questions while moderating. Again, this is entirely optional, but many GMs find it useful.
+This will let you pick one player out of the group for things like random events, shuffle the players so you can assign them roles, and decide yes or no questions while moderating. Again, this is entirely optional, but many GMs find it useful. See the [Randomizer plugin docs](https://github.com/AccaliaDeElementia/sockbot-plugin-randomizer) for more detail about how to use those commands.
 
 # Command reference
 
