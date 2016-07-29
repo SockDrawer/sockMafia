@@ -9,7 +9,11 @@
 
 Mafia plugin for [SockBot](https://sockbot.rtfd.org/en/latest/) version 3.1.1 or later.
 
-##Usage
+## Command Reference
+
+Detailed instructions can be found here: 
+- [Player instruction](docs/player.md)
+- [Mod instructions](docs/mod.md)
 
 ###Player Commands
 *All player commands must be run in the thread the game is being played in, as they are a matter of public record.*

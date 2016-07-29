@@ -14,7 +14,7 @@ You will need:
 The recommended installation steps are as follows:
 
 1. Install Sockbot globally using `npm install -g sockbot`
-2. Install Sockbot-mafia globally using `npm install -g sockmafia`
+2. Install Sockbot-mafia globally using `npm install -g sockbot-mafia`
 3. *Optionally* Install Randomizer if you want help assigning roles and picking players: `npm install -g sockbot-plugin-randomizer`
 4. Create a configuration file (see below)
 5. Run sockbot with the configuration file: `sockbot config.yml`
@@ -34,7 +34,7 @@ Under that goes the plugins section. This is where you can configure sockmafia:
 
 ```
 plugins:
-  sockmafia:
+  sockbot-mafia:
     thread: 52778
     mods:
      - mod
