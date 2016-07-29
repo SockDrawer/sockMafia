@@ -9,7 +9,11 @@
 
 Mafia plugin for [SockBot](https://sockbot.rtfd.org/en/latest/) version 3.1.1 or later.
 
-##Usage
+## Command Reference
+
+Detailed instructions can be found here: 
+- [Player instruction](docs/player.md)
+- [Mod instructions](docs/mod.md)
 
 ###Player Commands
 *All player commands must be run in the thread the game is being played in, as they are a matter of public record.*
@@ -23,16 +27,19 @@ Mafia plugin for [SockBot](https://sockbot.rtfd.org/en/latest/) version 3.1.1 or
 * **nolynch**: Vote for the group to not lynch anyone this current day. If No-lynch wins a vote, no execution occurs and the day ends.
 * **no-lynch**: Identical to **nolynch**. 
 * **unvote**: Rescind your current vote.
+* **target**: Target a player with your night action (if any). 
 
 ###Moderator commands
 
 * **prepare**: Start a new game in the current thread. The person who executes this command becomes the moderator for the new game. Takes one argument: a descriptor for the game.
 * **start**: Move the game from a preparation state to the running state, closing signups and allowing voting. Must be run in the game thread. 
-* **set**: Set a voting property for a player. Takes two arguments: the target to set, and the property to assign. Must be run in the game thread. Takes two arguments: the target username, such as '@yamikuronue', and the propery, one of loved, hated, or doublevoter.
+* **set**: Set a voting property for a player. Takes two arguments: the target username, such as '@yamikuronue', and the propery, one of loved, hated, or doublevoter.
 * **next-phase**: Move to the next game phase. Transitions night to day, and day to night. Must be used in the game thread. Takes no argumetns. 
-* **new-day**: Alias for **next-phase**
+* **new-day**: Move to the start of the next day. Takes no arguments. 
 * **kill**: Kill a player. Does not transition the day. Takes one argument: the target username.
 * **end**: Finish the game. This prevents further voting in the thread of a game that has concluded. Must be run in the game thread. 
+* **add**: Add a thread or chat to the game. Syntax: `!add thread 1234 to testMafia` or `!add chat 123 to testMafia`. Also try `!add this to testMafia` from the thread or chat you wish to add. 
+* **list-night-actions**: List all the actions being performed this night so you can resolve them and move to day. Does not resolve or move to day automatically. 
 
 ##Installation
 
