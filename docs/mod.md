@@ -19,6 +19,8 @@ The recommended installation steps are as follows:
 4. Create a configuration file (see below)
 5. Run sockbot with the configuration file: `sockbot config.yml`
 
+If you ever need to upgrade this plugin or sockbot, simply run the install command again. It will always pull the latest version from NPM. 
+
 ### Configuration
 
 You will need to configure Sockbot's username and password, something like:
