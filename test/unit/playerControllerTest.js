@@ -54,9 +54,12 @@ describe('player controller', () => {
 		it('should get a game by chat id', () => {
 			const command = {
 				getTopic: () => Promise.resolve({id: -1}),
-				parent: {
-					ids: [12]
-				},
+					parent: {
+						ids: {
+							topic: -1,
+							chat: 12
+						}
+					},
 				args: [
 				]
 			};
@@ -71,9 +74,11 @@ describe('player controller', () => {
 		it('should get a game by topic id', () => {
 			const command = {
 				getTopic: () => Promise.resolve({id: 1234}),
-				parent: {
-					ids: [12]
-				},
+					parent: {
+						ids: {
+							topic: 1234
+						}
+					},
 				args: [
 				]
 			};
@@ -300,7 +305,59 @@ describe('player controller', () => {
 				sandbox.spy(view, 'reportError');
 
 			});
+			
+			it('Should require 1 arg', () => {
+				const command = {
+					getTopic: () => Promise.resolve({
+						id: 200
+					}),
+					getUser: () => Promise.resolve(mockVoter),
+					getPost: () => Promise.resolve({
+						id: 5
+					}),
+					args: [],
+					line: '!for Sadie',
+					reply: () => Promise.resolve(),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
+				};
+				sandbox.stub(playerController, 'doVote').resolves();
+				return playerController.forHandler(command).then((value) => {
+					playerController.doVote.called.should.be.false;
+					view.reportError.called.should.be.true;
+				});
+			});
 
+			it('Should not work in chats', () => {
+				const command = {
+					getTopic: () => Promise.reject('Do not call me! you will break chat functionality'),
+					getUser: () => Promise.resolve(mockVoter),
+					getPost: () => Promise.resolve({
+						id: 5
+					}),
+					args: ['Sadie'],
+					line: '!for Sadie',
+					reply: () => Promise.resolve(),
+					parent: {
+						ids: {
+							topic: -1,
+							chat: 12
+						}
+					}
+				};
+
+				const resolution = 'Some resolution value';
+
+				sandbox.stub(playerController, 'doVote').resolves(resolution);
+				return playerController.forHandler(command).then((value) => {
+					playerController.doVote.called.should.be.false;
+					view.reportError.called.should.be.true;
+				});
+			});
+			
 			it('Should call DoVote()', () => {
 				const command = {
 					getTopic: () => Promise.resolve({
@@ -312,7 +369,12 @@ describe('player controller', () => {
 					}),
 					args: ['Sadie'],
 					line: '!for Sadie',
-					reply: () => Promise.resolve()
+					reply: () => Promise.resolve(),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				const resolution = 'Some resolution value';
@@ -370,7 +432,8 @@ describe('player controller', () => {
 				};
 
 				mockdao = {
-					getGameByTopicId: () => Promise.resolve(mockGame)
+					getGameByTopicId: () => Promise.resolve(mockGame),
+					getGameByChatId: () => Promise.resolve(mockGame)
 				};
 
 				playerController = new PlayerController(mockdao, null);
@@ -384,6 +447,58 @@ describe('player controller', () => {
 				sandbox.spy(view, 'reportError');
 
 			});
+			
+			it('Should require 1 arg', () => {
+				const command = {
+					getTopic: () => Promise.resolve({
+						id: 200
+					}),
+					getUser: () => Promise.resolve(mockVoter),
+					getPost: () => Promise.resolve({
+						id: 5
+					}),
+					args: [],
+					line: '!for Sadie',
+					reply: () => Promise.resolve(),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
+				};
+				sandbox.stub(playerController, 'doVote').resolves();
+				return playerController.voteHandler(command).then((value) => {
+					playerController.doVote.called.should.be.false;
+					view.reportError.called.should.be.true;
+				});
+			});
+			
+			it('Should not work in chats', () => {
+				const command = {
+					getTopic: () => Promise.reject('Do not call me! you will break chat functionality'),
+					getUser: () => Promise.resolve(mockVoter),
+					getPost: () => Promise.resolve({
+						id: 5
+					}),
+					args: ['Sadie'],
+					line: '!for Sadie',
+					reply: () => Promise.resolve(),
+					parent: {
+						ids: {
+							topic: -1,
+							chat: 12
+						}
+					}
+				};
+
+				const resolution = 'Some resolution value';
+
+				sandbox.stub(playerController, 'doVote').resolves(resolution);
+				return playerController.voteHandler(command).then((value) => {
+					playerController.doVote.called.should.be.false;
+					view.reportError.called.should.be.true;
+				});
+			});
 
 			it('Should call DoVote()', () => {
 				const command = {
@@ -396,7 +511,12 @@ describe('player controller', () => {
 					}),
 					reply: () => Promise.resolve(),
 					args: ['Sadie'],
-					line: '!for Sadie'
+					line: '!for Sadie',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				const resolution = 'Some resolution value';
@@ -418,6 +538,45 @@ describe('player controller', () => {
 					args[6].should.deep.equal(command); //Command
 				});
 			});
+			
+			it('Should allow "vote for" syntax', () => {
+				const command = {
+					getTopic: () => Promise.resolve({
+						id: 200
+					}),
+					getUser: () => Promise.resolve(mockVoter),
+					getPost: () => Promise.resolve({
+						id: 5
+					}),
+					reply: () => Promise.resolve(),
+					args: ['for', 'Sadie'],
+					line: '!vote for Sadie',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
+				};
+
+				const resolution = 'Some resolution value';
+
+				sandbox.stub(playerController, 'doVote').resolves(resolution);
+				sandbox.spy(command, 'reply');
+				return playerController.voteHandler(command).then((value) => {
+					value.should.equal(resolution);
+
+					playerController.doVote.called.should.be.true;
+					const args = playerController.doVote.firstCall.args;
+
+					args[0].should.equal(200); //Game ID
+					args[1].should.equal(5); //Post ID
+					args[2].should.equal('Lars'); //Voter
+					args[3].should.equal('Sadie'); //Target string
+					args[4].should.equal('!vote for Sadie'); //Input
+					args[5].should.equal(1); //Vote number
+					args[6].should.deep.equal(command); //Command
+				});
+			});
 
 			it('Should enable doublevotes', () => {
 				const command = {
@@ -429,7 +588,12 @@ describe('player controller', () => {
 						id: 5
 					}),
 					args: ['Sadie'],
-					line: '!for Sadie'
+					line: '!for Sadie',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				const resolution = 'Some resolution value';
@@ -496,7 +660,12 @@ describe('player controller', () => {
 					reply: sandbox.stub(),
 					getTopic: () => Promise.resolve({
 						id: 200
-					})
+					}),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				playerController = new PlayerController(mockdao, null);
@@ -639,7 +808,8 @@ describe('player controller', () => {
 				};
 
 				mockdao = {
-					getGameByTopicId: () => Promise.resolve(mockGame)
+					getGameByTopicId: () => Promise.resolve(mockGame),
+					getGameByChatId: () => Promise.resolve(mockGame)
 				};
 
 				playerController = new PlayerController(mockdao, null);
@@ -649,6 +819,7 @@ describe('player controller', () => {
 				};
 				sandbox.stub(view, 'respondInThread');
 				sandbox.stub(view, 'respond');
+				sandbox.stub(view, 'reportError');
 			});
 
 			it('should remain silent when no game is in session', () => {
@@ -663,7 +834,12 @@ describe('player controller', () => {
 						username: 'tehNinja'
 					}),
 					args: ['@noLunch'],
-					input: '!for @noLunch'
+					input: '!for @noLunch',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				sandbox.stub(mockdao, 'getGameByTopicId').rejects();
@@ -685,7 +861,12 @@ describe('player controller', () => {
 						username: 'tehNinja'
 					}),
 					args: [''],
-					input: '!unvote'
+					input: '!unvote',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				sandbox.stub(mockGame, 'getPlayer').throws('No such player');
@@ -709,7 +890,12 @@ describe('player controller', () => {
 						username: 'tehNinja'
 					}),
 					args: [],
-					input: '!unvote'
+					input: '!unvote',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				mockVoter.isAlive = false;
@@ -733,7 +919,12 @@ describe('player controller', () => {
 						username: 'tehNinja'
 					}),
 					args: [],
-					input: '!unvote'
+					input: '!unvote',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				mockGame.isDay = false;
@@ -742,6 +933,30 @@ describe('player controller', () => {
 
 					const output = view.respond.getCall(0).args[1];
 					output.should.include('It is not day');
+				});
+			});
+			
+			it('Should not work in chats', () => {
+				const command = {
+					getTopic: () => Promise.reject('Do not call me! you will break chat functionality'),
+					getUser: () => Promise.resolve(mockVoter),
+					getPost: () => Promise.resolve({
+						id: 5
+					}),
+					args: ['Sadie'],
+					line: '!for Sadie',
+					reply: () => Promise.resolve(),
+					parent: {
+						ids: {
+							topic: -1,
+							chat: 12
+						}
+					}
+				};
+				
+				sandbox.spy(mockGame, 'revokeAction');
+				return playerController.unvoteHandler(command).then((value) => {
+					mockGame.revokeAction.called.should.be.false;
 				});
 			});
 
@@ -757,7 +972,12 @@ describe('player controller', () => {
 						username: 'tehNinja'
 					}),
 					args: [],
-					input: '!unvote'
+					input: '!unvote',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				sandbox.spy(mockGame, 'revokeAction');
@@ -803,7 +1023,8 @@ describe('player controller', () => {
 				};
 
 				mockdao = {
-					getGameByTopicId: () => Promise.resolve(mockGame)
+					getGameByTopicId: () => Promise.resolve(mockGame),
+					getGameByChatId: () => Promise.resolve(mockGame)
 				};
 
 				playerController = new PlayerController(mockdao, null);
@@ -828,7 +1049,12 @@ describe('player controller', () => {
 						username: 'tehNinja'
 					}),
 					args: ['@noLunch'],
-					input: '!for @noLunch'
+					input: '!for @noLunch',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				sandbox.stub(mockdao, 'getGameByTopicId').rejects();
@@ -850,7 +1076,12 @@ describe('player controller', () => {
 						username: 'tehNinja'
 					}),
 					args: [],
-					input: '!unvote'
+					input: '!unvote',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				sandbox.stub(mockGame, 'getPlayer').throws('No such player');
@@ -874,7 +1105,12 @@ describe('player controller', () => {
 						username: 'tehNinja'
 					}),
 					args: [''],
-					input: '!unvote'
+					input: '!unvote',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				mockVoter.isAlive = false;
@@ -898,7 +1134,12 @@ describe('player controller', () => {
 						username: 'tehNinja'
 					}),
 					args: [''],
-					input: '!unvote'
+					input: '!unvote',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				mockGame.isDay = false;
@@ -907,6 +1148,30 @@ describe('player controller', () => {
 
 					const output = view.respond.getCall(0).args[1];
 					output.should.include('It is not day');
+				});
+			});
+			
+			it('Should not work in chats', () => {
+				const command = {
+					getTopic: () => Promise.reject('Do not call me! you will break chat functionality'),
+					getUser: () => Promise.resolve(mockVoter),
+					getPost: () => Promise.resolve({
+						id: 5
+					}),
+					args: ['Sadie'],
+					line: '!for Sadie',
+					reply: () => Promise.resolve(),
+					parent: {
+						ids: {
+							topic: -1,
+							chat: 12
+						}
+					}
+				};
+				
+				sandbox.spy(mockGame, 'registerAction');
+				return playerController.nolynchHandler(command).then((value) => {
+					mockGame.registerAction.called.should.be.false;
 				});
 			});
 
@@ -922,7 +1187,12 @@ describe('player controller', () => {
 						username: 'tehNinja'
 					}),
 					args: [''],
-					input: '!unvote'
+					input: '!unvote',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				sandbox.spy(mockGame, 'registerAction');
@@ -965,7 +1235,8 @@ describe('player controller', () => {
 			};
 
 			mockdao = {
-				getGameByTopicId: () => Promise.resolve(mockGame)
+				getGameByTopicId: () => Promise.resolve(mockGame),
+				getGameByChatId: () => Promise.resolve(mockGame)
 			};
 
 			playerController = new PlayerController(mockdao, null);
@@ -988,7 +1259,12 @@ describe('player controller', () => {
 					username: 'tehNinja'
 				}),
 				args: [''],
-				input: '!join'
+				input: '!join',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 			};
 
 			sandbox.stub(mockdao, 'getGameByTopicId').rejects();
@@ -1008,6 +1284,11 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 			};
 
 			mockGame.allPlayers = [mockUser];
@@ -1030,6 +1311,11 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 			};
 
 			sandbox.stub(mockGame, 'addPlayer').rejects('Error!');
@@ -1051,6 +1337,11 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 			};
 			mockGame.isActive = true;
 			sandbox.spy(mockGame, 'addPlayer');
@@ -1072,6 +1363,33 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
+			};
+
+			return playerController.joinHandler(command).then(() => {
+				view.respond.called.should.be.true;
+
+				const output = view.respond.getCall(0).args[1];
+				output.should.include('Welcome to the game, @tehNinja');
+			});
+		});
+		
+		it('should facilitate joining in chat', () => {
+			const command = {
+				getTopic: () => Promise.reject('Do not call me! you will break chat functionality'),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
+					parent: {
+						ids: {
+							topic: -1,
+							chat: 12
+						}
+					}
 			};
 
 			return playerController.joinHandler(command).then(() => {
@@ -1128,7 +1446,8 @@ describe('player controller', () => {
 			};
 
 			mockdao = {
-				getGameByTopicId: () => Promise.resolve(mockGame)
+				getGameByTopicId: () => Promise.resolve(mockGame),
+				getGameByChatId: () => Promise.resolve(mockGame)
 			};
 
 			playerController = new PlayerController(mockdao, null);
@@ -1148,7 +1467,12 @@ describe('player controller', () => {
 						username: 'tehNinja'
 					}),
 					args: ['@noLunch'],
-					input: '!for @noLunch'
+					input: '!for @noLunch',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				mockGame.isActive = false;
@@ -1167,6 +1491,35 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
+				};
+
+				return playerController.listAllPlayersHandler(command).then(() => {
+					view.respond.called.should.be.true;
+
+					const output = view.respond.getCall(0).args[1];
+					output.should.include('Yamikuronue');
+					output.should.include('Accalia');
+					output.should.include('Dreikin');
+				});
+			});
+			
+			it('should report players in a chat', () => {
+				const command = {
+					getTopic: () => Promise.reject('Do not call me! you will break chat functionality'),
+					getUser: () => Promise.resolve({
+						username: 'tehNinja'
+					}),
+					parent: {
+						ids: {
+							topic: -1,
+							chat: 123
+						}
+					}
 				};
 
 				return playerController.listAllPlayersHandler(command).then(() => {
@@ -1188,6 +1541,11 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				mockGame.livePlayers = [];
@@ -1208,6 +1566,11 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				mockGame.deadPlayers = [];
@@ -1228,6 +1591,11 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				mockGame.moderators = [];
@@ -1251,7 +1619,12 @@ describe('player controller', () => {
 						username: 'tehNinja'
 					}),
 					args: ['@noLunch'],
-					input: '!for @noLunch'
+					input: '!for @noLunch',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				mockGame.isActive = false;
@@ -1271,6 +1644,35 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
+				};
+
+				return playerController.listPlayersHandler(command).then(() => {
+					view.respond.called.should.be.true;
+
+					const output = view.respond.getCall(0).args[1];
+					output.should.include('Yamikuronue');
+					output.should.not.include('Accalia');
+					output.should.include('Dreikin');
+				});
+			});
+			
+			it('should work in chat', () => {
+				const command = {
+					getTopic: () => Promise.reject('Do not call me! you will break chat functionality'),
+					getUser: () => Promise.resolve({
+						username: 'tehNinja'
+					}),
+					parent: {
+						ids: {
+							topic: -1,
+							chat: 123
+						}
+					}
 				};
 
 				return playerController.listPlayersHandler(command).then(() => {
@@ -1291,6 +1693,11 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				mockGame.livePlayers = [];
@@ -1394,7 +1801,8 @@ describe('player controller', () => {
 			};
 
 			mockdao = {
-				getGameByTopicId: () => Promise.resolve(mockGame)
+				getGameByTopicId: () => Promise.resolve(mockGame),
+				getGameByChatId: () => Promise.resolve(mockGame)
 			};
 
 			playerController = new PlayerController(mockdao, null);
@@ -1416,7 +1824,12 @@ describe('player controller', () => {
 						username: 'tehNinja'
 					}),
 					args: ['@noLunch'],
-					input: '!for @noLunch'
+					input: '!for @noLunch',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				mockGame.isActive = false;
@@ -1435,6 +1848,11 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				return playerController.listVotesHandler(command).then(() => {
@@ -1457,6 +1875,11 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				return playerController.listVotesHandler(command).then(() => {
@@ -1469,6 +1892,25 @@ describe('player controller', () => {
 					dataSent.votes.Dreikin.votes.should.include(mockActions[2]);
 				});
 			});
+			
+			it('should work in chat', () => {
+				const command = {
+					getTopic: () => Promise.reject('Do not call me! you will break chat functionality'),
+					getUser: () => Promise.resolve({
+						username: 'tehNinja'
+					}),
+					parent: {
+						ids: {
+							topic: -1,
+							chat: 123
+						}
+					}
+				};
+
+				return playerController.listVotesHandler(command).then(() => {
+					view.respondWithTemplate.called.should.be.true;
+				});
+			});
 
 			it('should output mod of 0 for vanilla', () => {
 				const command = {
@@ -1478,6 +1920,11 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				return playerController.listVotesHandler(command).then(() => {
@@ -1495,6 +1942,11 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				sandbox.stub(mockUsers.dreikin, 'hasProperty', (prop) => prop === 'loved');
@@ -1514,6 +1966,11 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				sandbox.stub(mockUsers.dreikin, 'hasProperty', (prop) => prop === 'hated');
@@ -1533,6 +1990,11 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				sandbox.spy(mockGame, 'getValue');
@@ -1555,6 +2017,11 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 				};
 
 				sandbox.stub(mockGame, 'getValue').returns('today');
@@ -1605,6 +2072,7 @@ describe('player controller', () => {
 
 			mockdao = {
 				getGameByTopicId: () => Promise.resolve(mockGame),
+				getGameByChatId: () => Promise.resolve(mockGame),
 				getGameByName: () => Promise.resolve(mockGame)
 			};
 
@@ -1619,6 +2087,33 @@ describe('player controller', () => {
 			sandbox.stub(view, 'respondWithTemplate').resolves();
 		});
 		
+		it('Should require 1 arg', () => {
+			const command = {
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getPost: () => Promise.resolve({
+					id: 42
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
+				args: [],
+				input: '!target @noLunch',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
+			};
+				
+			sandbox.spy(mockGame, 'registerAction');
+			return playerController.targetHandler(command).then(() => {
+				mockGame.registerAction.called.should.be.false;
+				view.reportError.called.should.be.true;
+			});
+		});
+		
 		it('Should register actions', () => {
 			const command = {
 				getTopic: () => Promise.resolve({
@@ -1630,8 +2125,38 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
-				args: ['123', '@noLunch'],
-				input: '!target @noLunch'
+				args: ['@noLunch'],
+				input: '!target @noLunch',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
+			};
+				
+			sandbox.spy(mockGame, 'registerAction');
+			return playerController.targetHandler(command).then(() => {
+				mockGame.registerAction.calledWith(42, 'tehNinja', 'noLunch', 'target', 'target').should.equal.true;
+			});
+		});
+		
+		it('Should register actions from chat', () => {
+			const command = {
+				getTopic: () => Promise.reject('Do not call me! you will break chat functionality'),
+				getPost: () => Promise.resolve({
+					id: 42
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
+				args: ['@noLunch'],
+				input: '!target @noLunch',
+					parent: {
+						ids: {
+							topic: -1,
+							chat: 123
+						}
+					}
 			};
 				
 			sandbox.spy(mockGame, 'registerAction');
@@ -1651,8 +2176,13 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
-				args: ['123', '@noLunch'],
-				input: '!target @noLunch'
+				args: ['@noLunch'],
+				input: '!target @noLunch',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 			};
 				
 			sandbox.spy(playerController, 'getGame');
@@ -1673,8 +2203,13 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
-				args: ['123', '@noLunch'],
-				input: '!target @noLunch'
+				args: ['@noLunch'],
+				input: '!target @noLunch',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 			};
 				
 			sandbox.spy(mockGame, 'registerAction');
@@ -1697,8 +2232,13 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
-				args: ['123', '@noLunch'],
-				input: '!target @noLunch'
+				args: ['@noLunch'],
+				input: '!target @noLunch',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 			};
 				
 			sandbox.spy(mockGame, 'registerAction');
@@ -1721,8 +2261,13 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
-				args: ['123', '@noLunch'],
-				input: '!target @noLunch'
+				args: ['@noLunch'],
+				input: '!target @noLunch',
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
 			};
 				
 			sandbox.spy(mockGame, 'registerAction');

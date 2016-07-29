@@ -596,7 +596,8 @@ class MafiaGame {
         return this._dao.getGameByAlias(alias).then(() => {
             return Promise.reject('E_ALIAS_EXISTS');
         }, (reason) => {
-            if (reason.message !== 'E_NO_GAME') {
+            if (reason.message !== 'E_NO_GAME'
+            && reason !== 'E_NO_GAME') {
                 return Promise.reject(reason);
             }
             this._data.aliases.push(alias);
