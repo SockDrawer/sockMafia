@@ -114,6 +114,7 @@ class MafiaModController {
 	 * @param  {Forum} forum The forum to activate for
 	 */
 	activate(forum) {
+		this.forum = forum;
 		//Register commandss
 		forum.Commands.add('set', 'Assign a player a role (mod only)', this.setHandler.bind(this));
 		forum.Commands.add('kill', 'kill a player (mod only)', this.killHandler.bind(this));
@@ -123,26 +124,53 @@ class MafiaModController {
 		forum.Commands.add('add', 'Add a thread or chat to the game (mod only)', this.addHandler.bind(this));
 		forum.Commands.add('setValue', 'Set a Game Option', (command) => this.setValue(command));
 		forum.Commands.addAlias('option', (command) => this.setValue(command));
+		forum.Commands.add('send-rolecard', 'Send a rolecard to a user', (command) => this.sendRoleCard(command));
+	}
+
+
+	sendRoleCard(command) {
+		const target = Utils.argParse(command.args, ['in']),
+			gameName = command.args.join(' ');
+		if (!target || !gameName) {
+			command.reply('Invalid command: command format is `!send-rolecard TargetUsername in TargetGame`');
+			return Promise.resolve();
+		}
+		return Promise.all([
+				this.dao.getGame(gameName),
+				command.getUser()
+			])
+			.then((data) => {
+				const game = data[0],
+					user = data[1],
+					rolecard = command.parent.text,
+					title = `Rolecard for ${game.name}`,
+					targets = game.moderators;
+				try {
+					game.getModerator(user.username);
+				} catch (moderr) {
+					throw new Error(`You are not a moderator for ${game.name}`);
+				}
+				try {
+					targets.push(game.getPlayer(target).username);
+				} catch (moderr) {
+					throw new Error(`${target} is not a living player in ${game.name}`);
+				}
+				return this.forum.Chat.create(targets, rolecard, title)
+					.then((chatroom) => game.addChat(chatroom.id))
+					.then(() => command.reply(`Sent rolecard to ${target} in ${game.name}`));
+			}).catch((err) => {
+				debug('Error occurred sending rolecard', err);
+				command.reply(`Error sending rolecard: ${err}`);
+			});
 	}
 
 	setValue(command) {
-		if (('set' === command.args[0] || '').toLowerCase()) {
+		if ('set' === (command.args[0] || '').toLowerCase()) {
 			command.args.shift();
 		}
-		const argParse = (endTokens) => {
-				let token = command.args.shift();
-				const value = [],
-					tokenCheck = (tok) => tok === token.toLowerCase();
-
-				while (token && !endTokens.any(tokenCheck)) {
-					value.push(token);
-					token = command.args.shift();
-				}
-				return value.join(' ');
-			},
-			option = argParse(['to', 'equal', 'equals']),
-			value = argParse(['in']),
-			gameName = argParse([]) || command.parent.ids.topic;
+		const option = Utils.argParse(command.args, ['to', 'equal', 'equals']),
+			value = Utils.argParse(command.args, ['in']),
+			gameName = Utils.argParse(command.args, []) || command.parent.ids.topic;
 		return Promise.all([
 				this.dao.getGame(gameName),
 				command.getUser()

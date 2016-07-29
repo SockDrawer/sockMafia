@@ -957,7 +957,8 @@ class MafiaPlayerController {
 				const title = `Sanctioned chat for ${game.name}`,
 					message = `This is an officially sanctioned chat for ${game.name}`;
 				return this.forum.Chat.create(targets, message, title)
-					.then((chatroom) => game.addChat(chatroom.id));
+					.then((chatroom) => game.addChat(chatroom.id))
+					.then(() => command.reply(`Sent rolecard to ${target} in ${game.name}`));
 				//TODO: capture created chat and add it to game (needs core tweak)
 			})
 			.catch((err) => {

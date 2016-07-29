@@ -10,7 +10,7 @@ Array.prototype.contains = function (element) {
 
 module.exports = {
 	Enums: {
-		validProperties:  [
+		validProperties: [
 			'loved',
 			'hated',
 			'doublevoter',
@@ -22,5 +22,17 @@ module.exports = {
 			'cop',
 			'wanderer'
 		]
+	},
+
+	argParse: (args, endTokens) => {
+		let token = args.shift();
+		const value = [],
+			tokenCheck = (tok) => tok === token.toLowerCase();
+
+		while (token && !endTokens.any(tokenCheck)) {
+			value.push(token);
+			token = args.shift();
+		}
+		return value.join(' ');
 	}
 };
