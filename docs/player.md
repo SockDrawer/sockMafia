@@ -44,38 +44,38 @@ To target a player, use the `target` command, like so:
 
 Remember that Scum can only kill one person, so if subsequent `target` commands are issued by scum players, they will overwrite the previous target. 
 
-## Bot command reference
+# Bot command reference
 
 The following commands are availible to players:
 
-### List-players
+## List-players
 **Alias:** `listPlayers`
 
 Lists the currently living players in the game.
 
-### List-all-players
+## List-all-players
 **Alias**: `listAllPlayers`
 
 Lists all players, including dead ones. 
 
-### Join
+## Join
 
 Join the game. Can only be used before the game starts. 
 
-### For
+## For
 
 Vote for a player to be lynched. 
 
-### Vote
+## Vote
 
 Vote for a player to be lynched. If you are a doublevoter, this will use the "second vote" rather than the "first vote", and thus not overwrite your previous vote. Otherwise, this behaves identical to `for`
 
-### List-votes
+## List-votes
 **Alias**: listVotes
 
 List the current day's vote tally, including rescinded votes. Will also show how many are needed to lynch and when the day ends (if set).
 
-### Unvote
+## Unvote
 
 Form 1: `!unvote`
 Revokes your current vote. If you are a doublevoter, revokes both votes.
@@ -83,11 +83,11 @@ Revokes your current vote. If you are a doublevoter, revokes both votes.
 Form 2: `!unvote Trump`
 Revokes any vote for Trump, but does not revoke any other votes. Important for doublevoters. 
 
-### Nolynch
+## Nolynch
 **Alias**: no-lynch
 
 Votes to not lynch. If this option wins, the day will end prematurely. 
 
-### Target
+## Target
 
 Registers an intent to target another player. This will be delivered to the GM to act upon, depending on your role.
