@@ -954,7 +954,10 @@ class MafiaPlayerController {
 					debug('Error determining chat target', targeterr);
 					throw new Error(`'${target}' is not a living player in this game`);
 				}
-				return this.forum.Chat.create(targets, 'This is a mafia chat');
+				const title = `Sanctioned chat for ${game.name}`,
+					message = `This is an officially sanctioned chat for ${game.name}`;
+				return this.forum.Chat.create(targets, message, title)
+					.then((chatroom) => game.addChat(chatroom.id));
 				//TODO: capture created chat and add it to game (needs core tweak)
 			})
 			.catch((err) => {
