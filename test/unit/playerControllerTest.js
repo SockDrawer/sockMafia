@@ -1912,6 +1912,27 @@ describe('player controller', () => {
 				});
 			});
 
+			it('should report accurate to-lynch count', () => {
+				const command = {
+					getTopic: () => Promise.resolve({
+						id: 12345
+					}),
+					getUser: () => Promise.resolve({
+						username: 'tehNinja'
+					}),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
+				};
+
+				sandbox.spy(Utils, 'getNumVotesRequired');
+				return playerController.listVotesHandler(command).then(() => {
+					Utils.getNumVotesRequired.called.should.be.true;
+				});
+			});
+			
 			it('should output mod of 0 for vanilla', () => {
 				const command = {
 					getTopic: () => Promise.resolve({

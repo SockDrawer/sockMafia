@@ -10,6 +10,7 @@
 const view = require('./view');
 const Promise = require('bluebird');
 const debug = require('debug')('sockbot:mafia:playerController');
+const Utils = require('./utils');
 
 const E_NOGAME = 'Error: No game';
 let myName, myOwner, eventLogger;
@@ -113,14 +114,7 @@ class MafiaPlayerController {
 	* @returns {number}        The number needed to lynch
 	*/
 	getNumVotesRequired(game, target) {
-		const numPlayers = game.livePlayers.length;
-		let numToLynch = Math.ceil((numPlayers + 1) / 2);
-
-		if (target) {
-			numToLynch += this.getVoteModifierForTarget(game, target);
-		}
-
-		return numToLynch;
+		return Utils.getNumVotesRequired(game, target);
 	}
 
 	/**

@@ -75,7 +75,7 @@ function advance(game, type, endTime, command) {
 			
 			const numPlayers = game.livePlayers.length;
 			data.day = game.day;
-			data.toExecute = Math.ceil(numPlayers / 2);
+			data.toExecute = Utils.getNumVotesRequired(game);
 			
 			data.numPlayers = game.livePlayers.length;
 			
