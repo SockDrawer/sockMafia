@@ -29,7 +29,7 @@ module.exports = {
 		const value = [],
 			tokenCheck = (tok) => tok === token.toLowerCase();
 
-		while (token && !endTokens.any(tokenCheck)) {
+		while (token && !endTokens.some(tokenCheck)) {
 			value.push(token);
 			token = args.shift();
 		}
