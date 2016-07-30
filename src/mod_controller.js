@@ -201,47 +201,6 @@ class MafiaModController {
 			});
 	}
 
-	addHandler(command) {
-		const type = command.args[0];
-		const num = command.args[1];
-		const name = command.args[2].toLowerCase() === 'in' ? command.args[3] : command.args[2];
-
-		let game;
-
-		return this.dao.getGameByName(name).then((g) => {
-				game = g;
-				return command.getUser();
-			}).then((user) => {
-				logDebug('Received add request from ' + user.username + ' for ' + num + ' in game ' + name);
-				try {
-					game.getModerator(user.username);
-				} catch (_) {
-					throw new Error('You are not a moderator!');
-				}
-			}).then(() => {
-				if (type.toLowerCase() === 'thread') {
-					game.addTopic(num);
-				} else if (type.toLowerCase() === 'chat') {
-					game.addChat(num);
-				} else if (type.toLowerCase() === 'this') {
-					return command.getTopic().then((topic) => {
-						if (topic.id === -1) {
-							//Command came from a chat
-							game.addChat(command.parent.ids[0]);
-						} else {
-							game.addTopic(topic.id);
-						}
-					});
-				} else {
-					throw new Error(`I don't know how to add a "${type}". Try a "thread" or a "chat"?`);
-				}
-			})
-			.catch((err) => {
-				logRecoveredError('Error when setting property: ' + err);
-				view.reportError(command, 'Error setting player property: ', err);
-			});
-	}
-    
     getGame (command) {
 		//First check for 'in soandso' syntax
 		for (let i = 0; i < command.args.length; i++) {
