@@ -130,8 +130,8 @@ class MafiaModController {
 		forum.Commands.add('next-phase', 'move on to the next phase (mod only)', this.phaseHandler.bind(this));
 		forum.Commands.add('list-night-actions', 'List night actions submitted (mod only)', this.listNAHandler.bind(this));
 		forum.Commands.add('add', 'Add a thread or chat to the game (mod only)', this.addHandler.bind(this));
-		forum.Commands.add('setValue', 'Set a Game Option', (command) => this.setValue(command));
-		forum.Commands.addAlias('option', (command) => this.setValue(command));
+		forum.Commands.add('setValue', 'Set a Game Option', (command) => this.setOption(command));
+		forum.Commands.addAlias('option', (command) => this.setOption(command));
 		forum.Commands.add('send-rolecard', 'Send a rolecard to a user', (command) => this.sendRoleCard(command));
 	}
 
@@ -172,13 +172,18 @@ class MafiaModController {
 			});
 	}
 
-	setValue(command) {
+	setOption(command) {
 		if ('set' === (command.args[0] || '').toLowerCase()) {
 			command.args.shift();
 		}
-		const option = Utils.argParse(command.args, ['to', 'equal', 'equals']),
+		const syntaxText = 'Incorrect syntax. Usage: !option [set] optionName equal optionValue in testMafia',
+			option = Utils.argParse(command.args, ['to', 'equal', 'equals']),
 			value = Utils.argParse(command.args, ['in']),
 			gameName = Utils.argParse(command.args, []) || command.parent.ids.topic;
+		if (!option || !value || !gameName) {
+			command.reply(syntaxText);
+			return Promise.resolve();
+		}
 		return Promise.all([
 				this.dao.getGame(gameName),
 				command.getUser()
@@ -201,7 +206,7 @@ class MafiaModController {
 			});
 	}
 
-    getGame (command) {
+	getGame(command) {
 		//First check for 'in soandso' syntax
 		for (let i = 0; i < command.args.length; i++) {
 			if (command.args[i].toLowerCase() === 'in' && command.args[i + 1]) {
@@ -220,15 +225,15 @@ class MafiaModController {
 			return this.dao.getGameByTopicId(command.parent.ids.topic);
 		}
 	}
-    
-    addHandler (command) {
+
+	addHandler(command) {
 		function notEnoughArgs() {
 			const text = 'Incorrect syntax. Usage: !add [thread|chat] 123 testMafia or !add [thread|chat] 123 to testMafia or !add this to testMafia';
 			logRecoveredError('Error when setting property: ' + text);
 			view.reportError(command, 'Error setting player property: ', text);
 			return Promise.resolve();
 		}
-	
+
 		/*
 		Terse mode:					Terse this mode:
 		args = {					args = {
@@ -236,7 +241,7 @@ class MafiaModController {
 			'123',						'testMafia'
 			'testMafia'				}
 		}
-		
+
 		Verbose mode:				Verbose this mode:
 		args = {					args = {
 			'thread',					'this',
@@ -245,7 +250,7 @@ class MafiaModController {
 			'testMafia'				}
 		}
 		*/
-	
+
 		let game;
 		const thisMode = command.args[0].toLowerCase() === 'this';
 		let itemId = thisMode ? '' : command.args[1];
@@ -269,61 +274,61 @@ class MafiaModController {
 				gameId = command.args[3];
 			}
 		}
-		
+
 		return command.getUser().then((u) => {
-			user = u;
-			
-			if (isNumeric(gameId)) {
-				return this.dao.getGameByTopicId(gameId);
-			} else {
-				return this.dao.getGameByName(gameId);
-			}
-		}).then((g) => {
-			game = g;
-			
-			try {
-				game.getModerator(user.username);
-			} catch (_) {
-				return Promise.reject('You are not a moderator');
-			}
-			logDebug('Received add thread/chat request in ' + game.name + ' from ' + user.username);
-			
-		}).then(() => {
-			if (thisMode) {
-				const topicId = command.parent.ids.topic;
-				if (topicId === -1) {
-					//Command came from a chat
+				user = u;
+
+				if (isNumeric(gameId)) {
+					return this.dao.getGameByTopicId(gameId);
+				} else {
+					return this.dao.getGameByName(gameId);
+				}
+			}).then((g) => {
+				game = g;
+
+				try {
+					game.getModerator(user.username);
+				} catch (_) {
+					return Promise.reject('You are not a moderator');
+				}
+				logDebug('Received add thread/chat request in ' + game.name + ' from ' + user.username);
+
+			}).then(() => {
+				if (thisMode) {
+					const topicId = command.parent.ids.topic;
+					if (topicId === -1) {
+						//Command came from a chat
+						chat = true;
+						itemId = command.parent.ids.chat;
+						return game.addChat(itemId);
+					} else {
+						itemId = topicId;
+						return game.addTopic(itemId);
+					}
+				}
+
+				const type = command.args[0];
+				if (type === 'thread') {
+					return game.addTopic(itemId);
+				} else if (type === 'chat') {
 					chat = true;
-					itemId = command.parent.ids.chat;
 					return game.addChat(itemId);
 				} else {
-					itemId = topicId;
-					return game.addTopic(itemId);
+					throw new Error(`I don't know how to add a "${type}". Try a "thread" or a "chat"?`);
 				}
-			}
-		
-			const type = command.args[0];
-			if ( type === 'thread') {
-				return game.addTopic(itemId);
-			} else if ( type === 'chat') {
-				chat = true;
-				return game.addChat(itemId);
-			} else {
-				throw new Error(`I don't know how to add a "${type}". Try a "thread" or a "chat"?`);
-			}
-		})
-		.then(() => {
-			view.respond(command, 'Sucess! That thread/chat is now part of the game.');
-			if (chat) {
-				view.respondInChat(itemId, 'This chat is now sanctioned as part of ' + game.name);
-			} else {
-				view.respondInThread(itemId, 'This thread is now sanctioned as part of ' + game.name);
-			}
-		})
-		.catch((err) => {
-			logRecoveredError('Error adding thread/chat: ' + err);
-			view.reportError(command, 'Error adding thread/chat: ', err);
-		});
+			})
+			.then(() => {
+				view.respond(command, 'Sucess! That thread/chat is now part of the game.');
+				if (chat) {
+					view.respondInChat(itemId, 'This chat is now sanctioned as part of ' + game.name);
+				} else {
+					view.respondInThread(itemId, 'This thread is now sanctioned as part of ' + game.name);
+				}
+			})
+			.catch((err) => {
+				logRecoveredError('Error adding thread/chat: ' + err);
+				view.reportError(command, 'Error adding thread/chat: ', err);
+			});
 	}
 
 	/**
@@ -358,7 +363,7 @@ class MafiaModController {
 				if (command.args.length < 2) {
 					throw new Error('Incorrect syntax. Usage: !set [playerName] [property] or !set [playername] [property] in testMafia');
 				}
-			
+
 				if (!Utils.Enums.validProperties.contains(property.toLowerCase())) {
 					return Promise.reject('Property not valid.\n Valid properties: ' + Utils.Enums.validProperties.join(', '));
 				}
@@ -387,22 +392,22 @@ class MafiaModController {
 	}
 
 	/**
-	* Next-phase: A mod function that moves to the next phase
-	* Must be used in the game thread.
-	*
-	* Game rules:
-	*  - A game can advance to night when it is in the day phase
-	*  - A game can only be advanced by the mod
-	*  - When the game is advanced to night, a new day does not start
-	* 
-	* @example !next-phase
-	*
-	* @param  {commands.command} command The command that was passed in.
-	* @returns {Promise}        A promise that will resolve when the game is ready
-	*/
-	phaseHandler (command) {
+	 * Next-phase: A mod function that moves to the next phase
+	 * Must be used in the game thread.
+	 *
+	 * Game rules:
+	 *  - A game can advance to night when it is in the day phase
+	 *  - A game can only be advanced by the mod
+	 *  - When the game is advanced to night, a new day does not start
+	 *
+	 * @example !next-phase
+	 *
+	 * @param  {commands.command} command The command that was passed in.
+	 * @returns {Promise}        A promise that will resolve when the game is ready
+	 */
+	phaseHandler(command) {
 		let modName, game, mod, endTime;
-		
+
 		if (command.args[0] === 'ends' && command.args[1]) {
 			command.args.shift();
 			endTime = command.args.join(' ');
@@ -460,8 +465,8 @@ class MafiaModController {
 			day: 0,
 			names: []
 		};
-		let  modName, game, mod, endTime;
-		
+		let modName, game, mod, endTime;
+
 		if (command.args[0] === 'ends' && command.args[1]) {
 			command.args.shift();
 			endTime = command.args.join(' ');
@@ -510,7 +515,7 @@ class MafiaModController {
 
 		let modName, game, mod, target;
 
-			return command.getUser().then((user) => {
+		return command.getUser().then((user) => {
 				modName = user.username;
 				logDebug('Received kill request from ' + modName + 'for ' + target);
 				return this.getGame(command);
@@ -531,7 +536,7 @@ class MafiaModController {
 				if (targetString === '') {
 					throw new Error('Please select a target to kill');
 				}
-				
+
 				try {
 					target = game.getPlayer(targetString);
 				} catch (_) {
@@ -572,51 +577,51 @@ class MafiaModController {
 		debug('Listing night actions for ' + gameId);
 
 		return Promise.all([this.getGame(command), command.getUser()])
-		.then((responses) => {
-			game = responses[0];
-			try {
-				mod = game.getModerator(responses[1].username);
-			} catch (_) {
-				return Promise.reject('You are not a moderator');
-			}
-			return mod.isModerator ? Promise.resolve() : Promise.reject('You are not a moderator');
-		}).then((a) => {
-			const actions = game.getActions('target').filter((action) => {
-				return action.isCurrent;
-			});
-			const data = {
-				scum2: {
-					show: false,
-					actions: []
-				},
-				scum: {
-					show: false,
-					actions: []
-				},
-				other: {
-					show: false,
-					actions: []
-				},
-			};
-			
-			for (let i = 0; i < actions.length; i++) {
-				if (actions[i].token === 'scum') {
-					data.scum.actions.push(actions[i]);
-					data.scum.show = true;
-				} else if (actions[i].token === 'scum2') {
-					data.scum2.actions.push(actions[i]);
-					data.scum2.show = true;
-				} else {
-					data.other.actions.push(actions[i]);
-					data.other.show = true;
+			.then((responses) => {
+				game = responses[0];
+				try {
+					mod = game.getModerator(responses[1].username);
+				} catch (_) {
+					return Promise.reject('You are not a moderator');
 				}
-			}
-			
-			return view.respondWithTemplate('templates/listNightActions.hbs', data, command);
-		}).catch((err) => {
-			logRecoveredError('Error listing night actions: ' + err);
-			view.reportError(command, 'Error listing night actions: ', err);
-		});
+				return mod.isModerator ? Promise.resolve() : Promise.reject('You are not a moderator');
+			}).then((a) => {
+				const actions = game.getActions('target').filter((action) => {
+					return action.isCurrent;
+				});
+				const data = {
+					scum2: {
+						show: false,
+						actions: []
+					},
+					scum: {
+						show: false,
+						actions: []
+					},
+					other: {
+						show: false,
+						actions: []
+					},
+				};
+
+				for (let i = 0; i < actions.length; i++) {
+					if (actions[i].token === 'scum') {
+						data.scum.actions.push(actions[i]);
+						data.scum.show = true;
+					} else if (actions[i].token === 'scum2') {
+						data.scum2.actions.push(actions[i]);
+						data.scum2.show = true;
+					} else {
+						data.other.actions.push(actions[i]);
+						data.other.show = true;
+					}
+				}
+
+				return view.respondWithTemplate('templates/listNightActions.hbs', data, command);
+			}).catch((err) => {
+				logRecoveredError('Error listing night actions: ' + err);
+				view.reportError(command, 'Error listing night actions: ', err);
+			});
 	}
 }
 

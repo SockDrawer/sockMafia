@@ -7,7 +7,8 @@ const chai = require('chai'),
 //promise library plugins
 require('sinon-as-promised');
 require('chai-as-promised');
-
+chai.use(require('sinon-chai'));
+chai.use(require('chai-string'));
 chai.should();
 
 const ModController = require('../../src/mod_controller');
@@ -29,10 +30,10 @@ describe('mod controller', () => {
 	afterEach(() => {
 		sandbox.restore();
 	});
-	
+
 	describe('getGame', () => {
-		let mockGame, mockdao, modController; 
-		
+		let mockGame, mockdao, modController;
+
 		beforeEach(() => {
 			mockGame = {
 				getAllPlayers: () => 1,
@@ -49,21 +50,22 @@ describe('mod controller', () => {
 				getGameByChatId: () => Promise.resolve(mockGame),
 				getGameByName: () => Promise.resolve(mockGame)
 			};
-			
+
 			modController = new ModController(mockdao, null);
 		});
-		
+
 		it('should get a game by chat id', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: -1}),
-				parent : {
+				getTopic: () => Promise.resolve({
+					id: -1
+				}),
+				parent: {
 					ids: {
 						topic: -1,
 						chat: 12
 					}
 				},
-				args: [
-				]
+				args: []
 			};
 			sandbox.spy(mockdao, 'getGameByTopicId');
 			sandbox.spy(mockdao, 'getGameByChatId');
@@ -72,18 +74,19 @@ describe('mod controller', () => {
 				mockdao.getGameByChatId.calledWith(12).should.be.true;
 			});
 		});
-		
+
 		it('should get a game by topic id', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 1234}),
-				parent : {
+				getTopic: () => Promise.resolve({
+					id: 1234
+				}),
+				parent: {
 					ids: {
 						topic: 1234,
 						chat: -1
 					}
 				},
-				args: [
-				]
+				args: []
 			};
 			sandbox.spy(mockdao, 'getGameByTopicId');
 			sandbox.spy(mockdao, 'getGameByChatId');
@@ -92,10 +95,12 @@ describe('mod controller', () => {
 				mockdao.getGameByTopicId.calledWith(1234).should.be.true;
 			});
 		});
-		
+
 		it('should get a game by name', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 1234}),
+				getTopic: () => Promise.resolve({
+					id: 1234
+				}),
 				parent: {
 					ids: [12]
 				},
@@ -115,7 +120,7 @@ describe('mod controller', () => {
 				mockdao.getGameByName.calledWith('testMafia').should.be.true;
 			});
 		});
-		
+
 	});
 
 	describe('kill()', () => {
@@ -157,12 +162,16 @@ describe('mod controller', () => {
 
 		it('Should reject non-mods', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'Margaret'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -171,8 +180,8 @@ describe('mod controller', () => {
 
 			mockUser.isModerator = false;
 			sandbox.stub(mockGame, 'getModerator').throws();
-			
-			return modController.killHandler(command).then( () => {
+
+			return modController.killHandler(command).then(() => {
 				const output = view.reportError.getCall(0).args[2];
 				output.should.include('You are not a moderator');
 			});
@@ -180,10 +189,14 @@ describe('mod controller', () => {
 
 		it('Should require 1 arg', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -192,22 +205,26 @@ describe('mod controller', () => {
 
 			sandbox.spy(mockGame, 'killPlayer');
 
-			return modController.killHandler(command).then( () => {
+			return modController.killHandler(command).then(() => {
 				mockGame.killPlayer.called.should.be.false;
 				view.reportError.called.should.be.true;
 				const output = view.reportError.getCall(0).args[2];
 				output.toString().should.include('Please select a target to kill');
 			});
 		});
-		
+
 		it('Should not kill dead players', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'Margaret'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -217,7 +234,7 @@ describe('mod controller', () => {
 			mockTarget.isAlive = false;
 			sandbox.spy(mockGame, 'killPlayer');
 
-			return modController.killHandler(command).then( () => {
+			return modController.killHandler(command).then(() => {
 				mockGame.killPlayer.called.should.be.false;
 				const output = view.reportError.getCall(0).args[2];
 				output.should.include('Target not alive');
@@ -226,12 +243,16 @@ describe('mod controller', () => {
 
 		it('Should not kill players not in the game', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'Margaret'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -241,7 +262,7 @@ describe('mod controller', () => {
 			sandbox.stub(mockGame, 'getPlayer').returns(mockUser).withArgs('Margaret').throws('NoSuchPlayer');
 			sandbox.spy(mockGame, 'killPlayer');
 
-			return modController.killHandler(command).then( () => {
+			return modController.killHandler(command).then(() => {
 				mockGame.killPlayer.called.should.be.false;
 				const output = view.reportError.getCall(0).args[2];
 				output.toString().should.include('Target not in game');
@@ -250,12 +271,16 @@ describe('mod controller', () => {
 
 		it('Should report errors', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'Margaret'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -264,7 +289,7 @@ describe('mod controller', () => {
 
 			sandbox.stub(mockGame, 'killPlayer').rejects('an error occurred');
 
-			return modController.killHandler(command).then( () => {
+			return modController.killHandler(command).then(() => {
 				mockGame.killPlayer.called.should.be.true;
 				const output = view.reportError.getCall(0).args[2];
 				output.should.be.an('Error');
@@ -274,12 +299,16 @@ describe('mod controller', () => {
 
 		it('Should kill players', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'Margaret'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -291,23 +320,25 @@ describe('mod controller', () => {
 				command: 'Kill',
 				results: 'Killed @Margaret',
 				game: 'testMafia'
-			} ;
+			};
 
-			return modController.killHandler(command).then( () => {
+			return modController.killHandler(command).then(() => {
 				mockGame.killPlayer.calledWith('Margaret').should.be.true;
 				const output = view.respondWithTemplate.getCall(0).args[1];
 				output.should.deep.equal(expectedOutput);
 			});
 		});
-		
+
 		it('Should work from chat', () => {
 			const command = {
 				getTopic: () => Promise.reject('Do not call me! you will break chat functionality'),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'Margaret'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: -1,
 						chat: 123
@@ -317,7 +348,7 @@ describe('mod controller', () => {
 
 			sandbox.spy(mockGame, 'killPlayer');
 
-			return modController.killHandler(command).then( () => {
+			return modController.killHandler(command).then(() => {
 				mockGame.killPlayer.calledWith('Margaret').should.be.true;
 			});
 		});
@@ -327,7 +358,7 @@ describe('mod controller', () => {
 		let mockGame, mockUser, mockdao, modController;
 
 		beforeEach(() => {
-			
+
 			mockUser = {
 				username: 'God',
 				getPlayerProperty: () => [],
@@ -361,10 +392,14 @@ describe('mod controller', () => {
 
 		it('Should reject non-mods', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
 				args: [],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -374,7 +409,7 @@ describe('mod controller', () => {
 			sandbox.spy(mockGame, 'nextPhase');
 			sandbox.stub(mockGame, 'getModerator').throws();
 
-			return modController.phaseHandler(command).then( () => {
+			return modController.phaseHandler(command).then(() => {
 				//Game actions
 				mockGame.nextPhase.called.should.equal(false);
 
@@ -387,10 +422,14 @@ describe('mod controller', () => {
 
 		it('Should reject non-existant game', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
 				args: [],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -400,7 +439,7 @@ describe('mod controller', () => {
 			sandbox.stub(mockdao, 'getGameByTopicId').rejects('No such game');
 			sandbox.spy(mockGame, 'nextPhase');
 
-			return modController.phaseHandler(command).then( () => {
+			return modController.phaseHandler(command).then(() => {
 				//Output back to mod
 				view.reportError.calledWith(command).should.be.true;
 				const modOutput = view.reportError.getCall(0).args[2];
@@ -412,10 +451,14 @@ describe('mod controller', () => {
 
 		it('Should move to night', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
 				args: [],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -423,7 +466,7 @@ describe('mod controller', () => {
 			};
 			sandbox.stub(mockGame, 'nextPhase').resolves();
 
-			return modController.phaseHandler(command).then( () => {
+			return modController.phaseHandler(command).then(() => {
 				//Game actions
 				mockGame.nextPhase.called.should.be.true;
 
@@ -432,18 +475,20 @@ describe('mod controller', () => {
 				const modOutput = view.respond.getCall(0).args[1];
 				modOutput.should.include('It is now night');
 
-				
+
 				view.respondWithTemplate.called.should.not.be.true;
 
 			});
 		});
-		
+
 		it('Should work in chatt', () => {
 			const command = {
 				getTopic: () => Promise.reject('Do not call me! you will break chat functionality'),
-				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
 				args: [],
-				parent : {
+				parent: {
 					ids: {
 						topic: -1,
 						chat: 1234
@@ -452,7 +497,7 @@ describe('mod controller', () => {
 			};
 			sandbox.stub(mockGame, 'nextPhase').resolves();
 
-			return modController.phaseHandler(command).then( () => {
+			return modController.phaseHandler(command).then(() => {
 				//Game actions
 				mockGame.nextPhase.called.should.be.true;
 
@@ -461,18 +506,22 @@ describe('mod controller', () => {
 				const modOutput = view.respond.getCall(0).args[1];
 				modOutput.should.include('It is now night');
 
-				
+
 				view.respondWithTemplate.called.should.not.be.true;
 
 			});
 		});
-		
+
 		it('Should optionally add an end time', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
 				args: ['ends', 'today'],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -480,24 +529,28 @@ describe('mod controller', () => {
 			};
 			sandbox.spy(mockGame, 'setValue');
 
-			return modController.phaseHandler(command).then( () => {
+			return modController.phaseHandler(command).then(() => {
 				//Set the flag
 				mockGame.setValue.called.should.be.true;
 				mockGame.setValue.calledWith('phaseEnd', 'today').should.be.true;
-				
+
 				view.respond.calledWith(command).should.be.true;
 				const modOutput = view.respond.getCall(0).args[1];
 				modOutput.should.include('The phase will end today');
 
 			});
 		});
-		
+
 		it('Should optionally add an end time with spaces', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
 				args: ['ends', 'on', 'march', 'second'],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -505,20 +558,24 @@ describe('mod controller', () => {
 			};
 			sandbox.spy(mockGame, 'setValue');
 
-			return modController.phaseHandler(command).then( () => {
+			return modController.phaseHandler(command).then(() => {
 				//Set the flag
 				mockGame.setValue.called.should.be.true;
 				mockGame.setValue.calledWith('phaseEnd', 'on march second').should.be.true;
 
 			});
 		});
-		
+
 		it('Should not require an end time', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
 				args: [],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -526,18 +583,22 @@ describe('mod controller', () => {
 			};
 			sandbox.spy(mockGame, 'setValue');
 
-			return modController.phaseHandler(command).then( () => {
+			return modController.phaseHandler(command).then(() => {
 				//Set the flag
 				mockGame.setValue.called.should.be.false;
 			});
 		});
-		
+
 		it('Should handle malformed end time', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
 				args: ['ends'],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -545,18 +606,22 @@ describe('mod controller', () => {
 			};
 			sandbox.spy(mockGame, 'setValue');
 
-			return modController.phaseHandler(command).then( () => {
+			return modController.phaseHandler(command).then(() => {
 				//Set the flag
 				mockGame.setValue.called.should.be.false;
 			});
 		});
-		
+
 		it('Should ignore other args', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
 				args: ['banana', 'today'],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -564,18 +629,18 @@ describe('mod controller', () => {
 			};
 			sandbox.spy(mockGame, 'setValue');
 
-			return modController.phaseHandler(command).then( () => {
+			return modController.phaseHandler(command).then(() => {
 				//Set the flag
 				mockGame.setValue.called.should.be.false;
 			});
 		});
-	});	
-	
+	});
+
 	describe('new-day()', () => {
 		let mockGame, mockUser, mockdao, modController;
 
 		beforeEach(() => {
-			
+
 			mockUser = {
 				username: 'God',
 				getPlayerProperty: () => [],
@@ -610,10 +675,14 @@ describe('mod controller', () => {
 
 		it('Should reject non-mods', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
 				args: [],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -623,7 +692,7 @@ describe('mod controller', () => {
 			sandbox.spy(mockGame, 'nextPhase');
 			sandbox.stub(mockGame, 'getModerator').throws();
 
-			return modController.dayHandler(command).then( () => {
+			return modController.dayHandler(command).then(() => {
 				//Game actions
 				mockGame.nextPhase.called.should.equal(false);
 
@@ -636,10 +705,14 @@ describe('mod controller', () => {
 
 		it('Should reject non-existant game', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
 				args: [],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -649,7 +722,7 @@ describe('mod controller', () => {
 			sandbox.stub(mockdao, 'getGameByTopicId').rejects('No such game');
 			sandbox.spy(mockGame, 'nextPhase');
 
-			return modController.dayHandler(command).then( () => {
+			return modController.dayHandler(command).then(() => {
 				//Output back to mod
 				view.reportError.calledWith(command).should.be.true;
 				const modOutput = view.reportError.getCall(0).args[2];
@@ -658,13 +731,17 @@ describe('mod controller', () => {
 
 			});
 		});
-		
+
 		it('Should advance days', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
 				args: [],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -675,14 +752,14 @@ describe('mod controller', () => {
 				return Promise.resolve();
 			});
 
-			return modController.dayHandler(command).then( () => {
+			return modController.dayHandler(command).then(() => {
 				//Game actions
 				mockGame.newDay.called.should.be.true;
 
 				//Output back to mod
 				view.respondWithTemplate.called.should.be.true;
 				const actualData = view.respondWithTemplate.getCall(0).args[1];
-				
+
 				actualData.day.should.equal(mockGame.day);
 				actualData.numPlayers.should.equal(3);
 				actualData.toExecute.should.equal(2);
@@ -690,13 +767,15 @@ describe('mod controller', () => {
 
 			});
 		});
-		
+
 		it('Should work from chat', () => {
 			const command = {
 				getTopic: () => Promise.reject('Do not call me! you will break chat functionality'),
-				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
 				args: [],
-				parent : {
+				parent: {
 					ids: {
 						topic: -1,
 						chat: 1234
@@ -708,7 +787,7 @@ describe('mod controller', () => {
 				return Promise.resolve();
 			});
 
-			return modController.dayHandler(command).then( () => {
+			return modController.dayHandler(command).then(() => {
 				//Game actions
 				mockGame.newDay.called.should.be.true;
 
@@ -717,13 +796,17 @@ describe('mod controller', () => {
 
 			});
 		});
-		
+
 		it('Should optionally add an end time', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
 				args: ['ends', 'today'],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -731,24 +814,28 @@ describe('mod controller', () => {
 			};
 			sandbox.spy(mockGame, 'setValue');
 
-			return modController.dayHandler(command).then( () => {
+			return modController.dayHandler(command).then(() => {
 				//Set the flag
 				mockGame.setValue.called.should.be.true;
 				mockGame.setValue.calledWith('phaseEnd', 'today').should.be.true;
-				
+
 				view.respond.calledWith(command).should.be.true;
 				const modOutput = view.respond.getCall(0).args[1];
 				modOutput.should.include('The phase will end today');
 
 			});
 		});
-		
+
 		it('Should optionally add an end time with spaces', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
 				args: ['ends', 'on', 'march', 'second'],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -756,20 +843,24 @@ describe('mod controller', () => {
 			};
 			sandbox.spy(mockGame, 'setValue');
 
-			return modController.dayHandler(command).then( () => {
+			return modController.dayHandler(command).then(() => {
 				//Set the flag
 				mockGame.setValue.called.should.be.true;
 				mockGame.setValue.calledWith('phaseEnd', 'on march second').should.be.true;
 
 			});
 		});
-		
+
 		it('Should not require an end time', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
 				args: [],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -777,18 +868,22 @@ describe('mod controller', () => {
 			};
 			sandbox.spy(mockGame, 'setValue');
 
-			return modController.dayHandler(command).then( () => {
+			return modController.dayHandler(command).then(() => {
 				//Set the flag
 				mockGame.setValue.called.should.be.false;
 			});
 		});
-		
+
 		it('Should handle malformed end time', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
 				args: ['ends'],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -796,18 +891,22 @@ describe('mod controller', () => {
 			};
 			sandbox.spy(mockGame, 'setValue');
 
-			return modController.dayHandler(command).then( () => {
+			return modController.dayHandler(command).then(() => {
 				//Set the flag
 				mockGame.setValue.called.should.be.false;
 			});
 		});
-		
+
 		it('Should ignore other args', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
 				args: ['banana', 'today'],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -815,7 +914,7 @@ describe('mod controller', () => {
 			};
 			sandbox.spy(mockGame, 'setValue');
 
-			return modController.dayHandler(command).then( () => {
+			return modController.dayHandler(command).then(() => {
 				//Set the flag
 				mockGame.setValue.called.should.be.false;
 			});
@@ -824,7 +923,7 @@ describe('mod controller', () => {
 
 	describe('add()', () => {
 		let mockGame, mockUser, mockdao, modController;
-		
+
 		beforeEach(() => {
 			mockUser = {
 				username: 'God',
@@ -833,8 +932,8 @@ describe('mod controller', () => {
 			};
 
 			mockGame = {
-				addTopic :  () => Promise.resolve(),
-				addChat :  () => Promise.resolve(),
+				addTopic: () => Promise.resolve(),
+				addChat: () => Promise.resolve(),
 				getModerator: () => Promise.resolve()
 			};
 
@@ -847,17 +946,21 @@ describe('mod controller', () => {
 
 			modController = new ModController(mockdao);
 		});
-		
+
 		it('Should reject non-mods', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'thread',
 					'123',
 					'testMafia'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -866,185 +969,216 @@ describe('mod controller', () => {
 
 			sandbox.stub(mockGame, 'getModerator').throws('E_NOMOD');
 
-
-			return modController.addHandler(command).then( () => {
+			return modController.addHandler(command).then(() => {
 				view.reportError.calledWith(command).should.be.true;
 				const output = view.reportError.getCall(0).args[2].toString();
 
 				output.should.include('You are not a moderator');
 			});
 		});
-		
+
 		it('Should require 3 arguments', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: ['huh?'],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
 				},
 			};
-			
+
 			sandbox.spy(mockdao, 'getGameByName');
-			
-			return modController.addHandler(command).then( () => {
+
+			return modController.addHandler(command).then(() => {
 				view.reportError.called.should.be.true;
 			});
 		});
-		
+
 		it('Should accept terse format', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'thread',
 					'123',
 					'testMafia'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
 				},
 			};
-			
+
 			sandbox.spy(mockdao, 'getGameByName');
-			
-			return modController.addHandler(command).then( () => {
+
+			return modController.addHandler(command).then(() => {
 				mockdao.getGameByName.calledWith('testMafia').should.be.true;
 			});
 		});
-		
+
 		it('Should accept friendly format', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'thread',
 					'123',
 					'to',
 					'testMafia'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
 				},
 			};
-			
+
 			sandbox.spy(mockdao, 'getGameByName');
-			
-			return modController.addHandler(command).then( () => {
+
+			return modController.addHandler(command).then(() => {
 				mockdao.getGameByName.calledWith('testMafia').should.be.true;
 			});
 		});
-		
+
 		it('Should add threads', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'thread',
 					'123',
 					'testMafia'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
 				},
 			};
-			
+
 			sandbox.spy(mockGame, 'addTopic');
-			
-			return modController.addHandler(command).then( () => {
+
+			return modController.addHandler(command).then(() => {
 				mockGame.addTopic.called.should.be.true;
 			});
 		});
-		
+
 		it('Should add chats', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'chat',
 					'123',
 					'testMafia'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
 				},
 			};
-			
+
 			sandbox.spy(mockGame, 'addChat');
-			
-			return modController.addHandler(command).then( () => {
+
+			return modController.addHandler(command).then(() => {
 				mockGame.addChat.called.should.be.true;
 			});
 		});
-		
+
 		it('Should not add cats', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'cat',
 					'123',
 					'testMafia'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
 				},
 			};
-			
+
 			sandbox.spy(mockGame, 'addChat');
 			sandbox.spy(mockGame, 'addTopic');
-			
-			return modController.addHandler(command).then( () => {
+
+			return modController.addHandler(command).then(() => {
 				mockGame.addChat.called.should.be.false;
 				mockGame.addTopic.called.should.be.false;
-				
+
 				view.reportError.calledWith(command).should.be.true;
 				const output = view.reportError.getCall(0).args[2].toString();
 
 				output.should.include('I don\'t know how to add a "cat".');
 			});
 		});
-		
+
 		it('Should add "this" when requested from a thread', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'this',
 					'testMafia'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
 				}
 			};
-			
+
 			sandbox.spy(mockGame, 'addChat');
 			sandbox.spy(mockGame, 'addTopic');
-			
-			return modController.addHandler(command).then( () => {
+
+			return modController.addHandler(command).then(() => {
 				mockGame.addTopic.calledWith(12345).should.be.true;
 			});
 		});
-		
+
 		it('Should add "this" when requested from a chat', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: -1}),
-				getUser: () => Promise.resolve({username: 'God'}),
-				parent : {
+				getTopic: () => Promise.resolve({
+					id: -1
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
+				parent: {
 					ids: {
 						topic: -1,
 						chat: 12
@@ -1055,64 +1189,72 @@ describe('mod controller', () => {
 					'testMafia'
 				]
 			};
-			
+
 			sandbox.spy(mockGame, 'addChat');
 			sandbox.spy(mockGame, 'addTopic');
-			
-			return modController.addHandler(command).then( () => {
+
+			return modController.addHandler(command).then(() => {
 				mockGame.addChat.called.should.be.true;
-				
+
 				mockGame.addChat.firstCall.args[0].should.equal(12);
 			});
 		});
-		
+
 		it('Should add "this" when requested from a thread (natural syntax)', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'this',
 					'to',
 					'testMafia'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
 				}
 			};
-			
+
 			sandbox.spy(mockGame, 'addChat');
 			sandbox.spy(mockGame, 'addTopic');
-			
-			return modController.addHandler(command).then( () => {
+
+			return modController.addHandler(command).then(() => {
 				mockGame.addTopic.calledWith(12345).should.be.true;
 			});
 		});
-		
+
 		it('Should add "this" when requested from a chat (natural syntax)', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: -1}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: -1
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'this',
 					'to',
 					'testMafia'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: -1,
 						chat: 12
 					}
 				}
 			};
-			
+
 			sandbox.spy(mockGame, 'addChat');
 			sandbox.spy(mockGame, 'addTopic');
-			
-			return modController.addHandler(command).then( () => {
+
+			return modController.addHandler(command).then(() => {
 				mockGame.addChat.called.should.be.true;
-				
+
 				mockGame.addChat.firstCall.args[0].should.equal(12);
 			});
 		});
@@ -1162,13 +1304,17 @@ describe('mod controller', () => {
 
 		it('Should reject non-mods', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'Margaret',
 					'loved'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -1179,7 +1325,7 @@ describe('mod controller', () => {
 			sandbox.stub(mockGame, 'getModerator').throws('E_NOMOD');
 
 
-			return modController.setHandler(command).then( () => {
+			return modController.setHandler(command).then(() => {
 				view.reportError.calledWith(command).should.be.true;
 				const output = view.reportError.getCall(0).args[2].toString();
 
@@ -1189,13 +1335,17 @@ describe('mod controller', () => {
 
 		it('Should reject non-players', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'Sanderson',
 					'loved'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -1203,44 +1353,50 @@ describe('mod controller', () => {
 			};
 
 			sandbox.stub(mockGame, 'getPlayer').throws();
-			
-			return modController.setHandler(command).then( () => {
+
+			return modController.setHandler(command).then(() => {
 				view.reportError.calledWith(command).should.be.true;
 				const output = view.reportError.getCall(0).args[2].toString();
 
 				output.should.include('Target not in game');
 			});
 		});
-		
+
 		it('Should require 2 arguments', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
 				},
 			};
 
-			return modController.setHandler(command).then( () => {
+			return modController.setHandler(command).then(() => {
 				view.reportError.calledWith(command).should.be.true;
 				const output = view.reportError.getCall(0).args[2].toString();
 
 				output.should.include('Incorrect syntax');
 			});
 		});
-		
+
 		it('Should work in chat', () => {
 			const command = {
 				getTopic: () => Promise.reject('Do not call me! you will break chat functionality'),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'Margaret',
 					'loved'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: -1,
 						chat: 123
@@ -1249,20 +1405,24 @@ describe('mod controller', () => {
 			};
 
 
-			return modController.setHandler(command).then( () => {
+			return modController.setHandler(command).then(() => {
 				view.respondWithTemplate.called.should.be.true;
 			});
 		});
 
 		it('Should allow loved', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'Margaret',
 					'loved'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -1276,7 +1436,7 @@ describe('mod controller', () => {
 				game: 'testMafia'
 			};
 
-			return modController.setHandler(command).then( () => {
+			return modController.setHandler(command).then(() => {
 				view.respondWithTemplate.called.should.be.true;
 				const output = view.respondWithTemplate.getCall(0).args[1];
 				output.should.deep.equal(expected);
@@ -1285,13 +1445,17 @@ describe('mod controller', () => {
 
 		it('Should allow hated', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'Margaret',
 					'hated'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -1304,7 +1468,7 @@ describe('mod controller', () => {
 				game: 'testMafia'
 			};
 
-			return modController.setHandler(command).then( () => {
+			return modController.setHandler(command).then(() => {
 				view.respondWithTemplate.called.should.be.true;
 				const output = view.respondWithTemplate.getCall(0).args[1];
 				output.should.deep.equal(expected);
@@ -1313,13 +1477,17 @@ describe('mod controller', () => {
 
 		it('Should allow doublevoter', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'Margaret',
 					'doublevoter'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -1332,22 +1500,26 @@ describe('mod controller', () => {
 				game: 'testMafia'
 			};
 
-			return modController.setHandler(command).then( () => {
+			return modController.setHandler(command).then(() => {
 				view.respondWithTemplate.called.should.be.true;
 				const output = view.respondWithTemplate.getCall(0).args[1];
 				output.should.deep.equal(expected);
 			});
 		});
-		
+
 		it('Should allow lynchproof', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'Margaret',
 					'lynchproof'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -1360,32 +1532,36 @@ describe('mod controller', () => {
 				game: 'testMafia'
 			};
 
-			return modController.setHandler(command).then( () => {
+			return modController.setHandler(command).then(() => {
 				view.respondWithTemplate.called.should.be.true;
 				const output = view.respondWithTemplate.getCall(0).args[1];
 				output.should.deep.equal(expected);
 			});
-		});	
-		
+		});
+
 		it('Should allow night action properties', () => {
 			const properties = ['scum', 'scum2', 'cultLeader', 'cultist', 'cop', 'wanderer'];
 			let command;
 			const tests = [];
 			for (let i = 0; i < properties.length; i++) {
 				command = {
-					getTopic: () => Promise.resolve({id: 12345}),
-					getUser: () => Promise.resolve({username: 'God'}),
+					getTopic: () => Promise.resolve({
+						id: 12345
+					}),
+					getUser: () => Promise.resolve({
+						username: 'God'
+					}),
 					args: [
 						'Margaret',
 						properties[i]
 					],
-					parent : {
+					parent: {
 						ids: {
 							topic: 12345
 						}
 					},
 				};
-				
+
 				tests[i] = modController.setHandler(command);
 			}
 
@@ -1404,20 +1580,24 @@ describe('mod controller', () => {
 
 		it('Should reject doodoohead', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'Margaret',
 					'doodoohead'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
 				},
 			};
 
-			return modController.setHandler(command).then( () => {
+			return modController.setHandler(command).then(() => {
 				view.reportError.calledWith(command).should.be.true;
 				const output = view.reportError.getCall(0).args[2];
 
@@ -1428,13 +1608,17 @@ describe('mod controller', () => {
 
 		it('Should bubble up errors', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'Margaret',
 					'doublevoter'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -1443,7 +1627,7 @@ describe('mod controller', () => {
 			sandbox.stub(mockTarget, 'addProperty').throws('An error occurred');
 
 
-			return modController.setHandler(command).then( () => {
+			return modController.setHandler(command).then(() => {
 				view.reportError.calledWith(command).should.be.true;
 				const output = view.reportError.getCall(0).args[2];
 				output.should.be.an('Error');
@@ -1451,35 +1635,43 @@ describe('mod controller', () => {
 				output.toString().should.include('An error occurred');
 			});
 		});
-		
+
 		it('Should read "in" command with numeric arg', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'Margaret',
 					'hated',
 					'in',
 					'527'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
 				},
 			};
-			
+
 			sandbox.spy(mockdao, 'getGameByTopicId');
 
-			return modController.setHandler(command).then( () => {
+			return modController.setHandler(command).then(() => {
 				mockdao.getGameByTopicId.calledWith('527').should.be.true;
 			});
 		});
-		
+
 		it('Should read "in" command with string arg', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'Margaret',
 					'hated',
@@ -1487,26 +1679,30 @@ describe('mod controller', () => {
 					'Bushido',
 					'Mafia'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
 				},
 			};
-			
+
 			sandbox.spy(mockdao, 'getGameByName');
 			sandbox.spy(mockdao, 'getGameByTopicId');
 
-			return modController.setHandler(command).then( () => {
+			return modController.setHandler(command).then(() => {
 				mockdao.getGameByName.calledWith('Bushido Mafia').should.be.true;
 				mockdao.getGameByTopicId.called.should.be.false;
 			});
 		});
-		
+
 		it('Should not confuse string and numeric args', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'Margaret',
 					'hated',
@@ -1514,23 +1710,23 @@ describe('mod controller', () => {
 					'21_Jump',
 					'Street'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
 				},
 			};
-			
+
 			sandbox.spy(mockdao, 'getGameByName');
 			sandbox.spy(mockdao, 'getGameByTopicId');
 
-			return modController.setHandler(command).then( () => {
+			return modController.setHandler(command).then(() => {
 				mockdao.getGameByName.calledWith('21_Jump Street').should.be.true;
 				mockdao.getGameByTopicId.called.should.be.false;
 			});
 		});
 	}); //end of Set
-	
+
 	describe('listNightActions()', () => {
 
 		let mockGame, mockUserList, mockUser, mockdao, modController;
@@ -1541,9 +1737,9 @@ describe('mod controller', () => {
 				getPlayerProperty: () => [],
 				isModerator: true
 			};
-			
+
 			mockUserList = {};
-			
+
 			mockUserList.god = mockUser;
 
 			mockUserList.margaret = {
@@ -1561,7 +1757,7 @@ describe('mod controller', () => {
 				isAlive: true,
 				addProperty: () => true
 			};
-			
+
 			mockUserList.steve = {
 				username: 'Margaret',
 				getPlayerProperty: () => [],
@@ -1569,7 +1765,7 @@ describe('mod controller', () => {
 				isAlive: true,
 				addProperty: () => true
 			};
-			
+
 			mockGame = {
 				isActive: true,
 				name: 'testMafia',
@@ -1577,7 +1773,7 @@ describe('mod controller', () => {
 				killPlayer: () => Promise.resolve(),
 				nextPhase: () => 1,
 				getActions: () => 1,
-				getPlayer: (p) =>  mockUserList[p.toLowerCase()],
+				getPlayer: (p) => mockUserList[p.toLowerCase()],
 				getModerator: () => mockUser,
 				topicId: 12,
 				day: 1
@@ -1592,15 +1788,19 @@ describe('mod controller', () => {
 
 			modController = new ModController(mockdao);
 		});
-		
+
 		it('Should reject non-mods', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'123'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
@@ -1611,29 +1811,33 @@ describe('mod controller', () => {
 			sandbox.stub(mockGame, 'getModerator').throws('E_MODERATOR_NOT_EXIST');
 
 
-			return modController.listNAHandler(command).then( () => {
+			return modController.listNAHandler(command).then(() => {
 				view.reportError.calledWith(command).should.be.true;
 				const output = view.reportError.getCall(0).args[2].toString();
 
 				output.should.include('You are not a moderator');
 			});
 		});
-		
+
 		it('Should search for the game by ID', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'in',
 					'123'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
 				},
 			};
-				
+
 			sandbox.spy(mockdao, 'getGameByTopicId');
 			sandbox.spy(mockdao, 'getGameByName');
 			return modController.listNAHandler(command).then(() => {
@@ -1642,22 +1846,26 @@ describe('mod controller', () => {
 				mockdao.getGameByTopicId.calledWith('123').should.be.true;
 			});
 		});
-		
+
 		it('Should search for the game by name', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'in',
 					'testMafia'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
 				},
 			};
-				
+
 			sandbox.spy(mockdao, 'getGameByTopicId');
 			sandbox.spy(mockdao, 'getGameByName');
 			return modController.listNAHandler(command).then(() => {
@@ -1666,22 +1874,26 @@ describe('mod controller', () => {
 				mockdao.getGameByName.calledWith('testMafia').should.be.true;
 			});
 		});
-		
+
 		it('Should fetch the list of actions', () => {
 			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'in',
 					'123'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: 12345
 					}
 				},
 			};
-			
+
 			const mockAction = {
 				id: 1,
 				actor: mockUserList.margaret,
@@ -1690,36 +1902,38 @@ describe('mod controller', () => {
 				token: 'scum',
 				isCurrent: true
 			};
-			
+
 			sandbox.stub(mockGame, 'getActions').returns([mockAction]);
-			
+
 			return modController.listNAHandler(command).then(() => {
 				mockGame.getActions.calledWith('target').should.be.true;
 				view.respondWithTemplate.called.should.be.true;
-				
+
 				const dataReceived = view.respondWithTemplate.firstCall.args[1];
 				dataReceived.scum.show.should.be.true;
 				dataReceived.scum.actions.should.include(mockAction);
 				dataReceived.scum.actions.length.should.equal(1);
 			});
 		});
-		
+
 		it('Should work in chat', () => {
 			const command = {
 				getTopic: () => Promise.reject('Do not call me! you will break chat functionality'),
-				getUser: () => Promise.resolve({username: 'God'}),
+				getUser: () => Promise.resolve({
+					username: 'God'
+				}),
 				args: [
 					'in',
 					'123'
 				],
-				parent : {
+				parent: {
 					ids: {
 						topic: -1,
 						chat: 12
 					}
 				},
 			};
-			
+
 			const mockAction = {
 				id: 1,
 				actor: mockUserList.margaret,
@@ -1728,14 +1942,126 @@ describe('mod controller', () => {
 				token: 'scum',
 				isCurrent: true
 			};
-			
+
 			sandbox.stub(mockGame, 'getActions').returns([mockAction]);
-			
+
 			return modController.listNAHandler(command).then(() => {
 				mockGame.getActions.calledWith('target').should.be.true;
 				view.respondWithTemplate.called.should.be.true;
 			});
 		});
-	
+
+	});
+
+	describe('setValue()', () => {
+		let controller = null,
+			dao = null,
+			game = null,
+			command = null;
+		beforeEach(() => {
+			command = {
+				args: ['key', 'equal', 'value', 'in', 'game'],
+				getUser: sinon.stub().resolves({}),
+				reply: sinon.stub().resolves(),
+				parent: {
+					ids: {}
+				}
+			};
+			game = {
+				getModerator: sinon.stub(),
+				setValue: sinon.stub().resolves()
+			};
+			dao = {
+				getGame: sinon.stub().resolves(game)
+			};
+			controller = new ModController(dao);
+		});
+		describe('errors', () => {
+			it('should respond with error if Command.getUser() rejects', () => {
+				const error = new Error(`oopise ${Math.random()}`);
+				command.getUser.rejects(error);
+				return controller.setOption(command).then(() => {
+					command.reply.should.be.calledWith(`Error setting player property: ${error}`);
+					game.setValue.should.not.be.called;
+				});
+			});
+			it('should respond with error if getGame() rejects', () => {
+				const error = new Error(`oopise ${Math.random()}`);
+				dao.getGame.rejects(error);
+				return controller.setOption(command).then(() => {
+					command.reply.should.be.calledWith(`Error setting player property: ${error}`);
+					game.setValue.should.not.be.called;
+				});
+			});
+			it('should respond with error if setValue() rejects', () => {
+				const error = new Error(`oopise ${Math.random()}`);
+				game.setValue.rejects(error);
+				return controller.setOption(command).then(() => {
+					command.reply.should.be.calledWith(`Error setting player property: ${error}`);
+				});
+			});
+			it('should echo usage when no optionName given', () => {
+				command.args = ['equal', 'value', 'in', 'testMafia'];
+				return controller.setOption(command).then(() => {
+					command.reply.firstCall.args[0].should.startWith('Incorrect syntax. Usage:');
+					dao.getGame.should.not.be.called;
+				});
+			});
+			it('should echo usage when no value given', () => {
+				command.args = ['option', 'equal', 'in', 'testMafia'];
+				return controller.setOption(command).then(() => {
+					command.reply.firstCall.args[0].should.startWith('Incorrect syntax. Usage:');
+					dao.getGame.should.not.be.called;
+				});
+			});
+			it('should echo usage when no gameName given', () => {
+				command.args = ['option', 'equal', 'foo', 'in'];
+				return controller.setOption(command).then(() => {
+					command.reply.firstCall.args[0].should.startWith('Incorrect syntax. Usage:');
+					dao.getGame.should.not.be.called;
+				});
+			});
+			it('should respond with error when getModerator throws', () => {
+				const error = new Error(`oopise ${Math.random()}`);
+				game.getModerator.throws(error);
+				return controller.setOption(command).then(() => {
+					command.reply.should.be.calledWith('Error setting player property: Error: You are not a moderator!');
+					game.setValue.should.not.be.called;
+				});
+			});
+		});
+		it('should get gameName via arguments', () => {
+			const expected = `game${Math.random()}`;
+			command.args = ['option', 'equal', 'foo', 'in', expected];
+			return controller.setOption(command).then(() => {
+				dao.getGame.should.be.calledWith(expected).once;
+			});
+		});
+		it('should get gameName via ids when not specified in arguments', () => {
+			const expected = `game${Math.random()}`;
+			command.parent.ids.topic = expected;
+			command.args = ['option', 'equal', 'foo'];
+			return controller.setOption(command).then(() => {
+				dao.getGame.should.be.calledWith(expected).once;
+			});
+		});
+		it('should check user is moderator', () => {
+			const expected = `user${Math.random()}`;
+			command.getUser.resolves({
+				username: expected
+			});
+			command.args = ['option', 'equal', 'foo', 'in', 'testMafia'];
+			return controller.setOption(command).then(() => {
+				game.getModerator.should.be.calledWith(expected).once;
+			});
+		});
+		it('should set value on game', () => {
+			const option = `option${Math.random()}`,
+				value = `value${Math.random()}`;
+			command.args = [option, 'equal', value, 'in', 'testMafia'];
+			return controller.setOption(command).then(() => {
+				game.setValue.should.be.calledWith(option, value).once;
+			});
+		});
 	});
 });
