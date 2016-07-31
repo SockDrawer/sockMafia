@@ -1953,7 +1953,7 @@ describe('mod controller', () => {
 
 	});
 
-	describe('setValue()', () => {
+	describe('setOption()', () => {
 		let controller = null,
 			dao = null,
 			game = null,
@@ -1998,6 +1998,13 @@ describe('mod controller', () => {
 				game.setValue.rejects(error);
 				return controller.setOption(command).then(() => {
 					command.reply.should.be.calledWith(`Error setting player property: ${error}`);
+				});
+			});
+			it('should echo usage when no args', () => {
+				command.args = [];
+				return controller.setOption(command).then(() => {
+					command.reply.firstCall.args[0].should.startWith('Incorrect syntax. Usage:');
+					dao.getGame.should.not.be.called;
 				});
 			});
 			it('should echo usage when no optionName given', () => {
@@ -2061,6 +2068,161 @@ describe('mod controller', () => {
 			command.args = [option, 'equal', value, 'in', 'testMafia'];
 			return controller.setOption(command).then(() => {
 				game.setValue.should.be.calledWith(option, value).once;
+			});
+		});
+		it('should ignore optional leading `set` keyword', () => {
+			const option = `option${Math.random()}`,
+				value = `value${Math.random()}`;
+			command.args = ['set', option, 'equal', value, 'in', 'testMafia'];
+			return controller.setOption(command).then(() => {
+				game.setValue.should.be.calledWith(option, value).once;
+			});
+		});
+	});
+
+	describe('sendRoleCard()', () => {
+		let controller = null,
+			dao = null,
+			game = null,
+			command = null,
+			chatroom = null;
+		beforeEach(() => {
+			chatroom = {
+				id: Math.random()
+			};
+			command = {
+				args: ['userfoo', 'in', 'testMafia'],
+				getUser: sinon.stub().resolves({}),
+				reply: sinon.stub().resolves(),
+				parent: {
+					text: ''
+				},
+				text: `I am a merry rolecard text\n\n${Math.random()}`
+			};
+			game = {
+				name: 'testMafia',
+				moderators: [],
+				addChat: sinon.stub().resolves(),
+				getModerator: sinon.stub(),
+				getPlayer: sinon.stub().returns({}),
+				getValue: sinon.stub()
+			};
+			dao = {
+				getGame: sinon.stub().resolves(game)
+			};
+			controller = new ModController(dao);
+			controller.forum = {
+				Chat: {
+					create: sinon.stub().resolves(chatroom)
+				}
+			};
+		});
+		describe('errors', () => {
+			it('should reply with usage when no args provided', () => {
+				command.args = [];
+				return controller.sendRoleCard(command).then(() => {
+					command.reply.should.be.calledWith('Invalid command: Usage `!send-rolecard TargetUsername in TargetGame`').once;
+				});
+			});
+			it('should reply with usage when username not provided', () => {
+				command.args.shift();
+				return controller.sendRoleCard(command).then(() => {
+					command.reply.should.be.calledWith('Invalid command: Usage `!send-rolecard TargetUsername in TargetGame`').once;
+				});
+			});
+			it('should reply with usage when gameName not provided', () => {
+				command.args.pop();
+				return controller.sendRoleCard(command).then(() => {
+					command.reply.should.be.calledWith('Invalid command: Usage `!send-rolecard TargetUsername in TargetGame`').once;
+				});
+			});
+			it('should reply with error when getGame rejects', () => {
+				const error = new Error(`whoopsies ${Math.random()}`),
+					errormsg = `Error sending rolecard: ${error}`;
+				dao.getGame.rejects(error);
+				return controller.sendRoleCard(command).then(() => {
+					command.reply.should.be.calledWith(errormsg).once;
+				});
+			});
+			it('should reply with error when getUser() rejects', () => {
+				const error = new Error(`whoopsies ${Math.random()}`),
+					errormsg = `Error sending rolecard: ${error}`;
+				command.getUser.rejects(error);
+				return controller.sendRoleCard(command).then(() => {
+					command.reply.should.be.calledWith(errormsg).once;
+				});
+			});
+			it('should reply with error when mod not found', () => {
+				const errormsg = 'Error sending rolecard: Error: You are not a moderator for testMafia';
+				game.getModerator.throws(new Error());
+				return controller.sendRoleCard(command).then(() => {
+					command.reply.should.be.calledWith(errormsg).once;
+				});
+			});
+			it('should reply with error when user not found', () => {
+				const errormsg = 'Error sending rolecard: Error: userfoo is not a living player in testMafia';
+				game.getPlayer.throws(new Error());
+				return controller.sendRoleCard(command).then(() => {
+					command.reply.should.be.calledWith(errormsg).once;
+				});
+			});
+		});
+		it('should create chatroom on success', () => {
+			return controller.sendRoleCard(command).then(() => {
+				controller.forum.Chat.create.should.be.called.once;
+			});
+		});
+		it('should include mods in user list', () => {
+			const mod1 = `mod${Math.random()}`,
+				mod2 = `mod${Math.random()}`;
+			game.moderators = [mod1, mod2];
+			return controller.sendRoleCard(command).then(() => {
+				const args = controller.forum.Chat.create.firstCall.args;
+				args[0].should.include(mod1);
+				args[0].should.include(mod2);
+			});
+		});
+		it('should include target in user list', () => {
+			const target = `user${Math.random()}`;
+			game.getPlayer.returns({
+				username: target
+			});
+			return controller.sendRoleCard(command).then(() => {
+				const args = controller.forum.Chat.create.firstCall.args;
+				args[0].should.include(target);
+			});
+		});
+		it('should set chat name as expected', () => {
+			const name = `mafia game ${Math.random()}`;
+			game.name = name;
+			return controller.sendRoleCard(command).then(() => {
+				const args = controller.forum.Chat.create.firstCall.args;
+				args[2].should.equal(`Rolecard for ${name}`);
+			});
+		});
+		it('should send text of the command parent as rolecard', () => {
+			const text = `text \ntext\n text\n ${Math.random()}`;
+			command.parent.text = text;
+			return controller.sendRoleCard(command).then(() => {
+				const args = controller.forum.Chat.create.firstCall.args;
+				args[1].should.equal(text);
+			});
+		});
+		it('should send text of the command parent as rolecard', () => {
+			const text = `text \ntext\n text\n ${Math.random()}`;
+			command.parent.text = text;
+			return controller.sendRoleCard(command).then(() => {
+				const args = controller.forum.Chat.create.firstCall.args;
+				args[1].should.equal(text);
+			});
+		});
+		it('should strip commands from rolecard for bastard game', () => {
+			const text = 'text1\ntext2\ntext3';
+			game.getValue.returns('true');
+			command.parent.text = 'text1\n!set player hated\ntext2\n!send-rolecard player\ntext3';
+			return controller.sendRoleCard(command).then(() => {
+				const args = controller.forum.Chat.create.firstCall.args;
+				args[1].should.equal(text);
 			});
 		});
 	});

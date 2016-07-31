@@ -34,5 +34,9 @@ module.exports = {
 			token = args.shift();
 		}
 		return value.join(' ');
+	},
+	isEnabled(value) {
+		value = (value || '').toLowerCase();
+		return ['true', 'enabled', 'ok', 'yes'].some((val) => val === value);
 	}
 };

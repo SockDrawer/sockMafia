@@ -130,11 +130,11 @@ class MafiaModController {
 		forum.Commands.add('next-phase', 'move on to the next phase (mod only)', this.phaseHandler.bind(this));
 		forum.Commands.add('list-night-actions', 'List night actions submitted (mod only)', this.listNAHandler.bind(this));
 		forum.Commands.add('add', 'Add a thread or chat to the game (mod only)', this.addHandler.bind(this));
-		forum.Commands.add('setvalue', 'Set a Game Option', (command) => this.setOption(command));
+		forum.Commands.add('setvalue', 'Set a Game Option (mod only)', (command) => this.setOption(command));
 		forum.Commands.addAlias('set-value', (command) => this.setOption(command));
 		forum.Commands.addAlias('option', (command) => this.setOption(command));
 		forum.Commands.addAlias('set-option', (command) => this.setOption(command));
-		forum.Commands.add('send-rolecard', 'Send a rolecard to a user', (command) => this.sendRoleCard(command));
+		forum.Commands.add('send-rolecard', 'Send a rolecard to a user (mod only)', (command) => this.sendRoleCard(command));
 	}
 
 
@@ -142,7 +142,7 @@ class MafiaModController {
 		const target = Utils.argParse(command.args, ['in']),
 			gameName = command.args.join(' ');
 		if (!target || !gameName) {
-			command.reply('Invalid command: command format is `!send-rolecard TargetUsername in TargetGame`');
+			command.reply('Invalid command: Usage `!send-rolecard TargetUsername in TargetGame`');
 			return Promise.resolve();
 		}
 		return Promise.all([
@@ -152,9 +152,10 @@ class MafiaModController {
 			.then((data) => {
 				const game = data[0],
 					user = data[1],
-					rolecard = command.parent.text,
+					stripCommands = Utils.isEnabled(game.getValue('stripCommands')),
 					title = `Rolecard for ${game.name}`,
 					targets = game.moderators;
+				let rolecard = command.parent.text;
 				try {
 					game.getModerator(user.username);
 				} catch (moderr) {
@@ -164,6 +165,9 @@ class MafiaModController {
 					targets.push(game.getPlayer(target).username);
 				} catch (moderr) {
 					throw new Error(`${target} is not a living player in ${game.name}`);
+				}
+				if (stripCommands) {
+					rolecard = rolecard.split('\n').filter((line) => !/^!\w/.test(line)).join('\n');
 				}
 				return this.forum.Chat.create(targets, rolecard, title)
 					.then((chatroom) => game.addChat(chatroom.id))
