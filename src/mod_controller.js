@@ -65,24 +65,23 @@ function advance(game, type, endTime, command) {
 				data.phaseEnd = endTime;
 				data.showPhaseEnd = true;
 				return game.setValue('phaseEnd', endTime);
-			} else {
-				data.showPhaseEnd = false;
-				return Promise.resolve();
-			}
-		})
-		.then(() => {
-			if (game.day > currDay) {
-
-				const numPlayers = game.livePlayers.length;
-				data.day = game.day;
-				data.toExecute = Math.ceil(numPlayers / 2);
-
-				data.numPlayers = game.livePlayers.length;
-
-				data.names = game.livePlayers.map((player) => {
-					return player.username;
-				});
-
+		} else {
+			data.showPhaseEnd = false;
+			return Promise.resolve();
+		}
+	})
+	.then(() => {
+		if (game.day > currDay) {
+			
+			const numPlayers = game.livePlayers.length;
+			data.day = game.day;
+			data.toExecute = Utils.getNumVotesRequired(game);
+			
+			data.numPlayers = game.livePlayers.length;
+			
+			data.names = game.livePlayers.map((player) => {
+				return player.username;
+			});
 				logDebug('Moved to new day in  ' + game.name);
 				return view.respondWithTemplate('/templates/newDayTemplate.handlebars', data, command);
 			} else {
@@ -231,8 +230,21 @@ class MafiaModController {
 			return this.dao.getGameByTopicId(command.parent.ids.topic);
 		}
 	}
-
-	addHandler(command) {
+    
+    /**
+	* Add a thread or chat to the game so that commands can be executed in it. 
+	* Examples:
+	*  - !add thread 123 testmafia 
+	*  - !add thread 123 to testMafia
+	*  - !add chat 123 testMafia
+	*  - !add chat 123 to testMafia
+	*  - !add this testMafia
+	*  - !add this to testMafia
+	* 
+	* @param  {Command} command The command being executed
+	* @returns {Promise}        A promise that will resolve when the command is complete
+	*/
+    addHandler (command) {
 		function notEnoughArgs() {
 			const text = 'Incorrect syntax. Usage: !add [thread|chat] 123 testMafia or !add [thread|chat] 123 to testMafia or !add this to testMafia';
 			logRecoveredError('Error when setting property: ' + text);
@@ -337,12 +349,13 @@ class MafiaModController {
 			});
 	}
 
-	/**
-	 * Set: set a prperty for a player.
-	 * No game rules; this sets up rules for voting
-	 * @param {Sockbot.commands.command} command The command object
-	 */
-	setHandler(command) {
+    /**
+     * Set: set a prperty for a player.
+     * No game rules; this sets up rules for voting
+     * @param {Sockbot.commands.command} command The command object
+     * @returns {Promise}        A promise that will resolve when the command is complete
+     */
+	setHandler (command) {
 		const targetString = command.args[0] ? command.args[0].replace('@', '') : '';
 		const property = command.args[1];
 		let modName, game, mod, target;

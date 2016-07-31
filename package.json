@@ -1,6 +1,6 @@
 {
   "name": "sockmafia",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Mafia plugin for sockbot",
   "main": "./src/mafiabot.js",
   "scripts": {
@@ -29,7 +29,7 @@
   "dependencies": {
     "bluebird": "^3.1.1",
     "debug": "^2.2.0",
-    "fs-readfile-promise": "^2.0.1",
+    "fs-readfile-promise": "^3.0.0",
     "handlebars": "^4.0.5",
     "string": "^3.3.1"
   },
@@ -42,7 +42,7 @@
     "chai-string": "^1.2.0",
     "coveralls": "^2.11.3",
     "del": "^2.2.0",
-    "eslint": "^2.11",
+    "eslint": "^3.1.1",
     "istanbul": "^0.4.1",
     "mocha": "^2.3.4",
     "publish-please": "2.1.4",

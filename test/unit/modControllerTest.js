@@ -13,6 +13,7 @@ chai.should();
 
 const ModController = require('../../src/mod_controller');
 const view = require('../../src/view.js');
+const Utils = require('../../src/utils');
 
 
 describe('mod controller', () => {
@@ -767,7 +768,29 @@ describe('mod controller', () => {
 
 			});
 		});
+		
+		it('Should report the correct tolynch number', () => {
+			const command = {
+				getTopic: () => Promise.resolve({id: 12345}),
+				getUser: () => Promise.resolve({username: 'tehNinja'}),
+				args: [],
+				parent : {
+					ids: {
+						topic: 12345
+					}
+				},
+			};
+			sandbox.stub(mockGame, 'newDay', () => {
+				mockGame.day++;
+				return Promise.resolve();
+			});
 
+			sandbox.spy(Utils, 'getNumVotesRequired');
+			return modController.dayHandler(command).then(() => {
+				Utils.getNumVotesRequired.called.should.be.true;
+			});
+		});
+		
 		it('Should work from chat', () => {
 			const command = {
 				getTopic: () => Promise.reject('Do not call me! you will break chat functionality'),
