@@ -116,6 +116,40 @@ Usage:
 `!add chat 123 to gameName`
 `!add this to gameName` (adds the current thread or chat to the game)
 
+## Set-option
+
+Sets various game level configuration options.
+
+Aliases:
+
+- set-value
+- setvalue
+- option
+
+Usage:
+
+`!set-option chats equal enabled in testMafia`
+
+## Send-rolecard
+
+Sends the contents of the post or chat containing the command to the target users as their role card. 
+
+Note that it does not prevent the bot from trying to interpret any other commands in the post, so be careful how you word the role card to avoid putting the command on a line by itself.
+
+If you wish to omit information from the rolecard set the game option `stripCommands` to `enabled` to remove all commands from the role card when sending it to the player. 
+
+If you wish to send the same role card to multiple people, stripping commands is **highly** recommended, as it will prevent them from seeing the commands.
+
+Usage:
+
+```
+You are a **cop**! Each night you can investigate one person using `!target playerName in TargetGame`.
+
+!send-rolecard TargetUsername in TargetGame
+```
+
+This will send the entire text listed above to TargetUsername if you have stripCommands disabled, or just the first line if you have stripCommands enabled.
+
 # Configuration Reference
 
 ## Thread

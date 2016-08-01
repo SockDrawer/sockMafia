@@ -10,7 +10,7 @@ Array.prototype.contains = function (element) {
 
 module.exports = {
 	Enums: {
-		validProperties:  [
+		validProperties: [
 			'loved',
 			'hated',
 			'doublevoter',
@@ -23,7 +23,23 @@ module.exports = {
 			'wanderer'
 		]
 	},
-	
+
+	argParse: (args, endTokens) => {
+		let token = args.shift();
+		const value = [],
+			tokenCheck = (tok) => tok === token.toLowerCase();
+
+		while (token && !endTokens.some(tokenCheck)) {
+			value.push(token);
+			token = args.shift();
+		}
+		return value.join(' ');
+	},
+	isEnabled(value) {
+		value = (value || '').toLowerCase();
+		return ['true', 'enabled', 'ok', 'yes'].some((val) => val === value);
+	},
+
 	/**
 	* Get the number of votes required to lynch a player
 	*
@@ -45,7 +61,7 @@ module.exports = {
 
 		return numToLynch;
 	},
-	
+
 		/**
 	* Get the vote modifier for a given target.
 	*

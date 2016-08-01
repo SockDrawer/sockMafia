@@ -91,3 +91,14 @@ Votes to not lynch. If this option wins, the day will end prematurely.
 ## Target
 
 Registers an intent to target another player. This will be delivered to the GM to act upon, depending on your role.
+
+## Chat
+
+Open a chat with a Player and Game Mods.
+	 
+Game rules:
+- A game mod must have set the game option `chats` to `enabled` to use this command
+	 
+Usage:
+
+`!chat with yamikuronue in Mafia8`

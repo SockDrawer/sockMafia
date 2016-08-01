@@ -28,6 +28,7 @@ Detailed instructions can be found here:
 * **no-lynch**: Identical to **nolynch**. 
 * **unvote**: Rescind your current vote.
 * **target**: Target a player with your night action (if any). 
+* **chat**: Create a private chat with a player (and game mods). (if enabled by game mods)
 
 ###Moderator commands
 
@@ -40,10 +41,10 @@ Detailed instructions can be found here:
 * **end**: Finish the game. This prevents further voting in the thread of a game that has concluded. Must be run in the game thread. 
 * **add**: Add a thread or chat to the game. Syntax: `!add thread 1234 to testMafia` or `!add chat 123 to testMafia`. Also try `!add this to testMafia` from the thread or chat you wish to add. 
 * **list-night-actions**: List all the actions being performed this night so you can resolve them and move to day. Does not resolve or move to day automatically. 
+* **set-option**: Set a Game Option
+* **send-rolecard**: Send a rolecard to a player
 
 ##Installation
-
-*Note: This does not work on Node 6* for the time being, as our dependencies have not updated yet. Sorry for the inconvenience. 
 
 The preferred method of installation is via NPM; simply run this command within the SockBot installation folder:
 ```
