@@ -13,7 +13,6 @@ chai.should();
 
 const ModController = require('../../src/mod_controller');
 const view = require('../../src/view.js');
-const Utils = require('../../src/utils');
 
 
 describe('mod controller', () => {
@@ -768,29 +767,7 @@ describe('mod controller', () => {
 
 			});
 		});
-		
-		it('Should report the correct tolynch number', () => {
-			const command = {
-				getTopic: () => Promise.resolve({id: 12345}),
-				getUser: () => Promise.resolve({username: 'tehNinja'}),
-				args: [],
-				parent : {
-					ids: {
-						topic: 12345
-					}
-				},
-			};
-			sandbox.stub(mockGame, 'newDay', () => {
-				mockGame.day++;
-				return Promise.resolve();
-			});
 
-			sandbox.spy(Utils, 'getNumVotesRequired');
-			return modController.dayHandler(command).then(() => {
-				Utils.getNumVotesRequired.called.should.be.true;
-			});
-		});
-		
 		it('Should work from chat', () => {
 			const command = {
 				getTopic: () => Promise.reject('Do not call me! you will break chat functionality'),
@@ -2118,7 +2095,7 @@ describe('mod controller', () => {
 				getUser: sinon.stub().resolves({}),
 				reply: sinon.stub().resolves(),
 				parent: {
-					text: ''
+					ids: {}
 				},
 				text: `I am a merry rolecard text\n\n${Math.random()}`
 			};
@@ -2128,7 +2105,7 @@ describe('mod controller', () => {
 				addChat: sinon.stub().resolves(),
 				getModerator: sinon.stub(),
 				getPlayer: sinon.stub().returns({}),
-				getValue: sinon.stub()
+				setValue: sinon.stub().resolves()
 			};
 			dao = {
 				getGame: sinon.stub().resolves(game)
@@ -2198,7 +2175,11 @@ describe('mod controller', () => {
 		it('should include mods in user list', () => {
 			const mod1 = `mod${Math.random()}`,
 				mod2 = `mod${Math.random()}`;
-			game.moderators = [mod1, mod2];
+			game.moderators = [{
+				username: mod1
+			}, {
+				username: mod2
+			}];
 			return controller.sendRoleCard(command).then(() => {
 				const args = controller.forum.Chat.create.firstCall.args;
 				args[0].should.include(mod1);
@@ -2213,39 +2194,6 @@ describe('mod controller', () => {
 			return controller.sendRoleCard(command).then(() => {
 				const args = controller.forum.Chat.create.firstCall.args;
 				args[0].should.include(target);
-			});
-		});
-		it('should set chat name as expected', () => {
-			const name = `mafia game ${Math.random()}`;
-			game.name = name;
-			return controller.sendRoleCard(command).then(() => {
-				const args = controller.forum.Chat.create.firstCall.args;
-				args[2].should.equal(`Rolecard for ${name}`);
-			});
-		});
-		it('should send text of the command parent as rolecard', () => {
-			const text = `text \ntext\n text\n ${Math.random()}`;
-			command.parent.text = text;
-			return controller.sendRoleCard(command).then(() => {
-				const args = controller.forum.Chat.create.firstCall.args;
-				args[1].should.equal(text);
-			});
-		});
-		it('should send text of the command parent as rolecard', () => {
-			const text = `text \ntext\n text\n ${Math.random()}`;
-			command.parent.text = text;
-			return controller.sendRoleCard(command).then(() => {
-				const args = controller.forum.Chat.create.firstCall.args;
-				args[1].should.equal(text);
-			});
-		});
-		it('should strip commands from rolecard for bastard game', () => {
-			const text = 'text1\ntext2\ntext3';
-			game.getValue.returns('true');
-			command.parent.text = 'text1\n!set player hated\ntext2\n!send-rolecard player\ntext3';
-			return controller.sendRoleCard(command).then(() => {
-				const args = controller.forum.Chat.create.firstCall.args;
-				args[1].should.equal(text);
 			});
 		});
 	});
