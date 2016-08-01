@@ -2472,5 +2472,21 @@ describe('player controller', () => {
 				command.reply.should.be.calledWith(expected).once;
 			});
 		});
+		it('should allow optional leading `with` parameter', () => {
+			game.name = `NAME ${Math.random()} NAME`;
+
+			const username = `user${Math.random()}`,
+				target = `target${Math.random()}`,
+				expected = `Started chat between ${username} and ${target} in ${game.name}`;
+			command.getUser.resolves({
+				username: username
+			});
+			command.args.shift();
+			command.args.unshift(target);
+			command.args.unshift('with');
+			return controller.createChatHandler(command).then(() => {
+				command.reply.should.be.calledWith(expected).once;
+			});
+		});
 	});
 });

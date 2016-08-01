@@ -77,6 +77,8 @@ class MafiaPlayerController {
 		forum.Commands.addAlias('no-lynch', this.nolynchHandler.bind(this));
 
 		forum.Commands.add('target', 'Target a player with any night action you may have', this.targetHandler.bind(this));
+
+		forum.Commands.add('chat', 'Create a private chat with a player (and game mods)', (command) => this.createChatHandler(command));
 	}
 
 	/**
@@ -945,7 +947,7 @@ class MafiaPlayerController {
 	 * @returns {Promise}        A promise that will resolve when the game is ready
 	 */
 	createChatHandler(command) {
-		if (('with' === command.args[0] || '').toLowerCase()) {
+		if ('with' === (command.args[0] || '').toLowerCase()) {
 			command.args.shift();
 		}
 		const target = Utils.argParse(command.args, ['in']),
