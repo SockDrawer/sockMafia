@@ -116,6 +116,31 @@ Usage:
 `!add chat 123 to gameName`
 `!add this to gameName` (adds the current thread or chat to the game)
 
+## Set-option
+
+Sets various game level configuration options.
+
+Aliases:
+
+- set-value
+- setvalue
+- option
+
+Usage:
+
+`!set-option chats equal enabled in testMafia`
+
+## Send-rolecard
+
+Sends the contents of the post or chat containing the command to the target users as their role card.
+
+If you, as a bastard mod, wish to omit information from the rolecard set the game option `stripCommands` to `enabled` 
+to remove all commands from the role card when sending it to the player
+
+Usage:
+
+`!send-rolecard TargetUsername in TargetGame`
+
 # Configuration Reference
 
 ## Thread

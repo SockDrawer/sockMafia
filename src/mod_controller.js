@@ -137,7 +137,19 @@ class MafiaModController {
 		forum.Commands.add('send-rolecard', 'Send a rolecard to a user (mod only)', (command) => this.sendRoleCard(command));
 	}
 
-
+	/**
+	 * Sends the contents of the post or chat containing the command to the target users as their role card.
+	 *
+	 * If you, as a bastard mod, wish to omit information from the rolecard set the game option `stripCommands` to `enabled` 
+	 * to remove all commands from the role card when sending it to the player
+	 * 
+	 * Usage:
+	 *
+	 * `!send-rolecard TargetUsername in TargetGame`
+	 * 
+	 * @param  {Command} command The command being executed
+	 * @returns {Promise}        A promise that will resolve when the command is complete
+	 */
 	sendRoleCard(command) {
 		const target = Utils.argParse(command.args, ['in']),
 			gameName = command.args.join(' ');
@@ -178,6 +190,22 @@ class MafiaModController {
 			});
 	}
 
+	/**
+	 * Sets various game level configuration options.
+	 * 
+	 * Aliases:
+	 * 
+	 * - set-value
+	 * - setvalue
+	 * - option
+	 * 
+	 * Usage:
+	 * 
+	 * `!set-option chats equal enabled in testMafia`
+	 *
+	 * @param  {Command} command The command being executed
+	 * @returns {Promise}        A promise that will resolve when the command is complete
+	 */
 	setOption(command) {
 		if ('set' === (command.args[0] || '').toLowerCase()) {
 			command.args.shift();
