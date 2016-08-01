@@ -232,6 +232,19 @@ class MafiaModController {
 		}
 	}
 
+	/**
+	 * Add a thread or chat to the game so that commands can be executed in it. 
+	 * Examples:
+	 *  - !add thread 123 testmafia 
+	 *  - !add thread 123 to testMafia
+	 *  - !add chat 123 testMafia
+	 *  - !add chat 123 to testMafia
+	 *  - !add this testMafia
+	 *  - !add this to testMafia
+	 * 
+	 * @param  {Command} command The command being executed
+	 * @returns {Promise}        A promise that will resolve when the command is complete
+	 */
 	addHandler(command) {
 		function notEnoughArgs() {
 			const text = 'Incorrect syntax. Usage: !add [thread|chat] 123 testMafia or !add [thread|chat] 123 to testMafia or !add this to testMafia';
