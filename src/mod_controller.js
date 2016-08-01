@@ -152,9 +152,10 @@ class MafiaModController {
 			.then((data) => {
 				const game = data[0],
 					user = data[1],
-					rolecard = command.parent.text,
+					stripCommands = Utils.isEnabled(game.getValue('stripCommands')),
 					title = `Rolecard for ${game.name}`,
 					targets = game.moderators.map((mod) => mod.username);
+				let rolecard = command.parent.text;
 				try {
 					game.getModerator(user.username);
 				} catch (moderr) {
@@ -164,6 +165,9 @@ class MafiaModController {
 					targets.push(game.getPlayer(target).username);
 				} catch (moderr) {
 					throw new Error(`${target} is not a living player in ${game.name}`);
+				}
+				if (stripCommands) {
+					rolecard = rolecard.split('\n').filter((line) => !/^!\w/.test(line)).join('\n');
 				}
 				return this.forum.Chat.create(targets, rolecard, title)
 					.then((chatroom) => game.addChat(chatroom.id))

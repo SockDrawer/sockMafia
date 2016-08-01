@@ -2105,7 +2105,7 @@ describe('mod controller', () => {
 				addChat: sinon.stub().resolves(),
 				getModerator: sinon.stub(),
 				getPlayer: sinon.stub().returns({}),
-				setValue: sinon.stub().resolves()
+				getValue: sinon.stub().returns('')
 			};
 			dao = {
 				getGame: sinon.stub().resolves(game)
@@ -2194,6 +2194,39 @@ describe('mod controller', () => {
 			return controller.sendRoleCard(command).then(() => {
 				const args = controller.forum.Chat.create.firstCall.args;
 				args[0].should.include(target);
+			});
+		});
+		it('should set chat name as expected', () => {
+			const name = `mafia game ${Math.random()}`;
+			game.name = name;
+			return controller.sendRoleCard(command).then(() => {
+				const args = controller.forum.Chat.create.firstCall.args;
+				args[2].should.equal(`Rolecard for ${name}`);
+			});
+		});
+		it('should send text of the command parent as rolecard', () => {
+			const text = `text \ntext\n text\n ${Math.random()}`;
+			command.parent.text = text;
+			return controller.sendRoleCard(command).then(() => {
+				const args = controller.forum.Chat.create.firstCall.args;
+				args[1].should.equal(text);
+			});
+		});
+		it('should send text of the command parent as rolecard', () => {
+			const text = `text \ntext\n text\n ${Math.random()}`;
+			command.parent.text = text;
+			return controller.sendRoleCard(command).then(() => {
+				const args = controller.forum.Chat.create.firstCall.args;
+				args[1].should.equal(text);
+			});
+		});
+		it('should strip commands from rolecard for bastard game', () => {
+			const text = 'text1\ntext2\ntext3';
+			game.getValue.returns('true');
+			command.parent.text = 'text1\n!set player hated\ntext2\n!send-rolecard player\ntext3';
+			return controller.sendRoleCard(command).then(() => {
+				const args = controller.forum.Chat.create.firstCall.args;
+				args[1].should.equal(text);
 			});
 		});
 	});
