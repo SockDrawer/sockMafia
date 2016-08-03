@@ -2595,5 +2595,66 @@ describe('player controller', () => {
 				});
 			});
 		});
+		
+		describe('Postman mode open', () => {
+
+			it('should not include sender in user list', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				game.getValue.withArgs('postman').returns('open');
+				
+				return controller.createChatHandler(command).then(() => {
+					controller.forum.Chat.create.should.be.called;
+					const args = controller.forum.Chat.create.firstCall.args;
+					args[0].should.not.include('accalia');
+				});
+			});
+			
+			it('should send the message', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('open');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				const expected = 'accalia said: hi how are you';
+				
+				return controller.createChatHandler(command).then(() => {
+					controller.forum.Chat.create.should.be.called;
+					chatroom.send.should.be.called;
+					const args = chatroom.send.firstCall.args;
+					args[0].should.equal(expected);
+				});
+			});
+			
+			it('should re-use chats', () => {
+				const target = 'lapisLazuli';
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				
+				game.getValue = (key) => {
+					if (key === 'postman_chats') {
+						return game.chatRecord;
+					} else if (key === 'postman') {
+						return 'open';
+					} else {
+						return 'true';
+					}
+				};
+				
+				return controller.createChatHandler(command)
+				.then(() => command.args = ['with', target, 'hi', 'how', 'are', 'you'])
+				.then(() => controller.createChatHandler(command))
+				.then(() => {
+					controller.forum.Chat.create.should.be.calledOnce;
+				});
+			});
+		});
 	});
 });

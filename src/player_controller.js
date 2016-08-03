@@ -1019,7 +1019,8 @@ class MafiaPlayerController {
 					message = `This is an officially sanctioned chat for ${game.name}`;
 	
 				//Attempt to re-use chats.
-				if (postmanToggle === 'on') {
+				if (postmanToggle === 'on' 
+				|| postmanToggle === 'open') {
 					let existingChats = game.getValue('postman_chats');
 					if (!existingChats) {
 						existingChats = {};
@@ -1046,6 +1047,14 @@ class MafiaPlayerController {
 					
 					const message = command.args.join(' ');
 					return chatroom.send('Someone said: ' + message);
+				}
+				
+				if (postmanToggle && postmanToggle.toLowerCase() === 'open') {
+					//remove target
+					//command.args.shift();
+					
+					const message = command.args.join(' ');
+					return chatroom.send(user.username + ' said: ' + message);
 				}
 			})
 			.then(() => command.reply(`Started chat between ${user.username} and ${target} in ${game.name}`))
