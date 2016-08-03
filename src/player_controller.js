@@ -78,7 +78,9 @@ class MafiaPlayerController {
 
 		forum.Commands.add('target', 'Target a player with any night action you may have', this.targetHandler.bind(this));
 
-		forum.Commands.add('chat', 'Create a private chat with a player (and game mods)', (command) => this.createChatHandler(command));
+		forum.Commands.add('chat', 'Create a private chat with a player (and game mods)', this.createChatHandler.bind(this));
+		forum.Commands.addAlias('say', this.createChatHandler.bind(this));
+		forum.Commands.addAlias('whisper', this.createChatHandler.bind(this));
 	}
 
 	/**
