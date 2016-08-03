@@ -25,7 +25,7 @@ const Promise = require('bluebird');
 const debug = require('debug')('sockbot:mafia');
 require('./utils');
 
-let dao, modController,  playerController;
+let dao, modController, playerController;
 
 
 // Defaults
@@ -35,30 +35,33 @@ let dao, modController,  playerController;
  */
 exports.defaultConfig = {
 	/**
-	* Required delay before posting another reply in the same topic.
-	*
-	* @default
-	* @type {Number}
-	*/
+	 * Required delay before posting another reply in the same topic.
+	 *
+	 * @default
+	 * @type {Number}
+	 */
 	cooldown: 0 * 1000,
 	/**
-	* Messages to select reply from.
-	*
-	* @default
-	* @type {string[]}
-	*/
+	 * Messages to select reply from.
+	 *
+	 * @default
+	 * @type {string[]}
+	 */
 	messages: [
 		'Command invalid or no command issued. Try the `help` command.'
 	],
 	/**
-	* File location for database.
-	*
-	* @default
-	* @type {string}
-	*/
+	 * File location for database.
+	 *
+	 * @default
+	 * @type {string}
+	 */
 	db: './mafiadb',
 
-	voteBars: 'bastard'
+	options: {
+		chat: 'disabled',
+		voteBars: 'bastard'
+	}
 };
 
 const internals = {
@@ -128,16 +131,16 @@ exports.plugin = function plugin(forum, config) {
  */
 function registerMods(game, mods) {
 	return Promise.mapSeries(
-			mods,
-			function (mod) {
-				console.log('Mafia: Adding mod: ' + mod);
-				return game.addModerator(mod)
-					.catch((err) => {
-						console.log('Mafia: Adding mod: failed to add mod: ' + mod + '\n\tReason: ' + err);
-						return Promise.resolve();
-					});
-			}
-		);
+		mods,
+		function (mod) {
+			console.log('Mafia: Adding mod: ' + mod);
+			return game.addModerator(mod)
+				.catch((err) => {
+					console.log('Mafia: Adding mod: failed to add mod: ' + mod + '\n\tReason: ' + err);
+					return Promise.resolve();
+				});
+		}
+	);
 }
 
 /**
@@ -148,16 +151,16 @@ function registerMods(game, mods) {
  */
 function registerPlayers(game, players) {
 	return Promise.mapSeries(
-			players,
-			function (player) {
-				console.log('Mafia: Adding player: ' + player);
-				return game.addPlayer(player)
-					.catch((err) => {
-						console.log('Mafia: Adding player: failed to add player: ' + player + '\n\tReason: ' + err);
-						return Promise.resolve();
-					});
-			}
-		);
+		players,
+		function (player) {
+			console.log('Mafia: Adding player: ' + player);
+			return game.addPlayer(player)
+				.catch((err) => {
+					console.log('Mafia: Adding player: failed to add player: ' + player + '\n\tReason: ' + err);
+					return Promise.resolve();
+				});
+		}
+	);
 }
 
 /*eslint-enable no-console*/
@@ -183,7 +186,7 @@ exports.createFromFile = function (plugConfig) {
 				/*eslint-enable no-console*/
 				throw err; // rethrow error to fail bot startup
 			}
-		
+
 		})
 		.then((g) => {
 			game = g;
@@ -199,6 +202,25 @@ exports.createFromFile = function (plugConfig) {
 			} else {
 				return Promise.resolve();
 			}
+		})
+		.then(()=>{
+			const prom = Object.keys(plugConfig.options).map((key)=>{
+				if (game.getValue(key) === undefined) {
+					return game.setValue(key, plugConfig.options[key]);
+				}
+				return Promise.resolve();
+			});
+			return Promise.all(prom);
+		})
+		.then(() => {
+			if (plugConfig.voteBars) {
+				console.log('WARNING: Setting voteBars via old style config detected!'); //eslint-disable-line no-console
+				if (game.getValue('voteBars') === undefined) {
+					return game.setValue('voteBars', plugConfig.voteBars);
+				}
+				return Promise.resolve();
+			}
+			return Promise.resolve();
 		})
 		.catch((err) => {
 			/*eslint-disable no-console*/

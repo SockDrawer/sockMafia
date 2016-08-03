@@ -69,7 +69,10 @@ describe('mafia', () => {
 				cooldown: 0,
 				db: './mafiadb',
 				messages: ['Command invalid or no command issued. Try the `help` command.'],
-				voteBars: 'bastard',
+				options:{
+					voteBars: 'bastard',
+					chat: 'disabled'
+				},
 				bar: expected
 			});
 		});
@@ -80,7 +83,10 @@ describe('mafia', () => {
 				cooldown: 0,
 				db: './mafiadb',
 				messages: [expected],
-				voteBars: 'bastard'
+				options:{
+					voteBars: 'bastard',
+					chat: 'disabled'
+				}
 			});
 		});
 		it('should not override config setting with defaults', () => {
@@ -92,7 +98,10 @@ describe('mafia', () => {
 				cooldown: 0,
 				db: expected,
 				messages: ['Command invalid or no command issued. Try the `help` command.'],
-				voteBars: 'bastard'
+				options:{
+					voteBars: 'bastard',
+					chat: 'disabled'
+				}
 			});
 		});
 
@@ -105,7 +114,10 @@ describe('mafia', () => {
 				cooldown: 0,
 				db: './mafiadb',
 				messages: ['Command invalid or no command issued. Try the `help` command.'],
-				voteBars: 'bastard',
+				options:{
+					chat: 'disabled',
+					voteBars: 'bastard',
+				},
 				players: [expected]
 			});
 		});
