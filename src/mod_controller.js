@@ -97,14 +97,6 @@ function advance(game, type, endTime, command) {
 }
 
 /**
- * isNumeric
- * @returns true if the input is a number, false if not
- */
-function isNumeric(input) {
-	return /^\d+$/.test(input);
-};
-
-/**
  * The controller class for Mafiabot
  */
 class MafiaModController {
@@ -245,7 +237,7 @@ class MafiaModController {
 		for (let i = 0; i < command.args.length; i++) {
 			if (command.args[i].toLowerCase() === 'in' && command.args[i + 1]) {
 				const target = command.args.slice(i + 1, command.args.length).join(' ');
-				if (isNumeric(target)) {
+				if (Utils.isNumeric(target)) {
 					return this.dao.getGameByTopicId(target);
 				} else {
 					return this.dao.getGameByName(target);
@@ -325,7 +317,7 @@ class MafiaModController {
 		return command.getUser().then((u) => {
 				user = u;
 
-				if (isNumeric(gameId)) {
+				if (Utils.isNumeric(gameId)) {
 					return this.dao.getGameByTopicId(gameId);
 				} else {
 					return this.dao.getGameByName(gameId);

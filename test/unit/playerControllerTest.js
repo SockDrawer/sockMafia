@@ -664,6 +664,7 @@ describe('player controller', () => {
 					getTopic: () => Promise.resolve({
 						id: 200
 					}),
+					args: [],
 					parent: {
 						ids: {
 							topic: 123
@@ -1287,6 +1288,7 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
+				args: [''],
 				parent: {
 					ids: {
 						topic: 123
@@ -1314,6 +1316,7 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
+				args: [''],
 				parent: {
 					ids: {
 						topic: 123
@@ -1340,6 +1343,7 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
+				args: [''],
 				parent: {
 					ids: {
 						topic: 123
@@ -1366,6 +1370,7 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
+				args: [''],
 				parent: {
 					ids: {
 						topic: 123
@@ -1387,6 +1392,7 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
+				args: [''],
 				parent: {
 					ids: {
 						topic: -1,
@@ -1469,6 +1475,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [''],
 					args: ['@noLunch'],
 					input: '!for @noLunch',
 					parent: {
@@ -1491,6 +1498,7 @@ describe('player controller', () => {
 					getTopic: () => Promise.resolve({
 						id: 12345
 					}),
+					args: [''],
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
@@ -1517,6 +1525,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [''],
 					parent: {
 						ids: {
 							topic: -1,
@@ -1544,6 +1553,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [''],
 					parent: {
 						ids: {
 							topic: 123
@@ -1569,6 +1579,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [''],
 					parent: {
 						ids: {
 							topic: 123
@@ -1594,6 +1605,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [''],
 					parent: {
 						ids: {
 							topic: 123
@@ -1647,6 +1659,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [],
 					parent: {
 						ids: {
 							topic: 123
@@ -1670,6 +1683,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [],
 					parent: {
 						ids: {
 							topic: -1,
@@ -1693,6 +1707,7 @@ describe('player controller', () => {
 					getTopic: () => Promise.resolve({
 						id: 12345
 					}),
+					args: [],
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
@@ -1851,6 +1866,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [],
 					parent: {
 						ids: {
 							topic: 123
@@ -1878,6 +1894,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [],
 					parent: {
 						ids: {
 							topic: 123
@@ -1902,6 +1919,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [],
 					parent: {
 						ids: {
 							topic: -1,
@@ -1923,6 +1941,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [],
 					parent: {
 						ids: {
 							topic: 123
@@ -1941,6 +1960,7 @@ describe('player controller', () => {
 					getTopic: () => Promise.resolve({
 						id: 12345
 					}),
+					args: [],
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
@@ -1966,6 +1986,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [],
 					parent: {
 						ids: {
 							topic: 123
@@ -1990,6 +2011,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [],
 					parent: {
 						ids: {
 							topic: 123
@@ -2011,6 +2033,7 @@ describe('player controller', () => {
 					getTopic: () => Promise.resolve({
 						id: 12345
 					}),
+					args: [],
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
@@ -2041,6 +2064,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [],
 					parent: {
 						ids: {
 							topic: 123

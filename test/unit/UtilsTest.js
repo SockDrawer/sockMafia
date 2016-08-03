@@ -29,4 +29,22 @@ describe('Utils helpers', () => {
             input.should.eql(expected);
         });
     });
+    
+    describe('isNumeric()', () => {
+        it('Should return true for 123', () => {
+            Utils.isNumeric(123).should.be.true;
+        });
+        it('Should return true for "123"', () => {
+            Utils.isNumeric('123').should.be.true;
+        });
+        it('Should return false for "banana"', () => {
+            Utils.isNumeric('banana').should.be.false;
+        });
+        it('Should return false for "123abc"', () => {
+            Utils.isNumeric('123abc').should.be.false;
+        });
+        it('Should return false for "abc123"', () => {
+            Utils.isNumeric('abc123').should.be.false;
+        });
+    });
 });

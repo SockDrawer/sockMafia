@@ -249,6 +249,18 @@ class MafiaPlayerController {
 	}
 
 	getGame(command) {
+		//First check for 'in soandso' syntax
+		for (let i = 0; i < command.args.length; i++) {
+			if (command.args[i].toLowerCase() === 'in' && command.args[i + 1]) {
+				const target = command.args.slice(i + 1, command.args.length).join(' ');
+				if (Utils.isNumeric(target)) {
+					return this.dao.getGameByTopicId(target);
+				} else {
+					return this.dao.getGameByName(target);
+				}
+			}
+		}
+		
 		if (command.parent.ids.topic === -1) {
 			//Command came from a chat
 			return this.dao.getGameByChatId(command.parent.ids.chat);

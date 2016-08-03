@@ -84,5 +84,13 @@ module.exports = {
 			return -1;
 		}
 		return 0;
+	},
+	
+	/**
+	* isNumeric
+	* @returns true if the input is a number, false if not
+	*/
+	isNumeric: function(input) {
+		return /^\d+$/.test(input);
 	}
 };
