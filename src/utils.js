@@ -37,7 +37,7 @@ module.exports = {
 	},
 	isEnabled(value) {
 		value = (value || '').toLowerCase();
-		return ['true', 'enabled', 'ok', 'yes'].some((val) => val === value);
+		return ['true', 'enabled', 'ok', 'yes', 'on'].some((val) => val === value);
 	},
 
 	/**
