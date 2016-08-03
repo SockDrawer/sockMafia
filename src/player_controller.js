@@ -952,6 +952,9 @@ class MafiaPlayerController {
 		if ('with' === (command.args[0] || '').toLowerCase()) {
 			command.args.shift();
 		}
+		if ('to' === (command.args[0] || '').toLowerCase()) {
+			command.args.shift();
+		}
 		const target = Utils.argParse(command.args, ['in']),
 			gameName = Utils.argParse(command.args, []) || command.parent.ids.topic;
 		if (!target || !gameName) {

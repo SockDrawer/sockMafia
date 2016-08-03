@@ -7,6 +7,7 @@ const chai = require('chai'),
 //promise library plugins
 require('sinon-as-promised');
 require('chai-as-promised');
+chai.use(require('sinon-chai'));
 
 chai.should();
 
@@ -2466,8 +2467,7 @@ describe('player controller', () => {
 			command.getUser.resolves({
 				username: username
 			});
-			command.args.shift();
-			command.args.unshift(target);
+			command.args = [target, 'in', 'testMafia'];
 			return controller.createChatHandler(command).then(() => {
 				command.reply.should.be.calledWith(expected).once;
 			});
@@ -2481,9 +2481,21 @@ describe('player controller', () => {
 			command.getUser.resolves({
 				username: username
 			});
-			command.args.shift();
-			command.args.unshift(target);
-			command.args.unshift('with');
+			command.args = ['with', target, 'in', 'testMafia'];
+			return controller.createChatHandler(command).then(() => {
+				command.reply.should.be.calledWith(expected).once;
+			});
+		});
+		it('should allow optional leading `to` parameter', () => {
+			game.name = `NAME ${Math.random()} NAME`;
+
+			const username = `user${Math.random()}`,
+				target = `target${Math.random()}`,
+				expected = `Started chat between ${username} and ${target} in ${game.name}`;
+			command.getUser.resolves({
+				username: username
+			});
+			command.args = ['to', target, 'in', 'testMafia'];
 			return controller.createChatHandler(command).then(() => {
 				command.reply.should.be.calledWith(expected).once;
 			});
