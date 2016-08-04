@@ -2594,6 +2594,64 @@ describe('player controller', () => {
 					controller.forum.Chat.create.should.be.calledOnce;
 				});
 			});
+			
+			it('should respect lack of cc', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('on');
+				game.getValue.withArgs('postman-cc').returns(undefined);
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				const expected = `Message sent from accalia to ${target}: \nSomeone said: hi how are you`;
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.not.be.called;
+				});
+			});
+			
+			it('should respect cc value for 1 thread', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('on');
+				game.getValue.withArgs('postman-cc').returns('1234');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				const expected = `Message sent from accalia to ${target}: \nSomeone said: hi how are you`;
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.be.calledWith('1234');
+					view.respondInThread.firstCall.args[1].should.equal(expected);
+				});
+			});
+			
+			it('should respect cc value for 2 threads', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('on');
+				game.getValue.withArgs('postman-cc').returns('1234,5678');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				const expected = `Message sent from accalia to ${target}: \nSomeone said: hi how are you`;
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.be.calledWith('1234');
+					view.respondInThread.should.be.calledWith('5678');
+					view.respondInThread.firstCall.args[1].should.equal(expected);
+					view.respondInThread.secondCall.args[1].should.equal(expected);
+				});
+			});
 		});
 		
 		describe('Postman mode open', () => {
@@ -2656,7 +2714,7 @@ describe('player controller', () => {
 				});
 			});
 			
-			/*it('should respect cc value for 1 thread', () => {
+			it('should respect cc value for 1 thread', () => {
 				const target = `user${Math.random()}`;
 				game.getPlayer.onFirstCall().returns({
 					username: 'accalia'
@@ -2666,13 +2724,53 @@ describe('player controller', () => {
 				game.getValue.withArgs('postman').returns('open');
 				game.getValue.withArgs('postman-cc').returns('1234');
 				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
-				const expected = `accalia said to ${target}: hi how are you`;
+				const expected = `Message sent from accalia to ${target}: \naccalia said: hi how are you`;
 				
 				sandbox.stub(view, 'respondInThread').resolves();
 				return controller.createChatHandler(command).then(() => {
-					view.respondInThread.should.be.calledWith(1234, expected);
+					view.respondInThread.should.be.calledWith('1234');
+					view.respondInThread.firstCall.args[1].should.equal(expected);
 				});
-			});*/
+			});
+			
+			it('should respect cc value for 2 threads', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('open');
+				game.getValue.withArgs('postman-cc').returns('1234,5678');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				const expected = `Message sent from accalia to ${target}: \naccalia said: hi how are you`;
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.be.calledWith('1234');
+					view.respondInThread.should.be.calledWith('5678');
+					view.respondInThread.firstCall.args[1].should.equal(expected);
+					view.respondInThread.secondCall.args[1].should.equal(expected);
+				});
+			});
+			
+			it('should respect lack of cc', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('open');
+				game.getValue.withArgs('postman-cc').returns(undefined);
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				const expected = `Message sent from accalia to ${target}: \nSomeone said: hi how are you`;
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.not.be.called;
+				});
+			});
 		});
 	});
 });

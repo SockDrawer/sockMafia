@@ -1042,9 +1042,21 @@ class MafiaPlayerController {
 			.then((chatroom) => {
 				game.addChat(chatroom.id);
 				if (postmanToggle && postmanToggle.toLowerCase() !== 'off') {
-					const message = command.args.join(' ');
+					let message = command.args.join(' ');
 					const sender = postmanToggle.toLowerCase() === 'open' ? user.username : 'Someone';
-					return chatroom.send(`${sender} said: ${message}`);
+					message = `${sender} said: ${message}`;
+					
+					return chatroom.send(message).then(() => {
+						const ccValue = game.getValue('postman-cc').split(',');
+						if (ccValue.length > 0) {
+							const promises = ccValue.map((val) => {
+								return view.respondInThread(val, `Message sent from ${user.username} to ${target}: \n${message}`);
+							});
+							return Promise.all(promises);
+						} else {
+							return Promise.resolve();
+						}
+					});
 				}
 			})
 			.then(() => command.reply(`Started chat between ${user.username} and ${target} in ${game.name}`))
