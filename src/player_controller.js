@@ -1041,20 +1041,10 @@ class MafiaPlayerController {
 			})
 			.then((chatroom) => {
 				game.addChat(chatroom.id);
-				if (postmanToggle && postmanToggle.toLowerCase() === 'on') {
-					//remove target
-					//command.args.shift();
-					
+				if (postmanToggle && postmanToggle.toLowerCase() !== 'off') {
 					const message = command.args.join(' ');
-					return chatroom.send('Someone said: ' + message);
-				}
-				
-				if (postmanToggle && postmanToggle.toLowerCase() === 'open') {
-					//remove target
-					//command.args.shift();
-					
-					const message = command.args.join(' ');
-					return chatroom.send(user.username + ' said: ' + message);
+					const sender = postmanToggle.toLowerCase() === 'open' ? user.username : 'Someone';
+					return chatroom.send(`${sender} said: ${message}`);
 				}
 			})
 			.then(() => command.reply(`Started chat between ${user.username} and ${target} in ${game.name}`))

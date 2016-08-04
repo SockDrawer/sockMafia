@@ -2655,6 +2655,24 @@ describe('player controller', () => {
 					controller.forum.Chat.create.should.be.calledOnce;
 				});
 			});
+			
+			/*it('should respect cc value for 1 thread', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('open');
+				game.getValue.withArgs('postman-cc').returns('1234');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				const expected = `accalia said to ${target}: hi how are you`;
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.be.calledWith(1234, expected);
+				});
+			});*/
 		});
 	});
 });
