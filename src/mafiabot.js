@@ -80,7 +80,7 @@ exports.internals = internals;
  */
 exports.activate = function activate() {
 	debug('activating mafiabot');
-	const plugConfig = internals.configuration;
+	let plugConfig = internals.configuration;
 
 	dao = new MafiaDao(plugConfig.db);
 	modController = new MafiaModController(dao, plugConfig);
@@ -90,7 +90,11 @@ exports.activate = function activate() {
 	playerController.activate(internals.forum);
 	modController.activate(internals.forum);
 
-	return exports.createFromFile(plugConfig);
+	if (!Array.isArray(plugConfig)) {
+		plugConfig = [plugConfig];
+	}
+
+	return Promise.all(plugConfig.map((config) => exports.createFromFile(config)));
 };
 
 /**
@@ -203,8 +207,8 @@ exports.createFromFile = function (plugConfig) {
 				return Promise.resolve();
 			}
 		})
-		.then(()=>{
-			const prom = Object.keys(plugConfig.options).map((key)=>{
+		.then(() => {
+			const prom = Object.keys(plugConfig.options).map((key) => {
 				if (game.getValue(key) === undefined) {
 					return game.setValue(key, plugConfig.options[key]);
 				}
