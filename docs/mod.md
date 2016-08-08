@@ -51,6 +51,40 @@ plugins:
       stripCommands: disabled
 ```
 
+
+The above configuration is for a single game config, it is also possible to specify multiple games via the configuration. Below is an example of a multigame configuration.
+
+```
+plugins: 
+  sockbot-mafia: 
+    db: ./mafiadb
+    games: 
+      - 
+        mods: 
+          - mod
+        name: testMafia
+        options: 
+          chats: disabled
+          stripCommands: disabled
+          voteBars: bastard
+        players: 
+          - player1
+          - player2
+        thread: 52778
+      - 
+        mods: 
+          - mod2
+        name: testMafia2
+        options: 
+          chats: enabled
+          stripCommands: enabled
+          voteBars: hidden
+        players: 
+          - player3
+          - player4
+        thread: 8472
+```
+
 Detailed config information can be found in the reference below. 
 
 Recommended [randomizer](https://github.com/AccaliaDeElementia/sockbot-plugin-randomizer) settings are:
