@@ -60,29 +60,29 @@ plugins:
     db: ./mafiadb
     games: 
       - 
+        name: testMafia
+        thread: 52778
         mods: 
           - mod
-        name: testMafia
+        players: 
+          - player1
+          - player2
         options: 
           chats: disabled
           stripCommands: disabled
           voteBars: bastard
-        players: 
-          - player1
-          - player2
-        thread: 52778
       - 
+        name: testMafia2
+        thread: 8472
         mods: 
           - mod2
-        name: testMafia2
+        players: 
+          - player3
+          - player4
         options: 
           chats: enabled
           stripCommands: enabled
           voteBars: hidden
-        players: 
-          - player3
-          - player4
-        thread: 8472
 ```
 
 Detailed config information can be found in the reference below. 
