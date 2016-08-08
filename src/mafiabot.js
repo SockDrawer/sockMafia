@@ -35,22 +35,6 @@ let dao, modController, playerController;
  */
 exports.defaultConfig = {
 	/**
-	 * Required delay before posting another reply in the same topic.
-	 *
-	 * @default
-	 * @type {Number}
-	 */
-	cooldown: 0 * 1000,
-	/**
-	 * Messages to select reply from.
-	 *
-	 * @default
-	 * @type {string[]}
-	 */
-	messages: [
-		'Command invalid or no command issued. Try the `help` command.'
-	],
-	/**
 	 * File location for database.
 	 *
 	 * @default
@@ -80,7 +64,7 @@ exports.internals = internals;
  */
 exports.activate = function activate() {
 	debug('activating mafiabot');
-	let plugConfig = internals.configuration;
+	const plugConfig = internals.configuration;
 
 	dao = new MafiaDao(plugConfig.db);
 	modController = new MafiaModController(dao, plugConfig);
@@ -90,11 +74,12 @@ exports.activate = function activate() {
 	playerController.activate(internals.forum);
 	modController.activate(internals.forum);
 
-	if (!Array.isArray(plugConfig)) {
-		plugConfig = [plugConfig];
+	let gameConfig = plugConfig.games;
+	if (!Array.isArray(gameConfig)) {
+		gameConfig = [plugConfig];
 	}
 
-	return Promise.all(plugConfig.map((config) => exports.createFromFile(config)));
+	return Promise.all(gameConfig.map((config) => exports.createFromFile(config)));
 };
 
 /**
@@ -105,13 +90,13 @@ exports.activate = function activate() {
  */
 exports.plugin = function plugin(forum, config) {
 	debug('creating plugin object');
+	if (config === null || typeof config !== 'object') {
+		config = {};
+	}
 	if (Array.isArray(config)) {
 		config = {
 			messages: config
 		};
-	}
-	if (config === null || typeof config !== 'object') {
-		config = {};
 	}
 	Object.keys(exports.defaultConfig).forEach((key) => {
 		if (!config[key]) {

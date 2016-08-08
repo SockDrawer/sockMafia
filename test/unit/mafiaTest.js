@@ -66,9 +66,7 @@ describe('mafia', () => {
 				bar: expected
 			});
 			mafia.internals.configuration.should.eql({
-				cooldown: 0,
 				db: './mafiadb',
-				messages: ['Command invalid or no command issued. Try the `help` command.'],
 				options:{
 					voteBars: 'bastard',
 					chat: 'disabled'
@@ -80,7 +78,6 @@ describe('mafia', () => {
 			const expected = Math.random();
 			mafia.plugin(null, [expected]);
 			mafia.internals.configuration.should.eql({
-				cooldown: 0,
 				db: './mafiadb',
 				messages: [expected],
 				options:{
@@ -95,9 +92,7 @@ describe('mafia', () => {
 				db: expected
 			});
 			mafia.internals.configuration.should.eql({
-				cooldown: 0,
 				db: expected,
-				messages: ['Command invalid or no command issued. Try the `help` command.'],
 				options:{
 					voteBars: 'bastard',
 					chat: 'disabled'
@@ -111,9 +106,7 @@ describe('mafia', () => {
 				players: [expected]
 			});
 			mafia.internals.configuration.should.eql({
-				cooldown: 0,
 				db: './mafiadb',
-				messages: ['Command invalid or no command issued. Try the `help` command.'],
 				options:{
 					chat: 'disabled',
 					voteBars: 'bastard',
