@@ -45,7 +45,44 @@ plugins:
      - player2
     db: './mafiadb'
     name: testMafia
-    voteBars: bastard
+    options:
+      voteBars: bastard
+      chats: disabled
+      stripCommands: disabled
+```
+
+
+The above configuration is for a single game config, it is also possible to specify multiple games via the configuration. Below is an example of a multigame configuration.
+
+```
+plugins: 
+  sockbot-mafia: 
+    db: ./mafiadb
+    games: 
+      - 
+        name: testMafia
+        thread: 52778
+        mods: 
+          - mod
+        players: 
+          - player1
+          - player2
+        options: 
+          chats: disabled
+          stripCommands: disabled
+          voteBars: bastard
+      - 
+        name: testMafia2
+        thread: 8472
+        mods: 
+          - mod2
+        players: 
+          - player3
+          - player4
+        options: 
+          chats: enabled
+          stripCommands: enabled
+          voteBars: hidden
 ```
 
 Detailed config information can be found in the reference below. 
@@ -164,6 +201,38 @@ A list of moderators. Moderators can use the mod commands above.
 
 A list of players. Will be automatically added on bot start. When the bot is restarted, you may see errors indicating that the players already exist; this is normal.
 
+## Options
+
+A key value pair list of configuration options to be applied to the game. These options will only be applied on game creation, or if the option is not already set, in order to preserve any values that were set via commands.
+
+### Well Known Game Options
+
+#### VoteBars
+
+Votebars are the little progress bar next to each player's name in the vote list. There are three options for `voteBars`:
+
+- `hidden`: The votebar will not reflect reality in the case of Loved or Hated, but will treat them like they are normal. This means a Loved player's bar will never fill to 100%, and a Hated can go beyond it. 
+- `open`: The votebar will not only reflect reality, but also show an exact count of how many votes are needed to lynch that person
+- `bastard`: **Default** The votebar will reflect reality, but will not show a count. This means players can deduce Loved or Hated from the bars, but will have to be paying attention to notice. 
+
+#### Chats
+
+Certain games allow private messages between players to occur, this setting controlls whether or not that functionality is enabled for a given game.
+
+There are two possible values for `chats`:
+
+- `enabled`: private message threads between players are allowed and can be created with the `!chat` command.
+- `disabled`: **default** private messages threads between players are not allowed and cannot be created with the `!chat` command
+
+#### StripCommands
+
+Cartain moderator commands use the text of the post or chat that triggers the command to send to players withing the game, this setting controlls whether any commands within the test are preserved or stripped.
+
+There are two possible values for `stripCommands`:
+
+- `enabled`: commands will be stripped when sending the text of the post or chat to the player. This will allow the moderator to send te same text to multiple players or to include commands in the text that the player does not know about.
+- `disabled`: **default** commands will not be stripped and the text of the post or chat will be sent to the player as-is.
+
 ## DB
 
 The file to use as a database. This is a human-readable JSON file that can be examined and debugged if the game enters an incorrect state; if you do, please shut the bot down first.
@@ -173,6 +242,8 @@ The file to use as a database. This is a human-readable JSON file that can be ex
 The name of the game, to be used in commands.
 
 ## Votebars
+
+*Deprecated:* This config setting is deprecated and will be removed in future releases. Set this option via the options dictionary instead.
 
 Votebars are the little progress bar next to each player's name in the vote list. There are three options for voting bars:
 

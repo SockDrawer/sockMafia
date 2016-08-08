@@ -823,7 +823,8 @@ class MafiaPlayerController {
 			votes: {},
 			numNotVoting: 0,
 			notVoting: [],
-			toExecute: 0
+			toExecute: 0,
+			barStyle: ''
 		};
 
 
@@ -838,6 +839,7 @@ class MafiaPlayerController {
 
 				logDebug('Received list request in game ' + game.name);
 
+				data.barStyle = game.getValue('voteBars');
 				data.toExecute = this.getNumVotesRequired(game);
 				data.day = game.day;
 
