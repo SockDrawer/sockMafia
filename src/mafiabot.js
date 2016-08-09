@@ -44,7 +44,8 @@ exports.defaultConfig = {
 
 	options: {
 		chat: 'disabled',
-		voteBars: 'bastard'
+		voteBars: 'bastard',
+		postman: 'off'
 	}
 };
 

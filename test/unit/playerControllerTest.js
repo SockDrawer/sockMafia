@@ -7,6 +7,7 @@ const chai = require('chai'),
 //promise library plugins
 require('sinon-as-promised');
 require('chai-as-promised');
+chai.use(require('sinon-chai'));
 
 chai.should();
 
@@ -663,6 +664,7 @@ describe('player controller', () => {
 					getTopic: () => Promise.resolve({
 						id: 200
 					}),
+					args: [],
 					parent: {
 						ids: {
 							topic: 123
@@ -1286,6 +1288,7 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
+				args: [''],
 				parent: {
 					ids: {
 						topic: 123
@@ -1313,6 +1316,7 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
+				args: [''],
 				parent: {
 					ids: {
 						topic: 123
@@ -1339,6 +1343,7 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
+				args: [''],
 				parent: {
 					ids: {
 						topic: 123
@@ -1365,6 +1370,7 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
+				args: [''],
 				parent: {
 					ids: {
 						topic: 123
@@ -1386,6 +1392,7 @@ describe('player controller', () => {
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
+				args: [''],
 				parent: {
 					ids: {
 						topic: -1,
@@ -1468,6 +1475,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [''],
 					args: ['@noLunch'],
 					input: '!for @noLunch',
 					parent: {
@@ -1490,6 +1498,7 @@ describe('player controller', () => {
 					getTopic: () => Promise.resolve({
 						id: 12345
 					}),
+					args: [''],
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
@@ -1516,6 +1525,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [''],
 					parent: {
 						ids: {
 							topic: -1,
@@ -1543,6 +1553,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [''],
 					parent: {
 						ids: {
 							topic: 123
@@ -1568,6 +1579,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [''],
 					parent: {
 						ids: {
 							topic: 123
@@ -1593,6 +1605,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [''],
 					parent: {
 						ids: {
 							topic: 123
@@ -1646,6 +1659,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [],
 					parent: {
 						ids: {
 							topic: 123
@@ -1669,6 +1683,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [],
 					parent: {
 						ids: {
 							topic: -1,
@@ -1692,6 +1707,7 @@ describe('player controller', () => {
 					getTopic: () => Promise.resolve({
 						id: 12345
 					}),
+					args: [],
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
@@ -1850,6 +1866,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [],
 					parent: {
 						ids: {
 							topic: 123
@@ -1877,6 +1894,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [],
 					parent: {
 						ids: {
 							topic: 123
@@ -1901,6 +1919,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [],
 					parent: {
 						ids: {
 							topic: -1,
@@ -1922,6 +1941,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [],
 					parent: {
 						ids: {
 							topic: 123
@@ -1940,6 +1960,7 @@ describe('player controller', () => {
 					getTopic: () => Promise.resolve({
 						id: 12345
 					}),
+					args: [],
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
@@ -1965,6 +1986,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [],
 					parent: {
 						ids: {
 							topic: 123
@@ -1989,6 +2011,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [],
 					parent: {
 						ids: {
 							topic: 123
@@ -2010,6 +2033,7 @@ describe('player controller', () => {
 					getTopic: () => Promise.resolve({
 						id: 12345
 					}),
+					args: [],
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
@@ -2040,6 +2064,7 @@ describe('player controller', () => {
 					getUser: () => Promise.resolve({
 						username: 'tehNinja'
 					}),
+					args: [],
 					parent: {
 						ids: {
 							topic: 123
@@ -2309,12 +2334,16 @@ describe('player controller', () => {
 			chatroom = null;
 		beforeEach(() => {
 			chatroom = {
-				id: Math.random()
+				id: Math.random(),
+				send: sinon.stub().resolves()
 			};
 			command = {
 				args: ['userfoo', 'in', 'testMafia'],
 				getUser: sinon.stub().resolves({}),
 				reply: sinon.stub().resolves(),
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
 				parent: {
 					ids: {}
 				}
@@ -2324,10 +2353,23 @@ describe('player controller', () => {
 				moderators: [],
 				addChat: sinon.stub().resolves(),
 				getPlayer: sinon.stub().returns({}),
-				getValue: sinon.stub().returns('true')
+				getValue: sinon.stub(),
+				chatRecord: null,
+				topicId:  8675309,
+				setValue: (key, value) => {
+					if (key === 'postman_chats') {
+						game.chatRecord = value;
+					}
+				}
 			};
+			
+			game.getValue.withArgs('chats').returns('true');
+			game.getValue.withArgs('postman').returns('off');
+			
 			dao = {
-				getGame: sinon.stub().resolves(game)
+				getGame: sinon.stub().resolves(game),
+				getGameByTopicId: sinon.stub().resolves(game),
+				getGameByName: sinon.stub().resolves(game)
 			};
 			controller = new PlayerController(dao);
 			controller.forum = {
@@ -2340,25 +2382,22 @@ describe('player controller', () => {
 			it('should reply with usage when no args provided', () => {
 				command.args = [];
 				return controller.createChatHandler(command).then(() => {
-					command.reply.should.be.calledWith('Invalid command: Usage `!chat with somePlayer in mafiaGame`').once;
+					command.reply.should.be.called.once;
+					const args = command.reply.firstCall.args;
+					args[0].should.equal('Invalid command: Usage `!chat with somePlayer`');
 				});
 			});
 			it('should reply with usage when username not provided', () => {
-				command.args.shift();
+				command.args = ['to'];
 				return controller.createChatHandler(command).then(() => {
-					command.reply.should.be.calledWith('Invalid command: Usage `!chat with somePlayer in mafiaGame`').once;
-				});
-			});
-			it('should reply with usage when gameName not provided', () => {
-				command.args.pop();
-				return controller.createChatHandler(command).then(() => {
-					command.reply.should.be.calledWith('Invalid command: Usage `!chat with somePlayer in mafiaGame`').once;
+					command.reply.should.be.calledWith('Invalid command: Usage `!chat with somePlayer`').once;
 				});
 			});
 			it('should reply with error when getGame rejects', () => {
 				const error = new Error(`whoopsies ${Math.random()}`),
 					errormsg = `Error creating chat: ${error}`;
-				dao.getGame.rejects(error);
+					
+				sandbox.stub(controller, 'getGame').rejects(error);
 				return controller.createChatHandler(command).then(() => {
 					command.reply.should.be.calledWith(errormsg).once;
 				});
@@ -2373,7 +2412,7 @@ describe('player controller', () => {
 			});
 			it('should reply with error when chats disabled', () => {
 				const errormsg = 'Error creating chat: Error: Chats are not enabled for this game';
-				game.getValue.returns('false');
+				game.getValue.withArgs('chats').returns('false');
 				return controller.createChatHandler(command).then(() => {
 					command.reply.should.be.calledWith(errormsg).once;
 				});
@@ -2466,8 +2505,7 @@ describe('player controller', () => {
 			command.getUser.resolves({
 				username: username
 			});
-			command.args.shift();
-			command.args.unshift(target);
+			command.args = [target, 'in', 'testMafia'];
 			return controller.createChatHandler(command).then(() => {
 				command.reply.should.be.calledWith(expected).once;
 			});
@@ -2481,11 +2519,492 @@ describe('player controller', () => {
 			command.getUser.resolves({
 				username: username
 			});
-			command.args.shift();
-			command.args.unshift(target);
-			command.args.unshift('with');
+			command.args = ['with', target, 'in', 'testMafia'];
 			return controller.createChatHandler(command).then(() => {
 				command.reply.should.be.calledWith(expected).once;
+			});
+		});
+		it('should allow optional leading `to` parameter', () => {
+			game.name = `NAME ${Math.random()} NAME`;
+
+			const username = `user${Math.random()}`,
+				target = `target${Math.random()}`,
+				expected = `Started chat between ${username} and ${target} in ${game.name}`;
+			command.getUser.resolves({
+				username: username
+			});
+			command.args = ['to', target, 'in', 'testMafia'];
+			return controller.createChatHandler(command).then(() => {
+				command.reply.should.be.calledWith(expected).once;
+			});
+		});
+		
+		describe('Postman mode', () => {
+
+			it('should not include sender in user list', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				game.getValue.withArgs('postman').returns('on');
+				
+				return controller.createChatHandler(command).then(() => {
+					controller.forum.Chat.create.should.be.called;
+					const args = controller.forum.Chat.create.firstCall.args;
+					args[0].should.not.include('accalia');
+				});
+			});
+			
+			it('should send the message', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				game.getValue.withArgs('postman').returns('on');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				const expected = 'Someone said: hi how are you';
+				
+				return controller.createChatHandler(command).then(() => {
+					controller.forum.Chat.create.should.be.called;
+					chatroom.send.should.be.called;
+					const args = chatroom.send.firstCall.args;
+					args[0].should.equal(expected);
+				});
+			});
+			
+			it('should re-use chats', () => {
+				const target = 'lapisLazuli';
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				game.getValue.withArgs('postman').returns('on');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				
+				game.getValue = (key) => {
+					if (key === 'postman_chats') {
+						return game.chatRecord;
+					} else {
+						return 'on';
+					}
+				};
+				
+				return controller.createChatHandler(command)
+				.then(() => command.args = ['with', target, 'hi', 'how', 'are', 'you'])
+				.then(() => controller.createChatHandler(command))
+				.then(() => {
+					controller.forum.Chat.create.should.be.calledOnce;
+				});
+			});
+			
+			it('should respect lack of cc', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('on');
+				game.getValue.withArgs('postman-cc').returns(undefined);
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				const expected = `Message sent from accalia to ${target}: \nSomeone said: hi how are you`;
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.not.be.called;
+				});
+			});
+			
+			it('should respect cc value for 1 thread', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('on');
+				game.getValue.withArgs('postman-cc').returns('1234');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				const expected = `Message sent from accalia to ${target}: \nSomeone said: hi how are you`;
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.be.calledWith('1234');
+					view.respondInThread.firstCall.args[1].should.equal(expected);
+				});
+			});
+			
+			it('should respect cc value for 2 threads', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('on');
+				game.getValue.withArgs('postman-cc').returns('1234,5678');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				const expected = `Message sent from accalia to ${target}: \nSomeone said: hi how are you`;
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.be.calledWith('1234');
+					view.respondInThread.should.be.calledWith('5678');
+					view.respondInThread.firstCall.args[1].should.equal(expected);
+					view.respondInThread.secondCall.args[1].should.equal(expected);
+				});
+			});
+			
+			it('should respect lack of cc', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('on');
+				game.getValue.withArgs('postman-cc').returns(undefined);
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.not.be.called;
+				});
+			});
+			
+			it('should respect lack of public', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('on');
+				game.getValue.withArgs('postman-cc').returns(undefined);
+				game.getValue.withArgs('postman-public').returns(undefined);
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.not.be.calledWith(8675309);
+				});
+			});
+			
+			it('should respect public off', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('on');
+				game.getValue.withArgs('postman-cc').returns(undefined);
+				game.getValue.withArgs('postman-public').returns('off');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.not.be.calledWith(8675309);
+				});
+			});
+			
+			it('should respect public on', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('on');
+				game.getValue.withArgs('postman-cc').returns(undefined);
+				game.getValue.withArgs('postman-public').returns('on');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				const expected = `Message sent to ${target}: \nSomeone said: hi how are you`;
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.be.called;
+					view.respondInThread.firstCall.args[0].should.equal(8675309);
+					view.respondInThread.firstCall.args[1].should.equal(expected);
+				});
+			});
+			
+			it('should respect public day during the day', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				game.phase = 'day';
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('on');
+				game.getValue.withArgs('postman-cc').returns(undefined);
+				game.getValue.withArgs('postman-public').returns('day');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				const expected = `Message sent to ${target}: \nSomeone said: hi how are you`;
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.be.called;
+					view.respondInThread.firstCall.args[0].should.equal(8675309);
+					view.respondInThread.firstCall.args[1].should.equal(expected);
+				});
+			});
+			
+			it('should respect public day during the night', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				game.phase = 'night';
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('on');
+				game.getValue.withArgs('postman-cc').returns(undefined);
+				game.getValue.withArgs('postman-public').returns('day');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				const expected = `Message sent to ${target}: \nSomeone said: hi how are you`;
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.not.be.called;
+				});
+			});
+		});
+		
+		describe('Postman mode open', () => {
+
+			it('should not include sender in user list', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				game.getValue.withArgs('postman').returns('open');
+				
+				return controller.createChatHandler(command).then(() => {
+					controller.forum.Chat.create.should.be.called;
+					const args = controller.forum.Chat.create.firstCall.args;
+					args[0].should.not.include('accalia');
+				});
+			});
+			
+			it('should send the message', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('open');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				const expected = 'accalia said: hi how are you';
+				
+				return controller.createChatHandler(command).then(() => {
+					controller.forum.Chat.create.should.be.called;
+					chatroom.send.should.be.called;
+					const args = chatroom.send.firstCall.args;
+					args[0].should.equal(expected);
+				});
+			});
+			
+			it('should re-use chats', () => {
+				const target = 'lapisLazuli';
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				
+				game.getValue = (key) => {
+					if (key === 'postman_chats') {
+						return game.chatRecord;
+					} else if (key === 'postman') {
+						return 'open';
+					} else {
+						return 'true';
+					}
+				};
+				
+				return controller.createChatHandler(command)
+				.then(() => command.args = ['with', target, 'hi', 'how', 'are', 'you'])
+				.then(() => controller.createChatHandler(command))
+				.then(() => {
+					controller.forum.Chat.create.should.be.calledOnce;
+				});
+			});
+			
+			it('should respect cc value for 1 thread', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('open');
+				game.getValue.withArgs('postman-cc').returns('1234');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				const expected = `Message sent from accalia to ${target}: \naccalia said: hi how are you`;
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.be.calledWith('1234');
+					view.respondInThread.firstCall.args[1].should.equal(expected);
+				});
+			});
+			
+			it('should respect cc value for 2 threads', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('open');
+				game.getValue.withArgs('postman-cc').returns('1234,5678');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				const expected = `Message sent from accalia to ${target}: \naccalia said: hi how are you`;
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.be.calledWith('1234');
+					view.respondInThread.should.be.calledWith('5678');
+					view.respondInThread.firstCall.args[1].should.equal(expected);
+					view.respondInThread.secondCall.args[1].should.equal(expected);
+				});
+			});
+			
+			it('should cc value for 0 threads', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('open');
+				game.getValue.withArgs('postman-cc').returns('');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.not.be.called;
+				});
+			});
+			
+			it('should respect lack of cc', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('open');
+				game.getValue.withArgs('postman-cc').returns(undefined);
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.not.be.called;
+				});
+			});
+			
+			it('should respect lack of public', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('open');
+				game.getValue.withArgs('postman-public').returns(undefined);
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.not.be.calledWith(8675309);
+				});
+			});
+			
+			it('should respect public off', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('open');
+				game.getValue.withArgs('postman-cc').returns(undefined);
+				game.getValue.withArgs('postman-public').returns('off');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.not.be.calledWith(8675309);
+				});
+			});
+			
+			it('should respect public on', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('open');
+				game.getValue.withArgs('postman-cc').returns(undefined);
+				game.getValue.withArgs('postman-public').returns('on');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				const expected = `Message sent to ${target}: \naccalia said: hi how are you`;
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.be.called;
+					view.respondInThread.firstCall.args[0].should.equal(8675309);
+					view.respondInThread.firstCall.args[1].should.equal(expected);
+				});
+			});
+			
+			it('should respect public day during the day', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				game.phase = 'day';
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('open');
+				game.getValue.withArgs('postman-cc').returns(undefined);
+				game.getValue.withArgs('postman-public').returns('day');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				const expected = `Message sent to ${target}: \naccalia said: hi how are you`;
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.be.called;
+					view.respondInThread.firstCall.args[0].should.equal(8675309);
+					view.respondInThread.firstCall.args[1].should.equal(expected);
+				});
+			});
+			
+			it('should respect public day during the night', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				
+				game.phase = 'night';
+				
+				command.getUser.resolves({username: 'accalia'});
+				game.getValue.withArgs('postman').returns('open');
+				game.getValue.withArgs('postman-cc').returns(undefined);
+				game.getValue.withArgs('postman-public').returns('day');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+				const expected = `Message sent to ${target}: \nSomeone said: hi how are you`;
+				
+				sandbox.stub(view, 'respondInThread').resolves();
+				return controller.createChatHandler(command).then(() => {
+					view.respondInThread.should.not.be.called;
+				});
 			});
 		});
 	});

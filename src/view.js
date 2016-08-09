@@ -28,7 +28,11 @@ let readFile = require('fs-readfile-promise');
 exports.activate = function(forum, rf) {
 	debug('activating view');
 	post = forum ? forum.Post : post;
-	chat = forum ? forum.Chat : undefined;
+	try {
+		chat = forum ? forum.Chat : undefined;
+	} catch (e) {
+		debug('Chats not supported.');
+	}
 	formatter = forum ? forum.Format : formatter;
 	readFile = rf || require('fs-readfile-promise');
 
