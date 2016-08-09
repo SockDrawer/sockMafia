@@ -1047,12 +1047,21 @@ class MafiaPlayerController {
 					message = `${sender} said: ${message}`;
 					
 					return chatroom.send(message).then(() => {
-						const ccValue = game.getValue('postman-cc').split(',');
+						//Split on commas, but filter out any empty strings (falsey values)
+						const ccValue = (game.getValue('postman-cc') || '').split(',').filter((cc)=>cc);
+						
 						if (ccValue.length > 0) {
 							const promises = ccValue.map((val) => {
 								return view.respondInThread(val, `Message sent from ${user.username} to ${target}: \n${message}`);
 							});
 							return Promise.all(promises);
+						} else {
+							return Promise.resolve();
+						}
+					}).then(() => {
+						const publicValue = game.getValue('postman-public');
+						if (publicValue.toLowerCase() === 'on' || publicValue.toLowerCase() === game.phase.toLowerCase()) {
+							return view.respondInThread(game.topicId, `Message sent to ${target}: \n${message}`);
 						} else {
 							return Promise.resolve();
 						}
