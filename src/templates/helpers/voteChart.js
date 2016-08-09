@@ -13,14 +13,15 @@ const colors = {
 };
 
 module.exports = function() {
-	return function(votes, modifier, toExecute) {
+	return function(votes, modifier, toExecute, barStyle) {
 		let fillColor, bgColor, percent;
-		if (mafia.internals.configuration.voteBars.toLowerCase() === 'hidden') {
+		barStyle = (barStyle || 'bastard').toLowerCase();
+
+		if (barStyle === 'hidden') {
 			percent = votes / toExecute * 100;
 		} else {
 			percent = votes / (toExecute + modifier) * 100;
 		}
-
 		//Hammer color either when it would be hammer, or it's really hammer
 		const hammer = (toExecute + modifier - votes  === 1) || (toExecute - votes  === 1);
 
@@ -42,7 +43,7 @@ module.exports = function() {
 		let xml = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="12">';
 		xml += `<rect width="100%" height="100%" fill="${bgColor}"/>`;
 		xml += `<rect x="${(100.0 - percent)}%" width="${percent}" height="100%" fill="${fillColor}"/>`;
-		if (mafia.internals.configuration.voteBars.toLowerCase() === 'open') {
+		if (barStyle === 'open') {
 			xml += `<text x="${(100.0 - percent)}%" font-size="10" fill="${bgColor}">${votes}/${toExecute + modifier}</text>`;
 		}
 		xml += '</svg>';

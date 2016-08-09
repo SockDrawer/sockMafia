@@ -129,6 +129,9 @@ class MafiaModController {
 		forum.Commands.add('send-rolecard', 'Send a rolecard to a user (mod only)', (command) => this.sendRoleCard(command));
 	}
 
+
+
+
 	/**
 	 * Sends the contents of the post or chat containing the command to the target users as their role card.
 	 *
