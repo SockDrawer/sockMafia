@@ -24,6 +24,7 @@ describe('mod controller', () => {
 		sandbox.stub(view, 'respond').resolves();
 		sandbox.stub(view, 'respondInThread').resolves();
 		sandbox.stub(view, 'respondWithTemplate').resolves();
+		sandbox.stub(view, 'respondWithTemplateInThread').resolves();
 		sandbox.stub(view, 'reportError').resolves();
 
 	});
@@ -471,8 +472,8 @@ describe('mod controller', () => {
 				mockGame.nextPhase.called.should.be.true;
 
 				//Output to game
-				view.respond.calledWith(command).should.be.true;
-				const modOutput = view.respond.getCall(0).args[1];
+				view.respondInThread.calledWith(12).should.be.true;
+				const modOutput = view.respondInThread.getCall(0).args[1];
 				modOutput.should.include('It is now night');
 
 
@@ -502,12 +503,12 @@ describe('mod controller', () => {
 				mockGame.nextPhase.called.should.be.true;
 
 				//Output to game
-				view.respond.calledWith(command).should.be.true;
-				const modOutput = view.respond.getCall(0).args[1];
+				view.respondInThread.calledWith(12).should.be.true;
+				const modOutput = view.respondInThread.getCall(0).args[1];
 				modOutput.should.include('It is now night');
 
 
-				view.respondWithTemplate.called.should.not.be.true;
+				view.respondWithTemplateInThread.called.should.not.be.true;
 
 			});
 		});
@@ -534,8 +535,8 @@ describe('mod controller', () => {
 				mockGame.setValue.called.should.be.true;
 				mockGame.setValue.calledWith('phaseEnd', 'today').should.be.true;
 
-				view.respond.calledWith(command).should.be.true;
-				const modOutput = view.respond.getCall(0).args[1];
+				view.respondInThread.calledWith(12).should.be.true;
+				const modOutput = view.respondInThread.getCall(0).args[1];
 				modOutput.should.include('The phase will end today');
 
 			});
@@ -756,9 +757,9 @@ describe('mod controller', () => {
 				//Game actions
 				mockGame.newDay.called.should.be.true;
 
-				//Output back to mod
-				view.respondWithTemplate.called.should.be.true;
-				const actualData = view.respondWithTemplate.getCall(0).args[1];
+				//Output to game
+				view.respondWithTemplateInThread.called.should.be.true;
+				const actualData = view.respondWithTemplateInThread.getCall(0).args[1];
 
 				actualData.day.should.equal(mockGame.day);
 				actualData.numPlayers.should.equal(3);
@@ -792,7 +793,7 @@ describe('mod controller', () => {
 				mockGame.newDay.called.should.be.true;
 
 				//Output back to mod
-				view.respondWithTemplate.called.should.be.true;
+				view.respondWithTemplateInThread.called.should.be.true;
 
 			});
 		});
@@ -819,8 +820,8 @@ describe('mod controller', () => {
 				mockGame.setValue.called.should.be.true;
 				mockGame.setValue.calledWith('phaseEnd', 'today').should.be.true;
 
-				view.respond.calledWith(command).should.be.true;
-				const modOutput = view.respond.getCall(0).args[1];
+				view.respondInThread.calledWith(12).should.be.true;
+				const modOutput = view.respondInThread.getCall(0).args[1];
 				modOutput.should.include('The phase will end today');
 
 			});

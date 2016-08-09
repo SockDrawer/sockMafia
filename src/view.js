@@ -71,6 +71,17 @@ exports.respondWithTemplate  = function(templateFile, data, command) {
 	});
 };
 
+exports.respondWithTemplateInThread  = function(templateFile, data, thread) {
+	return readFile(__dirname + '/' + templateFile)
+	.then((buffer) => {
+		const source = buffer.toString();
+		const template = Handlebars.compile(source);
+
+		const output = template(data);
+		return post.reply(thread, undefined, output);
+	});
+};
+
 exports.reportError = function(command, preface, error) {
 	command.reply(preface + error);
 	return Promise.resolve();
