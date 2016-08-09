@@ -69,7 +69,8 @@ describe('mafia', () => {
 				db: './mafiadb',
 				options:{
 					voteBars: 'bastard',
-					chat: 'disabled'
+					chat: 'disabled',
+					postman: 'off'
 				},
 				bar: expected
 			});
@@ -82,7 +83,8 @@ describe('mafia', () => {
 				messages: [expected],
 				options:{
 					voteBars: 'bastard',
-					chat: 'disabled'
+					chat: 'disabled',
+					postman: 'off'
 				}
 			});
 		});
@@ -95,7 +97,8 @@ describe('mafia', () => {
 				db: expected,
 				options:{
 					voteBars: 'bastard',
-					chat: 'disabled'
+					chat: 'disabled',
+					postman: 'off'
 				}
 			});
 		});
@@ -110,6 +113,7 @@ describe('mafia', () => {
 				options:{
 					chat: 'disabled',
 					voteBars: 'bastard',
+					postman: 'off'
 				},
 				players: [expected]
 			});
