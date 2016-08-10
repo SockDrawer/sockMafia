@@ -260,7 +260,7 @@ class MafiaPlayerController {
 				}
 			}
 		}
-		
+
 		if (command.parent.ids.topic === -1) {
 			//Command came from a chat
 			return this.dao.getGameByChatId(command.parent.ids.chat);
@@ -963,41 +963,41 @@ class MafiaPlayerController {
 	 * @returns {Promise}        A promise that will resolve when the game is ready
 	 */
 	createChatHandler(command) {
-		
+
 		if ('with' === (command.args[0] || '').toLowerCase()) {
 			command.args.shift();
 		}
 		if ('to' === (command.args[0] || '').toLowerCase()) {
 			command.args.shift();
 		}
-		
+
 		const target = command.args.shift();
 		//const gameName = Utils.argParse(command.args, []) || command.parent.ids.topic;
-		
-		
+
+
 		if (!target) {
 			command.reply('Invalid command: Usage `!chat with somePlayer`');
 			return Promise.resolve();
 		}
-		
-		
+
+
 		let game = null;
 		let postmanToggle;
 		let user;
-		
-		
+
+
 		return Promise.all([
 				this.getGame(command),
 				command.getUser()
 			])
 			.then((data) => {
 				game = data[0],
-				user = data[1];
+					user = data[1];
 				const targets = game.moderators.map((mod) => mod.username);
 				if (!Utils.isEnabled(game.getValue('chats'))) {
 					throw new Error('Chats are not enabled for this game');
 				}
-				
+
 				postmanToggle = game.getValue('postman');
 				let originator;
 				try {
@@ -1006,11 +1006,11 @@ class MafiaPlayerController {
 					debug('Error determining chat originator', usererr);
 					throw new Error('You are not a living player in this game');
 				}
-				
+
 				if (!postmanToggle || postmanToggle.toLowerCase() === 'off') {
 					targets.unshift(originator);
 				}
-				
+
 				try {
 					targets.unshift(game.getPlayer(target).username);
 				} catch (targeterr) {
@@ -1019,27 +1019,30 @@ class MafiaPlayerController {
 				}
 				const title = `Sanctioned chat for ${game.name}`,
 					message = `This is an officially sanctioned chat for ${game.name}`;
-	
+
 				//Attempt to re-use chats.
-				if (postmanToggle === 'on' 
-				|| postmanToggle === 'open') {
+				if (postmanToggle === 'on' ||
+					postmanToggle === 'open') {
 					let existingChats = game.getValue('postman_chats');
 					if (!existingChats) {
 						existingChats = {};
 					}
-					
+
 					if (existingChats[target]) {
-						return Promise.resolve(existingChats[target]);
+						return this.forum.Chat.get(existingChats[target]); // need to retrieve chatroom as chatrooms don't serialize
 					} else {
-						return this.forum.Chat.create(targets, message, title).then((chatroom) => {
-							existingChats[target] = chatroom;
-							game.setValue('postman_chats', existingChats);
-							return Promise.resolve(chatroom);
-						});
+						return Promise.all(targets.map((a_user) => this.forum.User.getByName(a_user)))
+							.then((users) => this.forum.Chat.create(users, message, title))
+							.then((chatroom) => {
+								existingChats[target] = chatroom.id;
+								game.setValue('postman_chats', existingChats);
+								return Promise.resolve(chatroom);
+							});
 					}
 				}
-				
-				return this.forum.Chat.create(targets, message, title);
+
+				return Promise.all(targets.map((a_user) => this.forum.User.getByName(a_user)))
+					.then((users) => this.forum.Chat.create(users, message, title));
 			})
 			.then((chatroom) => {
 				game.addChat(chatroom.id);
@@ -1047,11 +1050,11 @@ class MafiaPlayerController {
 					let message = command.args.join(' ');
 					const sender = postmanToggle.toLowerCase() === 'open' ? user.username : 'Someone';
 					message = `${sender} said: ${message}`;
-					
+
 					return chatroom.send(message).then(() => {
 						//Split on commas, but filter out any empty strings (falsey values)
-						const ccValue = (game.getValue('postman-cc') || '').split(',').filter((cc)=>cc);
-						
+						const ccValue = (game.getValue('postman-cc') || '').split(',').filter((cc) => cc);
+
 						if (ccValue.length > 0) {
 							const promises = ccValue.map((val) => {
 								return view.respondInThread(val, `Message sent from ${user.username} to ${target}: \n${message}`);
