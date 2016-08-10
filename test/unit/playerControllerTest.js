@@ -2377,8 +2377,11 @@ describe('player controller', () => {
 					create: sinon.stub().resolves(chatroom)
 				}
 			};
+			
+			sandbox.stub(view, 'reportError');
 		});
 		describe('errors', () => {
+			const errPrefix = 'Error creating chat: ';
 			it('should reply with usage when no args provided', () => {
 				command.args = [];
 				return controller.createChatHandler(command).then(() => {
@@ -2394,41 +2397,42 @@ describe('player controller', () => {
 				});
 			});
 			it('should reply with error when getGame rejects', () => {
-				const error = new Error(`whoopsies ${Math.random()}`),
-					errormsg = `Error creating chat: ${error}`;
+				const error = new Error(`whoopsies ${Math.random()}`);
 					
 				sandbox.stub(controller, 'getGame').rejects(error);
 				return controller.createChatHandler(command).then(() => {
-					command.reply.should.be.calledWith(errormsg).once;
+					view.reportError.should.be.calledWith(command, errPrefix, error);
 				});
 			});
 			it('should reply with error when getUser() rejects', () => {
-				const error = new Error(`whoopsies ${Math.random()}`),
-					errormsg = `Error creating chat: ${error}`;
+				const error = new Error(`whoopsies ${Math.random()}`);
 				command.getUser.rejects(error);
 				return controller.createChatHandler(command).then(() => {
-					command.reply.should.be.calledWith(errormsg).once;
+					view.reportError.should.be.calledWith(command, errPrefix, error);
 				});
 			});
 			it('should reply with error when chats disabled', () => {
-				const errormsg = 'Error creating chat: Error: Chats are not enabled for this game';
+				const errormsg = 'Error: Chats are not enabled for this game';
 				game.getValue.withArgs('chats').returns('false');
 				return controller.createChatHandler(command).then(() => {
-					command.reply.should.be.calledWith(errormsg).once;
+					view.reportError.should.be.calledWith(command, errPrefix);
+					view.reportError.firstCall.args[2].toString().should.equal(errormsg);
 				});
 			});
 			it('should reply when requester not player', () => {
-				const errormsg = 'Error creating chat: Error: You are not a living player in this game';
+				const errormsg = 'Error: You are not a living player in this game';
 				game.getPlayer.onFirstCall().throws(new Error);
 				return controller.createChatHandler(command).then(() => {
-					command.reply.should.be.calledWith(errormsg).once;
+					view.reportError.should.be.calledWith(command, errPrefix);
+					view.reportError.firstCall.args[2].toString().should.equal(errormsg);
 				});
 			});
 			it('should reply when target not player', () => {
-				const errormsg = 'Error creating chat: Error: \'userfoo\' is not a living player in this game';
+				const errormsg = 'Error: \'userfoo\' is not a living player in this game';
 				game.getPlayer.onSecondCall().throws(new Error);
 				return controller.createChatHandler(command).then(() => {
-					command.reply.should.be.calledWith(errormsg).once;
+					view.reportError.should.be.calledWith(command, errPrefix);
+					view.reportError.firstCall.args[2].toString().should.equal(errormsg);
 				});
 			});
 		});

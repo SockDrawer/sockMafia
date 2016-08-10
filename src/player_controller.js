@@ -1073,7 +1073,7 @@ class MafiaPlayerController {
 			.then(() => command.reply(`Started chat between ${user.username} and ${target} in ${game.name}`))
 			.catch((err) => {
 				debug('Error ocurred creating chat', err);
-				command.reply(`Error creating chat: ${err}`);
+				view.reportError(command, 'Error creating chat: ', err);
 			});
 	}
 
