@@ -72,6 +72,6 @@ exports.respondWithTemplate  = function(templateFile, data, command) {
 };
 
 exports.reportError = function(command, preface, error) {
-	command.reply(preface + error);
+	command.reply(preface + (error.message || error));
 	return Promise.resolve();
 };
