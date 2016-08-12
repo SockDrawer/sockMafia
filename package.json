@@ -34,7 +34,7 @@
     "string": "^3.3.1"
   },
   "peerDependencies": {
-    "sockbot": "^4.3.0"
+    "sockbot": "^4.7.0"
   },
   "devDependencies": {
     "chai": "^3.2.0",

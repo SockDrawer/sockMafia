@@ -2650,7 +2650,7 @@ describe('player controller', () => {
 					username: 'accalia'
 				});
 				game.getValue.withArgs('postman').returns('on');
-				game.getValue.withArgs('postman-cc').returns('1234');
+				game.getValue.withArgs('postman-cc').returns(1234);
 				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
 				const expected = `Message sent from accalia to ${target}: \nSomeone said: hi how are you`;
 

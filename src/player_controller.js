@@ -1053,7 +1053,7 @@ class MafiaPlayerController {
 
 					return chatroom.send(message).then(() => {
 						//Split on commas, but filter out any empty strings (falsey values)
-						const ccValue = (game.getValue('postman-cc') || '').split(',').filter((cc) => cc);
+						const ccValue = (game.getValue('postman-cc') || '').toString().split(',').filter((cc) => cc);
 
 						if (ccValue.length > 0) {
 							const promises = ccValue.map((val) => {
