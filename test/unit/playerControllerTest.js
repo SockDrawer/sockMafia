@@ -2599,6 +2599,19 @@ describe('player controller', () => {
 					args[0].should.equal(expected);
 				});
 			});
+			
+			it('should add the chat', () => {
+				const target = `user${Math.random()}`;
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				game.getValue.withArgs('postman').returns('on');
+				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
+
+				return controller.createChatHandler(command).then(() => {
+					game.addChat.should.be.called;
+				});
+			});
 
 			it('should re-use chats', () => {
 				const target = 'lapisLazuli';
