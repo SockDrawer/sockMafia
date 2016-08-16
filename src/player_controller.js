@@ -987,7 +987,7 @@ class MafiaPlayerController {
 
 
 		return Promise.all([
-				this.getGame(command),
+				(command.parent.ids.topic === -1 ? this.dao.getGameByChatId(command.parent.ids.chat) : this.dao.getGameByTopicId(command.parent.ids.topic)),
 				command.getUser()
 			])
 			.then((data) => {
@@ -1046,32 +1046,35 @@ class MafiaPlayerController {
 			})
 			.then((chatroom) => {
 				game.addChat(chatroom.id);
-				if (postmanToggle && postmanToggle.toLowerCase() !== 'off') {
-					let message = command.args.join(' ');
-					const sender = postmanToggle.toLowerCase() === 'open' ? user.username : 'Someone';
-					message = `${sender} said: ${message}`;
-
-					return chatroom.send(message).then(() => {
-						//Split on commas, but filter out any empty strings (falsey values)
-						const ccValue = (game.getValue('postman-cc') || '').toString().split(',').filter((cc) => cc);
-
-						if (ccValue.length > 0) {
-							const promises = ccValue.map((val) => {
-								return view.respondInThread(val, `Message sent from ${user.username} to ${target}: \n${message}`);
-							});
-							return Promise.all(promises);
-						} else {
-							return Promise.resolve();
-						}
-					}).then(() => {
-						const publicValue = game.getValue('postman-public');
-						if (publicValue.toLowerCase() === 'on' || publicValue.toLowerCase() === game.phase.toLowerCase()) {
-							return view.respondInThread(game.topicId, `Message sent to ${target}: \n${message}`);
-						} else {
-							return Promise.resolve();
-						}
-					});
+				let message = command.args.join(' ');
+				
+				if (!postmanToggle || postmanToggle.toLowerCase() === 'off') {
+					return Promise.resolve();
 				}
+				
+				const sender = postmanToggle.toLowerCase() === 'open' ? user.username : 'Someone';
+				message = `${sender} said: ${message}`;
+				
+				return chatroom.send(message).then(() => {
+					//Split on commas, but filter out any empty strings (falsey values)
+					const ccValue = (game.getValue('postman-cc') || '').toString().split(',').filter((cc) => cc);
+
+					if (ccValue.length > 0) {
+						const promises = ccValue.map((val) => {
+							return view.respondInThread(val, `Message sent from ${user.username} to ${target}: \n${message}`);
+						});
+						return Promise.all(promises);
+					} else {
+						return Promise.resolve();
+					}
+				}).then(() => {
+					const publicValue = game.getValue('postman-public');
+					if (publicValue.toLowerCase() === 'on' || publicValue.toLowerCase() === game.phase.toLowerCase()) {
+						return view.respondInThread(game.topicId, `Message sent to ${target}: \n${message}`);
+					} else {
+						return Promise.resolve();
+					}
+				});
 			})
 			.then(() => command.reply(`Started chat between ${user.username} and ${target} in ${game.name}`))
 			.catch((err) => {

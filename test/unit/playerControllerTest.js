@@ -2400,14 +2400,6 @@ describe('player controller', () => {
 					command.reply.should.be.calledWith('Invalid command: Usage `!chat with somePlayer`').once;
 				});
 			});
-			it('should reply with error when getGame rejects', () => {
-				const error = new Error(`whoopsies ${Math.random()}`);
-
-				sandbox.stub(controller, 'getGame').rejects(error);
-				return controller.createChatHandler(command).then(() => {
-					view.reportError.should.be.calledWith(command, errPrefix, error);
-				});
-			});
 			it('should reply with error when getUser() rejects', () => {
 				const error = new Error(`whoopsies ${Math.random()}`);
 				command.getUser.rejects(error);
