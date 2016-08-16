@@ -971,14 +971,21 @@ class MafiaPlayerController {
 			command.args.shift();
 		}
 
-		const target = command.args.shift();
-		//const gameName = Utils.argParse(command.args, []) || command.parent.ids.topic;
-
-
+		let target = command.args.shift();
+		
 		if (!target) {
 			command.reply('Invalid command: Usage `!chat with somePlayer`');
 			return Promise.resolve();
 		}
+
+
+
+		if (target.startsWith('@')) {
+			target = target.substring(1);
+		}
+		//const gameName = Utils.argParse(command.args, []) || command.parent.ids.topic;
+
+
 
 
 		let game = null;

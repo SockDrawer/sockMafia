@@ -2487,6 +2487,18 @@ describe('player controller', () => {
 				controller.forum.User.getByName.should.be.calledWith(target);
 			});
 		});
+		it('should include target when target has an "@"', () => {
+			const target = `user${Math.random()}`,
+				user = {
+					id: Math.random()
+				};
+				
+				command.args = [`@${target}`];
+			controller.forum.User.getByName.resolves(user);
+			return controller.createChatHandler(command).then(() => {
+				game.getPlayer.should.be.calledWith(target);
+			});
+		});
 		it('should send expected message', () => {
 			game.name = `NAME ${Math.random()} NAME`;
 			const expected = `This is an officially sanctioned chat for ${game.name}`;
