@@ -107,6 +107,7 @@ exports.plugin = function plugin(forum, config) {
 	internals.configuration = config;
 	internals.forum = forum;
 	dao = new MafiaDao(config.db);
+	internals.dao = dao;
 
 	return {
 		activate: exports.activate,
