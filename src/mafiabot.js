@@ -67,8 +67,7 @@ exports.internals = internals;
 exports.activate = function activate() {
 	debug('activating mafiabot');
 	const plugConfig = internals.configuration;
-
-	dao = new MafiaDao(plugConfig.db);
+	
 	modController = new MafiaModController(dao, plugConfig);
 	playerController = new MafiaPlayerController(dao, plugConfig);
 
@@ -107,6 +106,7 @@ exports.plugin = function plugin(forum, config) {
 	});
 	internals.configuration = config;
 	internals.forum = forum;
+	dao = new MafiaDao(config.db);
 
 	return {
 		activate: exports.activate,
