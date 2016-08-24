@@ -98,6 +98,7 @@ class MafiaPlayerController {
 				const text = '@' + target.username + ' has been lynched! Stay tuned for the flip.' +
 					' <b>It is now Night.</b>';
 				view.respondInThread(game.topicId, text);
+				this.forum.emit('mafia:playerLynched');
 			})
 			.catch((error) => {
 				const text = 'Error when lynching player: ' + error.toString();
