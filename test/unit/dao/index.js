@@ -208,6 +208,21 @@ describe('nouveau dao', () => {
                 game.should.be.an.instanceOf(MafiaGame);
             });
         });
+        it('should create game as active by default', () => {
+            return dao.createGame(42, 'foobar').then((game) => {
+                game.isActive.should.be.true;
+            });
+        });
+        it('should create game as active when requested', () => {
+            return dao.createGame(42, 'foobar', true).then((game) => {
+                game.isActive.should.be.true;
+            });
+        });
+        it('should create game as inactive when requested', () => {
+            return dao.createGame(42, 'foobar', false).then((game) => {
+                game.isActive.should.be.false;
+            });
+        });
         it('should store raw data internally', () => {
             return dao.createGame(42, 'foobar').then((game) => {
                 dao._data.should.have.length(1);

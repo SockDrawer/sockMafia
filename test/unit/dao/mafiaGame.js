@@ -1681,6 +1681,60 @@ describe('nouveau dao/MafiaGame', () => {
             });
         });
     });
+    describe('setActive', () => {
+        let game = null;
+        beforeEach(() => {
+            game = new MafiaGame({});
+            game.save = sinon.stub().resolves(game);
+        });
+        it('should set inactive game to active', () => {
+            game._data.isActive = false;
+            return game.setActive().then(() => {
+                game._data.isActive.should.be.true;
+            });
+        });
+        it('should set active game to active', () => {
+            game._data.isActive = true;
+            return game.setActive().then(() => {
+                game._data.isActive.should.be.true;
+            });
+        });
+        it('should resolve to self', () => {
+            return game.setActive().should.become(game);
+        });
+        it('should call game.save() to save changes', () => {
+            return game.setActive().then(() => {
+                game.save.should.be.called;
+            });
+        });
+    });
+    describe('setActive', () => {
+        let game = null;
+        beforeEach(() => {
+            game = new MafiaGame({});
+            game.save = sinon.stub().resolves(game);
+        });
+        it('should set inactive game to inactive', () => {
+            game._data.isActive = false;
+            return game.setInactive().then(() => {
+                game._data.isActive.should.be.false;
+            });
+        });
+        it('should set active game to inactive', () => {
+            game._data.isActive = true;
+            return game.setInactive().then(() => {
+                game._data.isActive.should.be.false;
+            });
+        });
+        it('should resolve to self', () => {
+            return game.setInactive().should.become(game);
+        });
+        it('should call game.save() to save changes', () => {
+            return game.setInactive().then(() => {
+                game.save.should.be.called;
+            });
+        });
+    });
     describe('toJSON()', () => {
         it('should return internal data store', () => {
             const data = {};
