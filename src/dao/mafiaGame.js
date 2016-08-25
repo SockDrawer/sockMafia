@@ -184,6 +184,26 @@ class MafiaGame {
     }
 
     /**
+     * sets the game to active state
+     *
+     * @returns {Promise<Game>} resloves to self on completion
+     */
+    setActive() {
+        this._data.isActive = true;
+        return this.save();
+    }
+
+    /**
+     * sets the game to active state
+     *
+     * @returns {Promise<Game>} resloves to self on completion
+     */
+    setInactive() {
+        this._data.isActive = false;
+        return this.save();
+    }
+
+    /**
      * Get a randomly ordered list of living players
      *
      * @returns {Array<MafiaUser>} A randomly ordered list of living players
