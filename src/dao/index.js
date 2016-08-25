@@ -76,9 +76,10 @@ class MafiaDao {
      *
      * @param {number} topicId Game topic. Must be an integer
      * @param {string} [name] Custom name for the game
+     * @param {boolean} [active=true] Start the game in this active state
      * @returns {Promise<MafiaGame>} Resolves to created game, rejects if preconditions or save state fails
      */
-    createGame(topicId, name) {
+    createGame(topicId, name, active) {
         //Force number coercsion
         topicId = parseInt(topicId, 10);
         return this.load().then((data) => {
@@ -90,7 +91,8 @@ class MafiaDao {
             }
             const game = new MafiaGame({
                 topicId: topicId,
-                name: name
+                name: name,
+                isActive: active
             }, this);
             this._data.push(game._data);
             return this.save().then(() => game);
@@ -121,7 +123,7 @@ class MafiaDao {
     getGameByTopicId(topicId) {
         return this.getGameByAlias(`t_${topicId}`);
     }
-    
+
     /**
      * Retrieve a previously created game by chatId
      *
@@ -158,7 +160,7 @@ class MafiaDao {
             return new MafiaGame(game, this);
         });
     }
-    
+
 
     /**
      * Load data from disk, once.
