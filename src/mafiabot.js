@@ -54,7 +54,8 @@ const internals = {
 	configuration: exports.defaultConfig,
 	timeouts: {},
 	interval: null,
-	events: null
+	events: null,
+	dao: dao
 };
 exports.internals = internals;
 
@@ -66,8 +67,7 @@ exports.internals = internals;
 exports.activate = function activate() {
 	debug('activating mafiabot');
 	const plugConfig = internals.configuration;
-
-	dao = new MafiaDao(plugConfig.db);
+	
 	modController = new MafiaModController(dao, plugConfig);
 	playerController = new MafiaPlayerController(dao, plugConfig);
 
@@ -106,6 +106,8 @@ exports.plugin = function plugin(forum, config) {
 	});
 	internals.configuration = config;
 	internals.forum = forum;
+	dao = new MafiaDao(config.db);
+	internals.dao = dao;
 
 	return {
 		activate: exports.activate,
@@ -126,7 +128,9 @@ function registerMods(game, mods) {
 			console.log('Mafia: Adding mod: ' + mod);
 			return game.addModerator(mod)
 				.catch((err) => {
-					console.log('Mafia: Adding mod: failed to add mod: ' + mod + '\n\tReason: ' + err);
+					if (err !== 'E_USER_EXIST') {
+						console.log('Mafia: Adding mod: failed to add mod: ' + mod + '\n\tReason: ' + err);
+					}
 					return Promise.resolve();
 				});
 		}
@@ -146,7 +150,9 @@ function registerPlayers(game, players) {
 			console.log('Mafia: Adding player: ' + player);
 			return game.addPlayer(player)
 				.catch((err) => {
-					console.log('Mafia: Adding player: failed to add player: ' + player + '\n\tReason: ' + err);
+					if (err !== 'E_USER_EXIST') {
+						console.log('Mafia: Adding player: failed to add player: ' + player + '\n\tReason: ' + err);
+					}
 					return Promise.resolve();
 				});
 		}

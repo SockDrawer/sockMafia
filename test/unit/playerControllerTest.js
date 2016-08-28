@@ -164,6 +164,9 @@ describe('player controller', () => {
 		describe('Lynch player', () => {
 			beforeEach(() => {
 				sandbox.stub(view, 'respondInThread');
+				playerController.forum = {
+					emit: () => 1
+				};
 			});
 
 			it('Should lynch successfully', () => {
@@ -175,6 +178,16 @@ describe('player controller', () => {
 					mockGame.nextPhase.called.should.equal(true);
 					view.respondInThread.calledWith(12).should.equal(true);
 					view.respondInThread.firstCall.args[1].should.equal('@Lars has been lynched! Stay tuned for the flip. <b>It is now Night.</b>');
+				});
+			});
+			
+			it('Should emit a lynch event', () => {
+				sandbox.stub(mockGame, 'killPlayer').resolves();
+				sandbox.stub(mockGame, 'nextPhase').resolves();
+				sandbox.stub(playerController.forum, 'emit');
+
+				return playerController.lynchPlayer(mockGame, mockUser).then(() => {
+					playerController.forum.emit.should.have.been.calledWith('mafia:playerLynched');
 				});
 			});
 
