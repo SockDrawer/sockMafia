@@ -224,6 +224,32 @@ There are two possible values for `chats`:
 - `enabled`: private message threads between players are allowed and can be created with the `!chat` command.
 - `disabled`: **default** private messages threads between players are not allowed and cannot be created with the `!chat` command
 
+#### Postman
+
+Postman Mode is a mode in which players can send messages to each other, but only through the bot; free chat is not allowed. If you wish to use the Postman Mode feature, this is the place to toggle it.
+
+There are three possible values for `postman`:
+
+- `off`: **default** If chats are enabled, they are free chats between players; no postmanning is done.
+- `on`: Messages will be anonymised and sent to the recipiant. One chat per player will be created as an "inbox" (when the first message is sent to them), and all messages will come from "anonymous".
+- `open`: Messages will be sent to the recipient. One chat per player will be created (upon receipt of the first message), but chats will maintain the name of the sender.
+
+#### Postman-cc
+
+If Postman mode is enabled, this allows a thread to be CC'd on all postman messages. This is meant for Club Ded usage (non-players and dead players watching the game proceed).
+
+`postman-cc` should be supplied the ID or comma-separated list of IDs for the threads that should be cc'd on all messages. Messages will include context, regardless of the postman setting above.
+
+#### Postman-public
+
+If Postman mode is enabled, this copies all postman messages to the main thread. The context will respect the Postman mode (either anonymous or with player names).
+
+Possible values are:
+
+- `none`: **default** No messages will be copied to the game thread.
+- A phase name such as `day`: messages will be copied to the main thread during that phase
+- `all`: Messages will always be copied to the main thread
+
 #### StripCommands
 
 Cartain moderator commands use the text of the post or chat that triggers the command to send to players withing the game, this setting controlls whether any commands within the test are preserved or stripped.
