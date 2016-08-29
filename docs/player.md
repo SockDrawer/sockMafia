@@ -93,12 +93,15 @@ Votes to not lynch. If this option wins, the day will end prematurely.
 Registers an intent to target another player. This will be delivered to the GM to act upon, depending on your role.
 
 ## Chat
+**Alias**: Whisper
 
 Open a chat with a Player and Game Mods.
 	 
 Game rules:
 - A game mod must have set the game option `chats` to `enabled` to use this command
+- If Postman mode is enabled, include the message you want to send to the player when you use this command, as you will not be able to reply further without issuing another command
 	 
 Usage:
 
-`!chat with yamikuronue in Mafia8`
+`!chat with yamikuronue`
+`!whisper to yamikuronue hi how are you`
