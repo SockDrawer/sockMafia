@@ -98,7 +98,7 @@ class MafiaPlayerController {
 				const text = '@' + target.username + ' has been lynched! Stay tuned for the flip.' +
 					' <b>It is now Night.</b>';
 				view.respondInThread(game.topicId, text);
-				this.forum.emit('mafia:playerLynched', target.username);
+				this.forum.emit('mafia:playerLynched');
 			})
 			.catch((error) => {
 				const text = 'Error when lynching player: ' + error.toString();
@@ -251,9 +251,6 @@ class MafiaPlayerController {
 
 	getGame(command) {
 		//First check for 'in soandso' syntax
-		debug('Checking to see if command is in a game');
-		
-		
 		for (let i = 0; i < command.args.length; i++) {
 			if (command.args[i].toLowerCase() === 'in' && command.args[i + 1]) {
 				const target = command.args.slice(i + 1, command.args.length).join(' ');
@@ -265,14 +262,10 @@ class MafiaPlayerController {
 			}
 		}
 		
-		debug('Game not explicitly supplied, checking for implicit game');
-		
 		if (command.parent.ids.topic === -1) {
-			debug('Searching for game by chat ID ' + command.parent.ids.room);
 			//Command came from a chat
 			return this.dao.getGameByChatId(command.parent.ids.room);
 		} else {
-			debug('Searching for game by topic ID ' + command.parent.ids.topic);
 			return this.dao.getGameByTopicId(command.parent.ids.topic);
 		}
 	}
@@ -1133,7 +1126,15 @@ class MafiaPlayerController {
 					throw new Error('Target is invalid');
 				}
 
-				return command.getPost().catch(() => command.getChat());
+				return command.getPost().catch(() => {
+					//So we tried to get a post and failed
+					//The most common reason for that is that 
+					//there is no post. Which means we're in a chat.
+					//So return a pseudo object with the chat ID.
+					//Why not a real chat? They can't be retrieved by ID
+					//which is also why we can't just call command.getChat()
+					return {id: command.parent.ids.chat};
+				});
 			}).then((post) => {
 				let actionToken = 'target';
 

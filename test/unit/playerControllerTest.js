@@ -2205,9 +2205,6 @@ describe('player controller', () => {
 			const command = {
 				getTopic: () => Promise.reject('Do not call me! you will break chat functionality'),
 				getPost: () => Promise.reject('Do not call me! you will break chat functionality'),
-				getChat: () => Promise.resolve({
-					id: 42
-				}),
 				getUser: () => Promise.resolve({
 					username: 'tehNinja'
 				}),
@@ -2216,7 +2213,8 @@ describe('player controller', () => {
 				parent: {
 					ids: {
 						topic: -1,
-						chat: 123
+						chat: 42,
+						room: 123
 					}
 				}
 			};

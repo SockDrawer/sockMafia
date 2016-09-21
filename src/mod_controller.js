@@ -249,7 +249,7 @@ class MafiaModController {
 		}
 		if (command.parent.ids.topic === -1) {
 			//Command came from a chat
-			return this.dao.getGameByChatId(command.parent.ids.chat);
+			return this.dao.getGameByChatId(command.parent.ids.room);
 		} else {
 			return this.dao.getGameByTopicId(command.parent.ids.topic);
 		}
