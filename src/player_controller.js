@@ -268,9 +268,9 @@ class MafiaPlayerController {
 		debug('Game not explicitly supplied, checking for implicit game');
 		
 		if (command.parent.ids.topic === -1) {
-			debug('Searching for game by chat ID ' + command.parent.ids.chat);
+			debug('Searching for game by chat ID ' + command.parent.ids.room);
 			//Command came from a chat
-			return this.dao.getGameByChatId(command.parent.ids.chat);
+			return this.dao.getGameByChatId(command.parent.ids.room);
 		} else {
 			debug('Searching for game by topic ID ' + command.parent.ids.topic);
 			return this.dao.getGameByTopicId(command.parent.ids.topic);
