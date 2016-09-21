@@ -98,7 +98,7 @@ class MafiaPlayerController {
 				const text = '@' + target.username + ' has been lynched! Stay tuned for the flip.' +
 					' <b>It is now Night.</b>';
 				view.respondInThread(game.topicId, text);
-				this.forum.emit('mafia:playerLynched');
+				this.forum.emit('mafia:playerLynched', target.username);
 			})
 			.catch((error) => {
 				const text = 'Error when lynching player: ' + error.toString();
@@ -251,6 +251,9 @@ class MafiaPlayerController {
 
 	getGame(command) {
 		//First check for 'in soandso' syntax
+		debug('Checking to see if command is in a game');
+		
+		
 		for (let i = 0; i < command.args.length; i++) {
 			if (command.args[i].toLowerCase() === 'in' && command.args[i + 1]) {
 				const target = command.args.slice(i + 1, command.args.length).join(' ');
@@ -262,10 +265,14 @@ class MafiaPlayerController {
 			}
 		}
 		
+		debug('Game not explicitly supplied, checking for implicit game');
+		
 		if (command.parent.ids.topic === -1) {
+			debug('Searching for game by chat ID ' + command.parent.ids.room);
 			//Command came from a chat
-			return this.dao.getGameByChatId(command.parent.ids.chat);
+			return this.dao.getGameByChatId(command.parent.ids.room);
 		} else {
+			debug('Searching for game by topic ID ' + command.parent.ids.topic);
 			return this.dao.getGameByTopicId(command.parent.ids.topic);
 		}
 	}
@@ -1126,7 +1133,7 @@ class MafiaPlayerController {
 					throw new Error('Target is invalid');
 				}
 
-				return command.getPost();
+				return command.getPost().catch(() => command.getChat());
 			}).then((post) => {
 				let actionToken = 'target';
 
