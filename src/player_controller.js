@@ -1133,7 +1133,7 @@ class MafiaPlayerController {
 					throw new Error('Target is invalid');
 				}
 
-				return command.getPost();
+				return command.getPost().catch(() => command.getChat());
 			}).then((post) => {
 				let actionToken = 'target';
 

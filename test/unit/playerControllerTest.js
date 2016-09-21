@@ -2204,7 +2204,8 @@ describe('player controller', () => {
 		it('Should register actions from chat', () => {
 			const command = {
 				getTopic: () => Promise.reject('Do not call me! you will break chat functionality'),
-				getPost: () => Promise.resolve({
+				getPost: () => Promise.reject('Do not call me! you will break chat functionality'),
+				getChat: () => Promise.resolve({
 					id: 42
 				}),
 				getUser: () => Promise.resolve({
