@@ -32,6 +32,11 @@ const mockForum = {
 		getByName: (user) => {
 			return user;
 		}
+	},
+	Post: {
+		reply: () => {
+			return Promise.resolve();
+		}
 	}
 };
 
