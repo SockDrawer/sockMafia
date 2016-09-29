@@ -67,6 +67,8 @@ describe('Postman Scenarios', function () {
 				quoteText: (input) => input
 			};
 			
+			view.activate(mockForum);
+			
 			playerController.forum = mockForum;
 
 			return dao.createGame(1, 'Game 1')
@@ -90,7 +92,7 @@ describe('Postman Scenarios', function () {
 		});
 		
 		it('Should add postman chats to the game', () => {
-			const command = {
+			let command = {
 				args: 'to Accalia hi this is a test'.split(' '),
 				line: '!whisper to Accalia hi this is a test',
 				reply: sandbox.stub(),
@@ -116,9 +118,25 @@ describe('Postman Scenarios', function () {
 				game.addChat.should.be.called;
 				game.addAlias.should.be.called;
 				game.addAlias.firstCall.args[0].should.equal('c_123');
+			}).then(() => {
+				command = {
+					args: [],
+					line: '!list-votes',
+					reply: sandbox.stub(),
+					getUser: () => Promise.resolve({username: 'accalia'}),
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
+				};
+				
+				
+				return playerController.listVotesHandler(command);
+			}).then(() => {
+				const output = command.reply.firstCall.args[0];
+				output.should.include('<u>Votecount for Day');
 			});
 		});
-
-
 	});
 });
