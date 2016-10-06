@@ -15,7 +15,7 @@
     "integration_coverage": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/integration/*.js",
     "publish-please": "publish-please",
     "prepublish": "publish-please guard",
-    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
+    "semantic-release": "semantic-release pre && npm publish --tag canary && semantic-release post"
   },
   "repository": {
     "type": "git",
