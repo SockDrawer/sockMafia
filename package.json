@@ -14,18 +14,19 @@
     "integration_tests": "mocha ./test/integration/*.js",
     "integration_coverage": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/integration/*.js",
     "publish-please": "publish-please",
-    "prepublish": "publish-please guard"
+    "prepublish": "publish-please guard",
+    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yamikuronue/sockMafia.git"
+    "url": "git+https://github.com/SockDrawer/sockMafia.git"
   },
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/yamikuronue/sockMafia/issues"
+    "url": "https://github.com/SockDrawer/sockMafia/issues"
   },
-  "homepage": "https://github.com/yamikuronue/sockMafia#readme",
+  "homepage": "https://github.com/SockDrawer/sockMafia#readme",
   "dependencies": {
     "bluebird": "^3.1.1",
     "debug": "^2.2.0",
