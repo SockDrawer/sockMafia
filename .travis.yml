@@ -7,6 +7,8 @@ before_script:
 - rm -rf ./coverage
 after_script:
 - test -e ./coverage/lcov.info && < ./coverage/lcov.info ./node_modules/coveralls/bin/coveralls.js
+after_success:
+- node build/travis_after_all semantic-release
 env:
   global:
     service_name: travis-ci	
