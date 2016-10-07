@@ -38,6 +38,8 @@
     "sockbot": "^4.3.0"
   },
   "devDependencies": {
+    "@yamikuronue/commit-analyzer": "yamikuronue/commit-analyzer",
+    "@yamikuronue/release-notes-generator": "yamikuronue/release-notes-generator",
     "chai": "^3.2.0",
     "chai-as-promised": "^5.2.0",
     "chai-string": "^1.2.0",
@@ -50,5 +52,9 @@
     "sinon": "^1.15.1",
     "sinon-as-promised": "^4.0.0",
     "sinon-chai": "^2.8.0"
+  },
+  "release": {
+    "analyzeCommits": "@yamikuronue/commit-analyzer",
+    "generateNotes": "@yamikuronue/release-notes-generator"
   }
 }
