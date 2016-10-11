@@ -1,6 +1,6 @@
 {
   "name": "sockmafia",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "description": "Mafia plugin for sockbot",
   "main": "src/mafiabot.js",
   "scripts": {
@@ -34,7 +34,7 @@
     "string": "^3.3.1"
   },
   "peerDependencies": {
-    "sockbot": "^4.3.0"
+    "sockbot": ">=4.3.0"
   },
   "devDependencies": {
     "chai": "^3.2.0",
