@@ -187,7 +187,7 @@ describe('player controller', () => {
 				sandbox.stub(playerController.forum, 'emit');
 
 				return playerController.lynchPlayer(mockGame, mockUser).then(() => {
-					playerController.forum.emit.should.have.been.calledWith('mafia:playerLynched');
+					playerController.forum.emit.should.have.been.calledWith('mafia:playerLynched', 'Lars');
 				});
 			});
 
