@@ -1,0 +1,7 @@
+site_name: Sockmafia
+pages:
+- Home: index.md
+- 'Players guide': player.md
+- 'Moderator guide': mod.md
+- API: 
+	- Main: src/mafiabot.md
