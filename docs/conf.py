@@ -15,7 +15,7 @@ for root, dirs, files in os.walk('../src'):
 				if e.errno != 17:
 					raise   
 				pass
-			os.system('jsdoc2md {1} > ./{2}'.format(os.path.join(root, name), docname))
+			os.system('jsdoc2md {0} > ./{1}'.format(os.path.join(root, name), docname))
 
 source_parsers = {
     '.md': CommonMarkParser,
