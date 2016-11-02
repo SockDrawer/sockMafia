@@ -2,7 +2,7 @@ from recommonmark.parser import CommonMarkParser
 import os
 from os.path import join, getsize
 
-#os.system('npm install')
+os.system('npm install')
 
 for root, dirs, files in os.walk('src'):
 	for name in files:
