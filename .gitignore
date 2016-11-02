@@ -10,7 +10,6 @@ lib-cov
 pids
 logs
 results
-build
 
 node_modules
 
@@ -28,4 +27,3 @@ intTesting.db
 intTesting.db
 config.yml
 mafiadb
-docs/src

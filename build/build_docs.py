@@ -1,8 +1,7 @@
-from recommonmark.parser import CommonMarkParser
 import os
 from os.path import join, getsize
 
-os.system('npm install')
+os.system('npm install jsdoc-to-markdown')
 
 for root, dirs, files in os.walk('../src'):
 	for name in files:
@@ -17,8 +16,4 @@ for root, dirs, files in os.walk('../src'):
 				pass
 			os.system('jsdoc2md {0} > ./{1}'.format(os.path.join(root, name), docname))
 
-source_parsers = {
-    '.md': CommonMarkParser,
-}
-
-source_suffix = ['.md']
+os.system('git add docs/*')
