@@ -709,7 +709,7 @@ class MafiaPlayerController {
 
 				
 				logDebug('List resolved');
-				return view.respondWithTemplate('/templates/listPlayers.handlebars', 
+				return view.respondWithTemplate('listPlayers.handlebars', 
 				{
 					alive: alive,
 					mods: mods,
@@ -758,7 +758,7 @@ class MafiaPlayerController {
 				const dead = game.deadPlayers;
 
 				logDebug('List resolved');
-				return view.respondWithTemplate('/templates/listPlayers.handlebars', 
+				return view.respondWithTemplate('listPlayers.handlebars', 
 				{
 					alive: alive,
 					mods: mods,
@@ -879,7 +879,7 @@ class MafiaPlayerController {
 				});
 
 				data.numPlayers = game.livePlayers.length;
-				return view.respondWithTemplate('/templates/voteTemplate.handlebars', data, command);
+				return view.respondWithTemplate('voteTemplate.handlebars', data, command);
 			})
 			.catch((err) => {
 				if (err === E_NOGAME) {
