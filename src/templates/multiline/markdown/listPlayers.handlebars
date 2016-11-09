@@ -1,0 +1,31 @@
+{{#header}}Player List{{/header}}
+
+{{#subheader}}Living:{{/subheader}}
+{{#if alive.length}}
+{{#each alive}}
+ - {{username}}
+{{/each}}
+{{else}}
+Nobody! Aren't you special?
+{{/if}}
+
+{{#if showdead}}
+{{#subheader}}Dead:{{/subheader}}
+{{#if dead.length}}
+{{#each dead}}
+ - {{username}}
+{{/each}}
+{{else}}
+Nobody! Aren't you special?
+{{/if}}
+{{/if}}
+
+
+{{#subheader}}Mods:{{/subheader}}
+{{#if mods.length}}
+{{#each mods}}
+ - {{username}}
+{{/each}}
+{{else}}
+None. Weird.
+{{/if}}

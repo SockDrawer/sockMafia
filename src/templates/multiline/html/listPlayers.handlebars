@@ -1,6 +1,6 @@
-## Player List
+{{#header}}Player List{{/header}}
 
-### Living:
+{{#subheader}}Living:{{/subheader}}
 {{#if alive.length}}
 {{#each alive}}
  - {{username}}
@@ -10,7 +10,7 @@ Nobody! Aren't you special?
 {{/if}}
 
 {{#if showdead}}
-## Dead:
+{{#subheader}}Dead:{{/subheader}}
 {{#if dead.length}}
 {{#each dead}}
  - {{username}}
@@ -21,7 +21,7 @@ Nobody! Aren't you special?
 {{/if}}
 
 
-## Mods:
+{{#subheader}}Mods:{{/subheader}}
 {{#if mods.length}}
 {{#each mods}}
  - {{username}}

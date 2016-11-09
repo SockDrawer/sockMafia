@@ -1,0 +1,10 @@
+{{#header}}It is now day {{day}}{{/header}}
+
+{{#subheader}}Living Players:{{/subheader}}
+
+{{#each names}}
+	- {{this}}
+{{/each}}
+
+
+With {{numPlayers}} playing, it's {{#bold}}{{toExecute}} to lynch!{{/bold}} {{#if showPhaseEnd}}The phase will end {{phaseEnd}}. {{/if}}

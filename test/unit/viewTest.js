@@ -33,7 +33,11 @@ describe('View helpers', () => {
 			},
 			urlForPost: (postId) => {
 				return '/p/' + postId;
-			}
+			},
+			bold: (text) => `<b>${text}</b>`,
+			header: (text) => text,
+			subheader: (text) => text,
+			link: (url, text) => `<a href="${url}">${text}</a>`
 		};
 		
 	});
@@ -88,8 +92,9 @@ describe('View helpers', () => {
 				},
 				isCurrent: true
 			}];
-			listNamesHelper(input).toString().should.contain('<b>');
-			listNamesHelper(input).toString().should.contain('</b>');
+			sandbox.spy(fakeFormatter, 'bold');
+			listNamesHelper(input);
+			fakeFormatter.bold.should.have.been.called;
 		});
 		
 		it('Should strikeout retracted posts', () => {
@@ -199,7 +204,7 @@ describe('View helpers', () => {
 			}, fakeGame);
 			
 			const output = listNamesHelper([voteOne, voteTwo]).toString();
-			output.should.contain('<a href="/p/1"><b>yamikuronue</b></a> ');
+			output.should.contain('<a href="/p/1"><b>yamikuronue</b></a>');
 			output.should.contain('<a href="/p/2"><s>dreikin</s></a> <a href="/p/3">[X]</a>');
 		});
 	});
@@ -367,7 +372,7 @@ describe('View', () => {
 		
 		readFileShim = sandbox.stub().resolves(new Buffer('read file'));
 
-		view.activate({Post: postShim, Format: undefined}, readFileShim);
+		view.activate({Post: postShim, Format: undefined, supports: () => false}, readFileShim);
 	});
 	
 	afterEach(() => {

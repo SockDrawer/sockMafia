@@ -18,7 +18,37 @@ const view = require('../../src/view.js');
 
 const testConfig = {
 	db: ':memory:',
+};
 
+const mockForum = {
+	Chat: {
+		create: () => 1
+	},
+	User: {
+		getByName: (user) => {
+			return user;
+		}
+	},
+	Post: {
+		reply: () => {
+			return Promise.resolve();
+		}
+	},
+	supports: (input) => {
+		return input === 'Chats' || input === 'Formatting.Markup.HTML' || input === 'Formatting.Multiline';
+	},
+	Format: {
+		urlForTopic: (topicId, slug, postId) => {
+			return '/t/' + slug + '/' + topicId + '/' + postId;
+		},
+		urlForPost: (postId) => {
+			return '/p/' + postId;
+		},
+		header2: (text) => `<h2>${text}</h2>`,
+		header3: (text) => `<h3>${text}</h3>`,
+		bold: (text) => `<b>${text}</b>`,
+		link: (url, text) => `<a href="${url}">${text}</a>`,
+	}
 };
 
 describe('MafiaBot', function () {
@@ -50,6 +80,8 @@ describe('MafiaBot', function () {
 				urlForPost: () => '',
 				quoteText: (input) => input
 			};
+			
+			view.activate(mockForum);
 
 			return dao.createGame(1, 'Game 1')
 				.then((g) => {
@@ -727,7 +759,7 @@ describe('MafiaBot', function () {
 	});
 
 	describe('Vote history', () => {
-		let dao, playerController, game, fakeFormatter;
+		let dao, playerController, game;
 
 		before(() => {
 			//Set up the database
@@ -738,16 +770,7 @@ describe('MafiaBot', function () {
 				quoteText: (input) => input
 			};
 
-			fakeFormatter = {
-				urlForTopic: (topicId, slug, postId) => {
-					return '/t/' + slug + '/' + topicId + '/' + postId;
-				},
-				urlForPost: (postId) => {
-					return '/p/' + postId;
-				}
-			};
-
-			view.activate({Format: fakeFormatter});
+			view.activate(mockForum);
 
 			return dao.createGame(2, 'Game 2')
 				.then((g) => {
@@ -1487,7 +1510,7 @@ describe('MafiaBot', function () {
 	});
 	
 	describe('Night Actions', () => {
-		let dao, playerController, modController, game, fakeFormatter;
+		let dao, playerController, modController, game;
 		
 		before(() => {
 			//Set up the database
@@ -1499,17 +1522,8 @@ describe('MafiaBot', function () {
 			};
 			
 			modController = new ModController(dao, testConfig);
-			
-			fakeFormatter = {
-				urlForTopic: (topicId, slug, postId) => {
-					return '/t/' + slug + '/' + topicId + '/' + postId;
-				},
-				urlForPost: (postId) => {
-					return '/p/' + postId;
-				}
-			};
-			
-			view.activate({Format: fakeFormatter});
+		
+			view.activate(mockForum);
 
 			return dao.createGame(3, 'Game 3')
 				.then((g) => {
@@ -1657,8 +1671,8 @@ describe('MafiaBot', function () {
 				return modController.listNAHandler(command);
 			}).then(() => {
 				const output = command.reply.firstCall.args[0];
-				output.should.include('**Scum**: Target dreikin');
-				output.should.include('**Scum 2**: Target dreikin');
+				output.should.include('<b>Scum</b>: Target dreikin');
+				output.should.include('<b>Scum 2</b>: Target dreikin');
 				
 			/* 
 				----------------------------------
@@ -1704,8 +1718,8 @@ describe('MafiaBot', function () {
 				return modController.listNAHandler(command);
 			}).then(() => {
 				const output = command.reply.firstCall.args[0];
-				output.should.include('**Scum**: Target dreikin');
-				output.should.include('**Scum 2**: Target accalia');
+				output.should.include('<b>Scum</b>: Target dreikin');
+				output.should.include('<b>Scum 2</b>: Target accalia');
 			/*
 				----------------------------------
 				Move 6: Scum targets TehNinja
@@ -1750,9 +1764,9 @@ describe('MafiaBot', function () {
 				return modController.listNAHandler(command);
 			}).then(() => {
 				const output = command.reply.firstCall.args[0];
-				output.should.not.include('**Scum**: Target dreikin');
-				output.should.include('**Scum**: Target tehNinja');
-				output.should.include('**Scum 2**: Target accalia');
+				output.should.not.include('<b>Scum</b>: Target dreikin');
+				output.should.include('<b>Scum</b>: Target tehNinja');
+				output.should.include('<b>Scum 2</b>: Target accalia');
 			});
 		});
 	});

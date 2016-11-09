@@ -37,6 +37,9 @@ const mockForum = {
 		reply: () => {
 			return Promise.resolve();
 		}
+	},
+	supports: (input) => {
+		return input === 'Chats' || input === 'Formatting.Markup.HTML' || input === 'Formatting.Multiline';
 	}
 };
 
