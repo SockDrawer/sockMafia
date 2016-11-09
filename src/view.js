@@ -46,6 +46,7 @@ exports.activate = function(forum, rf) {
 	//Which templates to use
 	if (forum.supports) {
 		if (forum.supports('Formatting.Multiline')) {
+			splitLines = false;
 			//Until we have lists in formatter, use separate templates
 			if (forum.supports('Formatting.Markup.HTML')) {
 				templateDir = '/templates/multiline/html/';
@@ -93,9 +94,9 @@ exports.respondWithTemplate  = function(templateFile, data, command) {
 
 		const output = template(data);
 		if (splitLines) {
-			return Promise.all(
-				output.split('\n').map((line) => command.reply(line))
-				);
+			return command.getPost().then((p) => Promise.all(
+				output.split('\n').map((line) => p.reply(line))
+			));
 		} else {
 			return command.reply(output);
 		}

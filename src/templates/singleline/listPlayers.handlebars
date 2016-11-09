@@ -1,3 +1,3 @@
-Living players:{{#if alive.length}}{{#each alive}}{{username}} {{/each}}{{else}}Nobody! Aren't you special?{{/if}}
-{{#if showdead}}{{#subheader}}Dead players:{{/subheader}}{{#if dead.length}}{{#each dead}}{{username}} {{/each}}{{else}}Nobody! Aren't you special?{{/if}}{{/if}}
-Mods:{{#if mods.length}}{{#each mods}}{{username}} {{/each}}{{else}}None. Weird.{{/if}}
+{{#bold}}Living players:{{/bold}} {{#if alive.length}}{{#each alive}}{{username}} {{/each}}{{else}}Nobody! Aren't you special?{{/if}}
+{{#if showdead}}{{#bold}}Dead players: {{/bold}}{{#if dead.length}}{{#each dead}}{{username}} {{/each}}{{else}}Nobody! Aren't you special?{{/if}}{{/if}}
+{{#bold}}Mods:{{/bold}} {{#if mods.length}}{{#each mods}}{{username}} {{/each}}{{else}}None. Weird.{{/if}}
