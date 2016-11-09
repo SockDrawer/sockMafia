@@ -8,6 +8,7 @@ const chai = require('chai'),
 require('sinon-as-promised');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
+chai.use(require('sinon-chai'));
 
 chai.should();
 
@@ -406,6 +407,23 @@ describe('View', () => {
 			Handlebars.compile.calledWith('read file').should.equal(true);
 			fakeTemplate.calledWith(data).should.equal(true);
 			fakeCommand.reply.calledWith('a compiled string').should.equal(true);
+		});
+	});
+	
+	it('should reply with Handlebars in split-lines mode', () => {
+		const data = {123: 435};
+		const fakeTemplate = sandbox.stub().returns('a compiled string\nwith two lines');
+		view.activate({
+			supports: () => false
+		}, readFileShim);
+
+		sandbox.stub(Handlebars, 'compile').returns(fakeTemplate);
+		return view.respondWithTemplate('foo.hbrs', data, fakeCommand).then(() => {
+			Handlebars.compile.calledWith('read file').should.equal(true);
+			fakeTemplate.calledWith(data).should.equal(true);
+			fakeCommand.reply.should.be.calledTwice;
+			fakeCommand.reply.should.be.calledWith('a compiled string');
+			fakeCommand.reply.should.be.calledWith('with two lines');
 		});
 	});
 });

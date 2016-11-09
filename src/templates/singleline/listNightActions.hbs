@@ -1,0 +1,6 @@
+{{#bold}}List of actions:{{/bold}}
+{{#if scum.show}}Scum: {{#each scum.actions}}{{target.username}} {{/each}}{{/if}}
+{{#if scum2.show}}Scum 2:{{#each scum2.actions}}{{target.username}} {{/each}}{{/if}}
+{{#if other.show}}Town:
+{{#each other.actions}}{{actor.username}} targets {{target.username}}{{/each}}
+{{/if}}
