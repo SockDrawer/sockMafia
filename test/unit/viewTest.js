@@ -368,7 +368,8 @@ describe('View', () => {
 		};
 		
 		fakeCommand = {
-			reply: sandbox.stub().resolves()
+			reply: sandbox.stub().resolves(),
+			getPost: () => Promise.resolve(postShim)
 		};
 		
 		readFileShim = sandbox.stub().resolves(new Buffer('read file'));
@@ -401,7 +402,10 @@ describe('View', () => {
 	it('should reply with Handlebars', () => {
 		const data = {123: 435};
 		const fakeTemplate = sandbox.stub().returns('a compiled string');
-
+		view.activate({
+			supports: () => true
+		}, readFileShim);
+		
 		sandbox.stub(Handlebars, 'compile').returns(fakeTemplate);
 		return view.respondWithTemplate('foo.hbrs', data, fakeCommand).then(() => {
 			Handlebars.compile.calledWith('read file').should.equal(true);
@@ -421,9 +425,9 @@ describe('View', () => {
 		return view.respondWithTemplate('foo.hbrs', data, fakeCommand).then(() => {
 			Handlebars.compile.calledWith('read file').should.equal(true);
 			fakeTemplate.calledWith(data).should.equal(true);
-			fakeCommand.reply.should.be.calledTwice;
-			fakeCommand.reply.should.be.calledWith('a compiled string');
-			fakeCommand.reply.should.be.calledWith('with two lines');
+			postShim.reply.should.be.calledTwice;
+			postShim.reply.should.be.calledWith('a compiled string');
+			postShim.reply.should.be.calledWith('with two lines');
 		});
 	});
 });
