@@ -109,7 +109,13 @@ exports.respondWithTemplateInThread  = function(templateFile, data, thread) {
 		const template = Handlebars.compile(source);
 
 		const output = template(data);
-		return post.reply(thread, undefined, output);
+		if (splitLines) {
+			return Promise.all(
+				output.split('\n').map((line) => post.reply(line))
+				);
+		} else {
+			return post.reply(output);
+		}
 	});
 };
 
