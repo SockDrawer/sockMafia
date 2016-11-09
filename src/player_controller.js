@@ -707,29 +707,15 @@ class MafiaPlayerController {
 				const alive = game.livePlayers;
 				const mods = game.moderators;
 
-				const numLiving = alive.length;
-				const numMods = mods.length;
-
-				let output = '## Player List\n';
-				output += '### Living:\n';
-				if (numLiving <= 0) {
-					output += 'Nobody! Aren\'t you special?\n';
-				} else {
-					for (let i = 0; i < numLiving; i++) {
-						output += '- ' + alive[i].username + '\n';
-					}
-				}
-				output += '### Mod(s):\n';
-				if (numMods <= 0) {
-					output += 'None. Weird.';
-				} else {
-					mods.forEach((mod) => {
-						output += '- ' + mod.username + '\n';
-					});
-				}
-
-				view.respond(command, output);
-				return Promise.resolve();
+				
+				logDebug('List resolved');
+				return view.respondWithTemplate('/templates/listPlayers.handlebars', 
+				{
+					alive: alive,
+					mods: mods,
+					showdead: false
+				},
+				command);
 			})
 			.catch((err) => {
 				if (err === E_NOGAME) {
@@ -771,39 +757,15 @@ class MafiaPlayerController {
 				const mods = game.moderators;
 				const dead = game.deadPlayers;
 
-				const numLiving = alive.length;
-				const numDead = dead.length;
-				const numMods = mods.length;
-
-				let output = '## Player List\n';
-				output += '### Living:\n';
-				if (numLiving <= 0) {
-					output += 'Nobody! Aren\'t you special?\n';
-				} else {
-					for (let i = 0; i < numLiving; i++) {
-						output += '- ' + alive[i].username + '\n';
-					}
-				}
-				output += '\n### Dead:\n';
-				if (numDead <= 0) {
-					output += 'Nobody! Aren\'t you special?\n';
-				} else {
-					for (let i = 0; i < numDead; i++) {
-						output += '- ' + dead[i].username + '\n';
-					}
-				}
-
-				output += '### Mod(s):\n';
-				if (numMods <= 0) {
-					output += 'None. Weird.';
-				} else {
-					mods.forEach((mod) => {
-						output += '- ' + mod.username + '\n';
-					});
-				}
-
-				view.respond(command, output);
-				return Promise.resolve();
+				logDebug('List resolved');
+				return view.respondWithTemplate('/templates/listPlayers.handlebars', 
+				{
+					alive: alive,
+					mods: mods,
+					dead: dead,
+					showdead: true
+				},
+				command);
 			})
 			.catch((err) => {
 				if (err === E_NOGAME) {

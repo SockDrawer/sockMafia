@@ -1474,6 +1474,7 @@ describe('player controller', () => {
 
 			playerController = new PlayerController(mockdao, null);
 			sandbox.stub(view, 'respondInThread');
+			sandbox.stub(view, 'respondWithTemplate');
 			sandbox.stub(view, 'respond');
 			sandbox.stub(view, 'reportError');
 		});
@@ -1499,9 +1500,10 @@ describe('player controller', () => {
 				};
 
 				mockGame.isActive = false;
+				sandbox.stub(playerController, 'getGame').rejects('E_NO_GAME');
 
 				return playerController.listAllPlayersHandler(command).then(() => {
-					view.respondInThread.called.should.be.false;
+					view.respondWithTemplate.called.should.be.false;
 					view.reportError.called.should.be.false;
 				});
 			});
@@ -1523,12 +1525,13 @@ describe('player controller', () => {
 				};
 
 				return playerController.listAllPlayersHandler(command).then(() => {
-					view.respond.called.should.be.true;
+					view.respondWithTemplate.called.should.be.true;
 
-					const output = view.respond.getCall(0).args[1];
-					output.should.include('Yamikuronue');
-					output.should.include('Accalia');
-					output.should.include('Dreikin');
+					const data = view.respondWithTemplate.getCall(0).args[1];
+					data.alive.should.include(mockUsers.yami);
+					data.dead.should.include(mockUsers.accalia);
+					data.mods.should.include(mockUsers.dreikin);
+					data.showdead.should.be.true;
 				});
 			});
 
@@ -1548,91 +1551,7 @@ describe('player controller', () => {
 				};
 
 				return playerController.listAllPlayersHandler(command).then(() => {
-					view.respond.called.should.be.true;
-
-					const output = view.respond.getCall(0).args[1];
-					output.should.include('Yamikuronue');
-					output.should.include('Accalia');
-					output.should.include('Dreikin');
-				});
-			});
-
-			it('should report when no living players exist', () => {
-				//TODO: Probably a 'game over' message?
-				const command = {
-					getTopic: () => Promise.resolve({
-						id: 12345
-					}),
-					getUser: () => Promise.resolve({
-						username: 'tehNinja'
-					}),
-					args: [''],
-					parent: {
-						ids: {
-							topic: 123
-						}
-					}
-				};
-
-				mockGame.livePlayers = [];
-
-				return playerController.listAllPlayersHandler(command).then(() => {
-					view.respond.called.should.be.true;
-
-					const output = view.respond.getCall(0).args[1];
-					output.should.include('### Living:\nNobody! Aren\'t you special?\n');
-				});
-			});
-
-			it('should report when no dead players exist', () => {
-				const command = {
-					getTopic: () => Promise.resolve({
-						id: 12345
-					}),
-					getUser: () => Promise.resolve({
-						username: 'tehNinja'
-					}),
-					args: [''],
-					parent: {
-						ids: {
-							topic: 123
-						}
-					}
-				};
-
-				mockGame.deadPlayers = [];
-
-				return playerController.listAllPlayersHandler(command).then(() => {
-					view.respond.called.should.be.true;
-
-					const output = view.respond.getCall(0).args[1];
-					output.should.include('### Dead:\nNobody! Aren\'t you special?\n');
-				});
-			});
-
-			it('should report when there are no mods', () => {
-				const command = {
-					getTopic: () => Promise.resolve({
-						id: 12345
-					}),
-					getUser: () => Promise.resolve({
-						username: 'tehNinja'
-					}),
-					args: [''],
-					parent: {
-						ids: {
-							topic: 123
-						}
-					}
-				};
-
-				mockGame.moderators = [];
-
-				return playerController.listAllPlayersHandler(command).then(() => {
-					view.respond.called.should.be.true;
-
-					const output = view.respond.getCall(0).args[1];
-					output.should.include('### Mod(s):\nNone. Weird.');
+					view.respondWithTemplate.called.should.be.true;
 				});
 			});
 		});
@@ -1656,9 +1575,10 @@ describe('player controller', () => {
 				};
 
 				mockGame.isActive = false;
+				sandbox.stub(playerController, 'getGame').rejects('E_NO_GAME');
 
 				return playerController.listPlayersHandler(command).then(() => {
-					view.respondInThread.called.should.be.false;
+					view.respondWithTemplate.called.should.be.false;
 					view.reportError.called.should.be.false;
 
 				});
@@ -1681,12 +1601,12 @@ describe('player controller', () => {
 				};
 
 				return playerController.listPlayersHandler(command).then(() => {
-					view.respond.called.should.be.true;
+					view.respondWithTemplate.called.should.be.true;
 
-					const output = view.respond.getCall(0).args[1];
-					output.should.include('Yamikuronue');
-					output.should.not.include('Accalia');
-					output.should.include('Dreikin');
+					const data = view.respondWithTemplate.getCall(0).args[1];
+					data.alive.should.include(mockUsers.yami);
+					data.mods.should.include(mockUsers.dreikin);
+					data.showdead.should.be.false;
 				});
 			});
 
@@ -1706,42 +1626,7 @@ describe('player controller', () => {
 				};
 
 				return playerController.listPlayersHandler(command).then(() => {
-					view.respond.called.should.be.true;
-
-					const output = view.respond.getCall(0).args[1];
-					output.should.include('Yamikuronue');
-					output.should.not.include('Accalia');
-					output.should.include('Dreikin');
-				});
-			});
-
-			it('should report lack of living players', () => {
-				const command = {
-					getTopic: () => Promise.resolve({
-						id: 12345
-					}),
-					args: [],
-					getUser: () => Promise.resolve({
-						username: 'tehNinja'
-					}),
-					parent: {
-						ids: {
-							topic: 123
-						}
-					}
-				};
-
-				mockGame.livePlayers = [];
-				mockGame.moderators = [];
-
-				return playerController.listPlayersHandler(command).then(() => {
-					view.respond.called.should.be.true;
-
-					const output = view.respond.getCall(0).args[1];
-					output.should.include('Nobody! Aren\'t you special?\n');
-					output.should.not.include('Accalia');
-					output.should.not.include('Yamikuronue');
-					output.should.include('None. Weird.');
+					view.respondWithTemplate.called.should.be.true;
 				});
 			});
 		});
