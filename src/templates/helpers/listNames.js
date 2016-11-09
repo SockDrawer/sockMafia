@@ -7,20 +7,10 @@ module.exports = function(formatter) {
 		list = list.map((value) => {
 			if (typeof value === 'object') {
 				if (value.isCurrent) {
-					return '<a href="'
-					+ formatter.urlForPost(value.postId)
-					+ '"><b>'
-					+ value.actor.username
-					+ '</b></a> ';
+					return formatter.link(formatter.urlForPost(value.postId), formatter.bold(value.actor.username));
 				} else {
-					return '<a href="'
-					+ formatter.urlForPost(value.postId)
-					+ '"><s>'
-					+ value.actor.username
-					+ '</s></a> '
-					+ '<a href="'
-					+ formatter.urlForPost(value.revokedId)
-					+ '">[X]</a>';
+					return formatter.link(formatter.urlForPost(value.postId), `<s>${value.actor.username}</s>`) + ' ' +
+						formatter.link(formatter.urlForPost(value.revokedId), '[X]');
 				}
 
 			}
