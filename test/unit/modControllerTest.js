@@ -1570,7 +1570,7 @@ describe('mod controller', () => {
 				view.respondWithTemplate.called.should.be.true;
 				view.respondWithTemplate.callCount.should.equal(properties.length);
 				for (let i = 0; i < properties.length; i++) {
-					view.respondWithTemplate.calledWith('templates/modSuccess.handlebars', {
+					view.respondWithTemplate.calledWith('modSuccess.handlebars', {
 						command: 'Set property',
 						results: 'Player Margaret is now ' + properties[i],
 						game: 'testMafia'

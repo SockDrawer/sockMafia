@@ -84,7 +84,7 @@ function advance(game, type, endTime, command) {
 				});
 
 				logDebug('Moved to new day in  ' + game.name);
-				return view.respondWithTemplateInThread('/templates/newDayTemplate.handlebars', data, game.topicId);
+				return view.respondWithTemplateInThread('newDayTemplate.handlebars', data, command);
 			} else {
 				let text = 'It is now ' + game.phase;
 				if (data.showPhaseEnd) {
@@ -477,7 +477,7 @@ class MafiaModController {
 			.then(() => target.addProperty(property))
 			.then(() => {
 				logDebug('Player ' + target.username + ' is now ' + property + ' in ' + game);
-				return view.respondWithTemplate('templates/modSuccess.handlebars', {
+				return view.respondWithTemplate('modSuccess.handlebars', {
 					command: 'Set property',
 					results: 'Player ' + target.username + ' is now ' + property,
 					game: game.name
@@ -646,7 +646,7 @@ class MafiaModController {
 			.then(() => game.killPlayer(targetString))
 			.then(() => {
 				logDebug('Killing ' + target);
-				return view.respondWithTemplate('templates/modSuccess.handlebars', {
+				return view.respondWithTemplate('modSuccess.handlebars', {
 					command: 'Kill',
 					results: 'Killed @' + targetString,
 					game: game.name
@@ -716,7 +716,7 @@ class MafiaModController {
 					}
 				}
 
-				return view.respondWithTemplate('templates/listNightActions.hbs', data, command);
+				return view.respondWithTemplate('listNightActions.hbs', data, command);
 			}).catch((err) => {
 				logRecoveredError('Error listing night actions: ' + err);
 				view.reportError(command, 'Error listing night actions: ', err);

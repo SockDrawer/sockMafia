@@ -61,7 +61,7 @@ exports.respondInThread = function(thread, output) {
 };
 
 exports.respondWithTemplate  = function(templateFile, data, command) {
-	return readFile(__dirname + '/' + templateFile)
+	return readFile(__dirname + '/templates/' + templateFile)
 	.then((buffer) => {
 		const source = buffer.toString();
 		const template = Handlebars.compile(source);
