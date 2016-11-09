@@ -28,6 +28,7 @@ let formatter = {
 
 let chat;
 let templateDir = '/templates/multiline/markdown/'; //Sensible default
+let splitLines = false;
 
 let readFile = require('fs-readfile-promise');
 
@@ -53,6 +54,7 @@ exports.activate = function(forum, rf) {
 			}
 		} else {
 			templateDir = '/templates/singleline/';
+			splitLines = true;
 		}
 	}
 
@@ -90,7 +92,13 @@ exports.respondWithTemplate  = function(templateFile, data, command) {
 		const template = Handlebars.compile(source);
 
 		const output = template(data);
-		return command.reply(output);
+		if (splitLines) {
+			return Promise.all(
+				output.split('\n').map((line) => command.reply(line))
+				);
+		} else {
+			return command.reply(output);
+		}
 	});
 };
 
