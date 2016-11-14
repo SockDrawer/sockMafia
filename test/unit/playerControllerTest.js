@@ -2620,6 +2620,29 @@ describe('player controller', () => {
 				});
 			});
 			
+			it('should re-use chats when the target has an @', () => {
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				game.getValue.withArgs('postman').returns('on');
+				command.args = ['with', 'error', 'hi', 'how', 'are', 'you'];
+				
+				game.getValue = (key) => {
+					if (key === 'postman_chats') {
+						return game.chatRecord;
+					} else {
+						return 'on';
+					}
+				};
+				
+				return controller.createChatHandler(command)
+				.then(() => command.args = ['with', '@error', 'hi', 'how', 'are', 'you'])
+				.then(() => controller.createChatHandler(command))
+				.then(() => {
+					controller.forum.Chat.create.should.be.calledOnce;
+				});
+			});
+			
 			it('should respect lack of cc', () => {
 				const target = `user${Math.random()}`;
 				game.getPlayer.onFirstCall().returns({

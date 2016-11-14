@@ -972,7 +972,7 @@ class MafiaPlayerController {
 			command.args.shift();
 		}
 		
-		const target = command.args.shift();
+		let target = command.args.shift();
 		//const gameName = Utils.argParse(command.args, []) || command.parent.ids.topic;
 		
 		
@@ -981,7 +981,9 @@ class MafiaPlayerController {
 			return Promise.resolve();
 		}
 		
-		
+		if (target.startsWith('@')) {
+			target = target.replace('@', '');
+		}
 		let game = null;
 		let postmanToggle;
 		let user;
