@@ -112,8 +112,11 @@ exports.respondWithTemplateInThread  = function(templateFile, data, thread) {
 		const output = template(data);
 		if (splitLines) {
 			return Promise.all(
-				output.split('\n').map((line) => post.reply(line))
-				);
+				output.trim().split('\n').map((line) => {
+					if (line.trim()) {
+						post.reply(line);
+					}
+				}));
 		} else {
 			return post.reply(output);
 		}
