@@ -2339,6 +2339,12 @@ describe('player controller', () => {
 
 	describe('createChatHandler()', () => {
 
+		function makeUserObject (name) {
+			return {
+				username: name
+			};
+		}
+		
 		let controller = null,
 			dao = null,
 			game = null,
@@ -2386,7 +2392,13 @@ describe('player controller', () => {
 			controller = new PlayerController(dao);
 			controller.forum = {
 				Chat: {
-					create: sinon.stub().resolves(chatroom)
+					create: sinon.stub().resolves(chatroom),
+					get: sinon.stub().resolves(chatroom)
+				},
+				User: {
+					getByName: (name) => {
+						return Promise.resolve(makeUserObject(name));
+					}
 				}
 			};
 		});
@@ -2459,8 +2471,8 @@ describe('player controller', () => {
 			}];
 			return controller.createChatHandler(command).then(() => {
 				const args = controller.forum.Chat.create.firstCall.args;
-				args[0].should.include(mod1);
-				args[0].should.include(mod2);
+				args[0].should.include(makeUserObject(mod1));
+				args[0].should.include(makeUserObject(mod2));
 			});
 		});
 		it('should include sender in user list', () => {
@@ -2470,7 +2482,7 @@ describe('player controller', () => {
 			});
 			return controller.createChatHandler(command).then(() => {
 				const args = controller.forum.Chat.create.firstCall.args;
-				args[0].should.include(target);
+				args[0].should.include(makeUserObject(target));
 			});
 		});
 		it('should include target in user list', () => {
@@ -2480,7 +2492,7 @@ describe('player controller', () => {
 			});
 			return controller.createChatHandler(command).then(() => {
 				const args = controller.forum.Chat.create.firstCall.args;
-				args[0].should.include(target);
+				args[0].should.include(makeUserObject(target));
 			});
 		});
 		it('should send expected message', () => {
