@@ -2730,7 +2730,7 @@ describe('player controller', () => {
 				game.getValue.withArgs('postman-cc').returns(undefined);
 				game.getValue.withArgs('postman-public').returns('on');
 				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
-				const expected = `Message sent to ${target}: \nSomeone said: hi how are you`;
+				const expected = `Delivered mail from accalia to ${target}`;
 				
 				sandbox.stub(view, 'respondInThread').resolves();
 				return controller.createChatHandler(command).then(() => {
@@ -2753,7 +2753,7 @@ describe('player controller', () => {
 				game.getValue.withArgs('postman-cc').returns(undefined);
 				game.getValue.withArgs('postman-public').returns('day');
 				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
-				const expected = `Message sent to ${target}: \nSomeone said: hi how are you`;
+				const expected = `Delivered mail from accalia to ${target}`;
 				
 				sandbox.stub(view, 'respondInThread').resolves();
 				return controller.createChatHandler(command).then(() => {
@@ -2776,7 +2776,6 @@ describe('player controller', () => {
 				game.getValue.withArgs('postman-cc').returns(undefined);
 				game.getValue.withArgs('postman-public').returns('day');
 				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
-				const expected = `Message sent to ${target}: \nSomeone said: hi how are you`;
 				
 				sandbox.stub(view, 'respondInThread').resolves();
 				return controller.createChatHandler(command).then(() => {
@@ -2965,7 +2964,7 @@ describe('player controller', () => {
 				game.getValue.withArgs('postman-cc').returns(undefined);
 				game.getValue.withArgs('postman-public').returns('on');
 				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
-				const expected = `Message sent to ${target}: \naccalia said: hi how are you`;
+				const expected = `Delivered mail from accalia to ${target}`;
 				
 				sandbox.stub(view, 'respondInThread').resolves();
 				return controller.createChatHandler(command).then(() => {
@@ -2988,7 +2987,7 @@ describe('player controller', () => {
 				game.getValue.withArgs('postman-cc').returns(undefined);
 				game.getValue.withArgs('postman-public').returns('day');
 				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
-				const expected = `Message sent to ${target}: \naccalia said: hi how are you`;
+				const expected = `Delivered mail from accalia to ${target}`;
 				
 				sandbox.stub(view, 'respondInThread').resolves();
 				return controller.createChatHandler(command).then(() => {
@@ -3011,7 +3010,6 @@ describe('player controller', () => {
 				game.getValue.withArgs('postman-cc').returns(undefined);
 				game.getValue.withArgs('postman-public').returns('day');
 				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
-				const expected = `Message sent to ${target}: \nSomeone said: hi how are you`;
 				
 				sandbox.stub(view, 'respondInThread').resolves();
 				return controller.createChatHandler(command).then(() => {

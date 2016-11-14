@@ -1064,7 +1064,7 @@ class MafiaPlayerController {
 					}).then(() => {
 						const publicValue = game.getValue('postman-public');
 						if (publicValue.toLowerCase() === 'on' || publicValue.toLowerCase() === game.phase.toLowerCase()) {
-							return view.respondInThread(game.topicId, `Message sent to ${target}: \n${message}`);
+							return view.respondInThread(game.topicId, `Delivered mail from ${user.username} to ${target}`);
 						} else {
 							return Promise.resolve();
 						}

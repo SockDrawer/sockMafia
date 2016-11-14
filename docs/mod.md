@@ -242,13 +242,13 @@ If Postman mode is enabled, this allows a thread to be CC'd on all postman messa
 
 #### Postman-public
 
-If Postman mode is enabled, this copies all postman messages to the main thread. The context will respect the Postman mode (either anonymous or with player names).
+If Postman mode is enabled, this will alert the main thread whenever a postman letter is sent. This will include both the sender and recipiant's names, but not the contents of the letter.
 
 Possible values are:
 
-- `none`: **default** No messages will be copied to the game thread.
-- A phase name such as `day`: messages will be copied to the main thread during that phase
-- `all`: Messages will always be copied to the main thread
+- `none`: **default** No alerts will be sent to the game thread.
+- A phase name such as `day`: alerts will be sent to the main thread during that phase
+- `all`: Alerts will always be sent to the main thread
 
 #### StripCommands
 
