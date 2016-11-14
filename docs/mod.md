@@ -169,7 +169,7 @@ Usage:
 
 ## Send-rolecard
 
-Sends the contents of the post or chat containing the command to the target users as their role card. 
+Sends the contents of the post or chat containing the command to the target users as their role card. The rolecard will then become a game thread that they can use to do things like send chats to other players (if enabled), though voting in private is always disabled.
 
 Note that it does not prevent the bot from trying to interpret any other commands in the post, so be careful how you word the role card to avoid putting the command on a line by itself.
 
