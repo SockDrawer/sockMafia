@@ -2339,6 +2339,12 @@ describe('player controller', () => {
 
 	describe('createChatHandler()', () => {
 
+		function makeUserObject (name) {
+			return {
+				username: name
+			};
+		}
+		
 		let controller = null,
 			dao = null,
 			game = null,
@@ -2386,7 +2392,13 @@ describe('player controller', () => {
 			controller = new PlayerController(dao);
 			controller.forum = {
 				Chat: {
-					create: sinon.stub().resolves(chatroom)
+					create: sinon.stub().resolves(chatroom),
+					get: sinon.stub().resolves(chatroom)
+				},
+				User: {
+					getByName: (name) => {
+						return Promise.resolve(makeUserObject(name));
+					}
 				}
 			};
 		});
@@ -2459,8 +2471,8 @@ describe('player controller', () => {
 			}];
 			return controller.createChatHandler(command).then(() => {
 				const args = controller.forum.Chat.create.firstCall.args;
-				args[0].should.include(mod1);
-				args[0].should.include(mod2);
+				args[0].should.include(makeUserObject(mod1));
+				args[0].should.include(makeUserObject(mod2));
 			});
 		});
 		it('should include sender in user list', () => {
@@ -2470,7 +2482,7 @@ describe('player controller', () => {
 			});
 			return controller.createChatHandler(command).then(() => {
 				const args = controller.forum.Chat.create.firstCall.args;
-				args[0].should.include(target);
+				args[0].should.include(makeUserObject(target));
 			});
 		});
 		it('should include target in user list', () => {
@@ -2480,7 +2492,7 @@ describe('player controller', () => {
 			});
 			return controller.createChatHandler(command).then(() => {
 				const args = controller.forum.Chat.create.firstCall.args;
-				args[0].should.include(target);
+				args[0].should.include(makeUserObject(target));
 			});
 		});
 		it('should send expected message', () => {
@@ -2602,6 +2614,29 @@ describe('player controller', () => {
 				
 				return controller.createChatHandler(command)
 				.then(() => command.args = ['with', target, 'hi', 'how', 'are', 'you'])
+				.then(() => controller.createChatHandler(command))
+				.then(() => {
+					controller.forum.Chat.create.should.be.calledOnce;
+				});
+			});
+			
+			it('should re-use chats when the target has an @', () => {
+				game.getPlayer.onFirstCall().returns({
+					username: 'accalia'
+				});
+				game.getValue.withArgs('postman').returns('on');
+				command.args = ['with', 'error', 'hi', 'how', 'are', 'you'];
+				
+				game.getValue = (key) => {
+					if (key === 'postman_chats') {
+						return game.chatRecord;
+					} else {
+						return 'on';
+					}
+				};
+				
+				return controller.createChatHandler(command)
+				.then(() => command.args = ['with', '@error', 'hi', 'how', 'are', 'you'])
 				.then(() => controller.createChatHandler(command))
 				.then(() => {
 					controller.forum.Chat.create.should.be.calledOnce;
@@ -2730,7 +2765,7 @@ describe('player controller', () => {
 				game.getValue.withArgs('postman-cc').returns(undefined);
 				game.getValue.withArgs('postman-public').returns('on');
 				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
-				const expected = `Message sent to ${target}: \nSomeone said: hi how are you`;
+				const expected = `Delivered mail from accalia to ${target}`;
 				
 				sandbox.stub(view, 'respondInThread').resolves();
 				return controller.createChatHandler(command).then(() => {
@@ -2753,7 +2788,7 @@ describe('player controller', () => {
 				game.getValue.withArgs('postman-cc').returns(undefined);
 				game.getValue.withArgs('postman-public').returns('day');
 				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
-				const expected = `Message sent to ${target}: \nSomeone said: hi how are you`;
+				const expected = `Delivered mail from accalia to ${target}`;
 				
 				sandbox.stub(view, 'respondInThread').resolves();
 				return controller.createChatHandler(command).then(() => {
@@ -2776,7 +2811,6 @@ describe('player controller', () => {
 				game.getValue.withArgs('postman-cc').returns(undefined);
 				game.getValue.withArgs('postman-public').returns('day');
 				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
-				const expected = `Message sent to ${target}: \nSomeone said: hi how are you`;
 				
 				sandbox.stub(view, 'respondInThread').resolves();
 				return controller.createChatHandler(command).then(() => {
@@ -2965,7 +2999,7 @@ describe('player controller', () => {
 				game.getValue.withArgs('postman-cc').returns(undefined);
 				game.getValue.withArgs('postman-public').returns('on');
 				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
-				const expected = `Message sent to ${target}: \naccalia said: hi how are you`;
+				const expected = `Delivered mail from accalia to ${target}`;
 				
 				sandbox.stub(view, 'respondInThread').resolves();
 				return controller.createChatHandler(command).then(() => {
@@ -2988,7 +3022,7 @@ describe('player controller', () => {
 				game.getValue.withArgs('postman-cc').returns(undefined);
 				game.getValue.withArgs('postman-public').returns('day');
 				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
-				const expected = `Message sent to ${target}: \naccalia said: hi how are you`;
+				const expected = `Delivered mail from accalia to ${target}`;
 				
 				sandbox.stub(view, 'respondInThread').resolves();
 				return controller.createChatHandler(command).then(() => {
@@ -3011,7 +3045,6 @@ describe('player controller', () => {
 				game.getValue.withArgs('postman-cc').returns(undefined);
 				game.getValue.withArgs('postman-public').returns('day');
 				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
-				const expected = `Message sent to ${target}: \nSomeone said: hi how are you`;
 				
 				sandbox.stub(view, 'respondInThread').resolves();
 				return controller.createChatHandler(command).then(() => {

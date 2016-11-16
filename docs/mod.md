@@ -169,7 +169,7 @@ Usage:
 
 ## Send-rolecard
 
-Sends the contents of the post or chat containing the command to the target users as their role card. 
+Sends the contents of the post or chat containing the command to the target users as their role card. The rolecard will then become a game thread that they can use to do things like send chats to other players (if enabled), though voting in private is always disabled.
 
 Note that it does not prevent the bot from trying to interpret any other commands in the post, so be careful how you word the role card to avoid putting the command on a line by itself.
 
@@ -242,13 +242,13 @@ If Postman mode is enabled, this allows a thread to be CC'd on all postman messa
 
 #### Postman-public
 
-If Postman mode is enabled, this copies all postman messages to the main thread. The context will respect the Postman mode (either anonymous or with player names).
+If Postman mode is enabled, this will alert the main thread whenever a postman letter is sent. This will include both the sender and recipiant's names, but not the contents of the letter.
 
 Possible values are:
 
-- `none`: **default** No messages will be copied to the game thread.
-- A phase name such as `day`: messages will be copied to the main thread during that phase
-- `all`: Messages will always be copied to the main thread
+- `none`: **default** No alerts will be sent to the game thread.
+- A phase name such as `day`: alerts will be sent to the main thread during that phase
+- `all`: Alerts will always be sent to the main thread
 
 #### StripCommands
 

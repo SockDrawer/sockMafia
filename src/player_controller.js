@@ -972,7 +972,7 @@ class MafiaPlayerController {
 			command.args.shift();
 		}
 		
-		const target = command.args.shift();
+		let target = command.args.shift();
 		//const gameName = Utils.argParse(command.args, []) || command.parent.ids.topic;
 		
 		
@@ -981,7 +981,9 @@ class MafiaPlayerController {
 			return Promise.resolve();
 		}
 		
-		
+		if (target.startsWith('@')) {
+			target = target.replace('@', '');
+		}
 		let game = null;
 		let postmanToggle;
 		let user;
@@ -1003,6 +1005,7 @@ class MafiaPlayerController {
 				let originator;
 				try {
 					originator = game.getPlayer(user.username).username;
+					debug('Postman sender: ' + originator);
 				} catch (usererr) {
 					debug('Error determining chat originator', usererr);
 					throw new Error('You are not a living player in this game');
@@ -1014,10 +1017,14 @@ class MafiaPlayerController {
 				
 				try {
 					targets.unshift(game.getPlayer(target).username);
+					debug('Chat target: ' + game.getPlayer(target).username);
 				} catch (targeterr) {
 					debug('Error determining chat target', targeterr);
 					throw new Error(`'${target}' is not a living player in this game`);
 				}
+				
+				return Promise.all(targets.map((t) => this.forum.User.getByName(t)));
+			}).then((targets) => {
 				const title = `Sanctioned chat for ${game.name}`,
 					message = `This is an officially sanctioned chat for ${game.name}`;
 	
@@ -1030,10 +1037,16 @@ class MafiaPlayerController {
 					}
 					
 					if (existingChats[target]) {
-						return Promise.resolve(existingChats[target]);
+						debug('Reusing existing chat: ' + existingChats[target]);
+						
+						return this.forum.Chat.get(existingChats[target]);
 					} else {
+						debug('creating chat');
+						debug('targets: ' + targets);
+						debug('message: ' + message);
+						debug('title: ' + title);
 						return this.forum.Chat.create(targets, message, title).then((chatroom) => {
-							existingChats[target] = chatroom;
+							existingChats[target] = chatroom.id;
 							game.setValue('postman_chats', existingChats);
 							return Promise.resolve(chatroom);
 						});
@@ -1043,6 +1056,7 @@ class MafiaPlayerController {
 				return this.forum.Chat.create(targets, message, title);
 			})
 			.then((chatroom) => {
+				debug(chatroom);
 				game.addChat(chatroom.id);
 				if (postmanToggle && postmanToggle.toLowerCase() !== 'off') {
 					let message = command.args.join(' ');
@@ -1051,7 +1065,7 @@ class MafiaPlayerController {
 					
 					return chatroom.send(message).then(() => {
 						//Split on commas, but filter out any empty strings (falsey values)
-						const ccValue = (game.getValue('postman-cc') || '').split(',').filter((cc)=>cc);
+						const ccValue = (game.getValue('postman-cc') ? game.getValue('postman-cc').toString() : '').split(',').filter((cc)=>cc);
 						
 						if (ccValue.length > 0) {
 							const promises = ccValue.map((val) => {
@@ -1064,7 +1078,7 @@ class MafiaPlayerController {
 					}).then(() => {
 						const publicValue = game.getValue('postman-public');
 						if (publicValue.toLowerCase() === 'on' || publicValue.toLowerCase() === game.phase.toLowerCase()) {
-							return view.respondInThread(game.topicId, `Message sent to ${target}: \n${message}`);
+							return view.respondInThread(game.topicId, `Delivered mail from ${user.username} to ${target}`);
 						} else {
 							return Promise.resolve();
 						}
