@@ -2115,6 +2115,9 @@ describe('mod controller', () => {
 			controller.forum = {
 				Chat: {
 					create: sinon.stub().resolves(chatroom)
+				},
+				User: {
+					getByName: sinon.stub().resolves({})
 				}
 			};
 		});
@@ -2173,7 +2176,7 @@ describe('mod controller', () => {
 				controller.forum.Chat.create.should.be.called.once;
 			});
 		});
-		it('should include mods in user list', () => {
+		it('should retrieve mods for user list', () => {
 			const mod1 = `mod${Math.random()}`,
 				mod2 = `mod${Math.random()}`;
 			game.moderators = [{
@@ -2182,21 +2185,45 @@ describe('mod controller', () => {
 				username: mod2
 			}];
 			return controller.sendRoleCard(command).then(() => {
-				const args = controller.forum.Chat.create.firstCall.args;
-				args[0].should.include(mod1);
-				args[0].should.include(mod2);
+				controller.forum.User.getByName.calledWith(mod1).should.equal(true);
+				controller.forum.User.getByName.calledWith(mod2).should.equal(true);
 			});
 		});
-		it('should include target in user list', () => {
+		it('should retrieve target for user list', () => {
 			const target = `user${Math.random()}`;
 			game.getPlayer.returns({
 				username: target
 			});
 			return controller.sendRoleCard(command).then(() => {
+				controller.forum.User.getByName.calledWith(target).should.equal(true);
+			});
+		});
+		it('should pass user objects to create', () => {
+			const mod1 = {
+					id: Math.random()
+				},
+				mod2 = {
+					id: Math.random()
+				},
+				target = {
+					id: Math.random()
+				};
+			game.moderators = [{
+				username: `mod${Math.random()}`
+			}, {
+				username: `mod${Math.random()}`
+			}];
+			controller.forum.User.getByName.onFirstCall().resolves(mod1);
+			controller.forum.User.getByName.onSecondCall().resolves(mod2);
+			controller.forum.User.getByName.onThirdCall().resolves(target);
+			return controller.sendRoleCard(command).then(() => {
 				const args = controller.forum.Chat.create.firstCall.args;
+				args[0].should.include(mod1);
+				args[0].should.include(mod2);
 				args[0].should.include(target);
 			});
 		});
+
 		it('should set chat name as expected', () => {
 			const name = `mafia game ${Math.random()}`;
 			game.name = name;
