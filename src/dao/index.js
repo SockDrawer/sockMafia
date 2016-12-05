@@ -8,6 +8,7 @@
 const fs = require('fs');
 
 const MafiaGame = require('./mafiaGame');
+const debug = require('debug')('sockbot:mafia:dao');
 
 /**
  * Read a serialized mafia configuration from disk and resolve to deserialized contents
@@ -83,10 +84,12 @@ class MafiaDao {
         //Force number coercsion
         topicId = parseInt(topicId, 10);
         return this.load().then((data) => {
+            debug('Creating game');
             const conflicts = data.filter((candidate) => {
                 return candidate.topicId === topicId || candidate.name === name;
             });
             if (conflicts.length !== 0) {
+                debug('Game already exists!');
                 return Promise.reject('E_GAME_EXISTS');
             }
             const game = new MafiaGame({
@@ -95,6 +98,7 @@ class MafiaDao {
                 isActive: active
             }, this);
             this._data.push(game._data);
+            debug(`Created game with topic ID ${topicId} and name ${name}`);
             return this.save().then(() => game);
         });
     }
@@ -153,8 +157,10 @@ class MafiaDao {
     getGameByAlias(alias) {
         alias = alias.toLowerCase();
         return this.load().then((data) => {
+            debug(`Searching for game by alias ${alias}`);
             const game = data.filter((candidate) => candidate.aliases.some((gamealias) => gamealias === alias))[0];
             if (!game) {
+                debug('No game found!');
                 return Promise.reject('E_NO_GAME');
             }
             return new MafiaGame(game, this);
