@@ -84,7 +84,7 @@ function advance(game, type, endTime, command) {
 				});
 
 				logDebug('Moved to new day in  ' + game.name);
-				return view.respondWithTemplateInThread('/templates/newDayTemplate.handlebars', data, command);
+				return view.respondWithTemplateInThread('/templates/newDayTemplate.handlebars', data, game.topicId);
 			} else {
 				let text = 'It is now ' + game.phase;
 				if (data.showPhaseEnd) {
@@ -185,19 +185,20 @@ class MafiaModController {
 	/**
 	 * Sends the contents of the post or chat containing the command to the target users as their role card.
 	 *
-	 * If you, as a bastard mod, wish to omit information from the rolecard set the game option `stripCommands` to `enabled` 
+	 * If you, as a bastard mod, wish to omit information from the rolecard set the game option `stripCommands` to `enabled`
 	 * to remove all commands from the role card when sending it to the player
-	 * 
+	 *
 	 * Usage:
 	 *
 	 * `!send-rolecard TargetUsername in TargetGame`
-	 * 
+	 *
 	 * @param  {Command} command The command being executed
 	 * @returns {Promise}        A promise that will resolve when the command is complete
 	 */
 	sendRoleCard(command) {
 		const target = Utils.argParse(command.args, ['in']),
 			gameName = command.args.join(' ');
+		let game = null;
 		if (!target || !gameName) {
 			command.reply('Invalid command: Usage `!send-rolecard TargetUsername in TargetGame`');
 			return Promise.resolve();
@@ -207,22 +208,28 @@ class MafiaModController {
 				command.getUser()
 			])
 			.then((data) => {
-				const game = data[0],
-					user = data[1],
-					stripCommands = Utils.isEnabled(game.getValue('stripCommands')),
-					title = `Rolecard for ${game.name}`,
-					targets = game.moderators.map((mod) => mod.username);
-				let rolecard = command.parent.text;
+				game = data[0];
+				const user = data[1];
 				try {
 					game.getModerator(user.username);
 				} catch (moderr) {
 					throw new Error(`You are not a moderator for ${game.name}`);
 				}
+			})
+			.then(() => {
+				const targets = game.moderators.map((mod) => mod.username);
 				try {
 					targets.push(game.getPlayer(target).username);
 				} catch (moderr) {
 					throw new Error(`${target} is not a living player in ${game.name}`);
 				}
+				return Promise.all(targets.map((t) => this.forum.User.getByName(t)));
+			})
+			.then((targets) => {
+				const stripCommands = Utils.isEnabled(game.getValue('stripCommands')),
+					title = `Rolecard for ${game.name}`;
+				let rolecard = command.parent.text;
+
 				if (stripCommands) {
 					rolecard = rolecard.split('\n').filter((line) => !/^!\w/.test(line)).join('\n');
 				}
@@ -237,15 +244,15 @@ class MafiaModController {
 
 	/**
 	 * Sets various game level configuration options.
-	 * 
+	 *
 	 * Aliases:
-	 * 
+	 *
 	 * - set-value
 	 * - setvalue
 	 * - option
-	 * 
+	 *
 	 * Usage:
-	 * 
+	 *
 	 * `!set-option chats equal enabled in testMafia`
 	 *
 	 * @param  {Command} command The command being executed
@@ -306,15 +313,15 @@ class MafiaModController {
 	}
 
 	/**
-	 * Add a thread or chat to the game so that commands can be executed in it. 
+	 * Add a thread or chat to the game so that commands can be executed in it.
 	 * Examples:
-	 *  - !add thread 123 testmafia 
+	 *  - !add thread 123 testmafia
 	 *  - !add thread 123 to testMafia
 	 *  - !add chat 123 testMafia
 	 *  - !add chat 123 to testMafia
 	 *  - !add this testMafia
 	 *  - !add this to testMafia
-	 * 
+	 *
 	 * @param  {Command} command The command being executed
 	 * @returns {Promise}        A promise that will resolve when the command is complete
 	 */
