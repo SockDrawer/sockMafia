@@ -11,6 +11,8 @@ const string = require('string');
 const MafiaUser = require('./mafiaUser'),
     MafiaAction = require('./mafiaAction');
 
+
+const debug = require('debug')('sockbot:mafia:dao:game');
 /**
  * Turn a string or a MafiaUser into a userslug.
  *
@@ -282,6 +284,7 @@ class MafiaGame {
             return Promise.reject('E_USER_EXIST');
         }
         this._data.livePlayers[user.userslug] = user.toJSON();
+        debug(`Added player ${username}`);
         return this.save().then(() => user);
     }
 
@@ -303,6 +306,7 @@ class MafiaGame {
             return Promise.reject('E_USER_EXIST');
         }
         this._data.moderators[moderator.userslug] = moderator.toJSON();
+        debug(`Added moderator ${username}`);
         return this.save().then(() => moderator);
     }
 
@@ -364,6 +368,7 @@ class MafiaGame {
             player.isAlive = false;
             delete this._data.livePlayers[player.userslug];
             this._data.deadPlayers[player.userslug] = player.toJSON();
+            debug(`Killed player ${user}`);
             return this.save().then(() => player);
         }
         return Promise.reject('E_USER_NOT_LIVE');
@@ -381,6 +386,7 @@ class MafiaGame {
             player.isAlive = true;
             delete this._data.deadPlayers[player.userslug];
             this._data.livePlayers[player.userslug] = player.toJSON();
+            debug(`Resurrected ${user}`);
             return this.save().then(() => player);
         }
         return Promise.reject('E_USER_NOT_DEAD');
