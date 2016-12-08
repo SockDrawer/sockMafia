@@ -110,26 +110,76 @@ class MafiaModController {
 	}
 
 	/**
-	 * Activate the controller
-	 * @param  {Forum} forum The forum to activate for
-	 */
+	* Activate the controller
+	* @param  {Forum} forum The forum to activate for
+	*/
 	activate(forum) {
 		this.forum = forum;
 		//Register commandss
 		forum.Commands.add('set', 'Assign a player a role (mod only)', this.setHandler.bind(this));
+		forum.Commands.addExtendedHelp('set', 'Assign a property to a player.\n' +
+			'The following properties have special meaning to the bot: ' +
+			'loved, hated, doublevoted, lynchproof, scum, scum2\n\n' +
+			'Usage: `!set playerName property [in gameName]`');
+		
+		
 		forum.Commands.add('kill', 'kill a player (mod only)', this.killHandler.bind(this));
+		forum.Commands.addExtendedHelp('kill', 'Kill a player. ' +
+			'Currently the only way to act on the faction kill at night, ' +
+			'to allow you to vet their choice and resolve any complicated situations. ' +
+			'Also useful for modkills. \n\n' +
+			'Usage: `!kill playerName [in gameName]`');
+		
 		forum.Commands.add('new-day', 'move on to a new day (mod only)', this.dayHandler.bind(this));
+		forum.Commands.addExtendedHelp('new-day', 'Move to the beginning of the next day.\n\n' +
+		'Usage: `!new-day`');
+		
 		forum.Commands.add('next-phase', 'move on to the next phase (mod only)', this.phaseHandler.bind(this));
+		forum.Commands.addExtendedHelp('next-phase', 'Move to the next phase. Transitions night to day across day boundaries, and day to night.\n\n' +
+		'Usage: `!next-phase`');
+		
 		forum.Commands.add('list-night-actions', 'List night actions submitted (mod only)', this.listNAHandler.bind(this));
+		forum.Commands.addExtendedHelp('list-night-actions', 'List the night actions that have been registered so far. ' +
+		'Will list scum separate from individual actions.\n\n' +
+		'Usage: `!list-night-actions [in gameName]`');
+		
 		forum.Commands.add('add', 'Add a thread or chat to the game (mod only)', this.addHandler.bind(this));
+		forum.Commands.addExtendedHelp('add', 'Adds a thread or chat to the game.' +
+		'Once a thread has been registered as part of a game, it will behave the same as the main thread, ' +
+		'allowing player commands. A chat mostly works the same, except that you cannot vote within chats. \n\n' +
+		'Usage: \n' +
+		'`!add thread 123 to gameName`\n' +
+		'`!add chat 123 to gameName`' +
+		'`!add this to gameName` (adds the current thread or chat to the game)');
+		
 		forum.Commands.add('set-option', 'Set a Game Option (mod only)', (command) => this.setOption(command));
-		forum.Commands.addAlias('set-value', (command) => this.setOption(command));
-		forum.Commands.addAlias('option', (command) => this.setOption(command));
-		forum.Commands.addAlias('setvalue', (command) => this.setOption(command));
+			forum.Commands.addAlias('set-value', (command) => this.setOption(command));
+			forum.Commands.addAlias('option', (command) => this.setOption(command));
+			forum.Commands.addAlias('setvalue', (command) => this.setOption(command));
+		forum.Commands.addExtendedHelp('set-option', 'Sets various game level configuration options.\n\n' +
+		'Aliases: \n' +
+		' - set-value\n' +
+		' - setvalue\n' +
+		' - option\n' +
+		'\n\n' +
+		'Usage: \n' +
+		'`!set-option chats equal enabled in testMafia`\n');
+		
+
 		forum.Commands.add('send-rolecard', 'Send a rolecard to a user (mod only)', (command) => this.sendRoleCard(command));
+		forum.Commands.addExtendedHelp('send-rolecard', 'Sends the contents of the post or chat containing the command to the target users as their role card.' +
+		'Note that it does not prevent the bot from trying to interpret any other commands in the post, ' +
+		'so be careful how you word the role card to avoid putting the command on a line by itself. \n' +
+		'If you wish to omit information from the rolecard set the game option `stripCommands` to `enabled` ' +
+		'to remove all commands from the role card when sending it to the player. \n' +
+		'If you wish to send the same role card to multiple people, ' +
+		'stripping commands is **highly** recommended, as it will prevent them from seeing the commands.\n\n' +
+		'Usage: \n' +
+		'```\n' +
+		'You are a **cop**! Each night you can investigate one person using `!target playerName in TargetGame`.\n' +
+		'!send-rolecard TargetUsername in TargetGame\n' +
+		'```\n');
 	}
-
-
 
 
 	/**
