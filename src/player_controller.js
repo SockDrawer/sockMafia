@@ -885,7 +885,7 @@ class MafiaPlayerController {
 				if (err === E_NOGAME) {
 					return Promise.resolve();
 				}
-				debug(err)
+				debug(err);
 				view.reportError(command, 'Error resolving list: ', err);
 				logRecoveredError('List failed ' + err);
 			});
