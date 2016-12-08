@@ -84,7 +84,7 @@ function advance(game, type, endTime, command) {
 				});
 
 				logDebug('Moved to new day in  ' + game.name);
-				return view.respondWithTemplateInThread('/templates/newDayTemplate.handlebars', data, command);
+				return view.respondWithTemplateInThread('/templates/newDayTemplate.handlebars', data, game.topicId);
 			} else {
 				let text = 'It is now ' + game.phase;
 				if (data.showPhaseEnd) {
