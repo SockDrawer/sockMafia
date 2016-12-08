@@ -1,6 +1,6 @@
 {
   "name": "sockmafia",
-  "version": "3.4.0",
+  "version": "4.0.0",
   "description": "Mafia plugin for sockbot",
   "main": "src/mafiabot.js",
   "scripts": {
