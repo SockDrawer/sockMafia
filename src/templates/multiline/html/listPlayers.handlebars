@@ -2,9 +2,11 @@
 
 {{#subheader}}Living:{{/subheader}}
 {{#if alive.length}}
+<ul>
 {{#each alive}}
- - {{username}}
+<li>{{username}}</li>
 {{/each}}
+</ul>
 {{else}}
 Nobody! Aren't you special?
 {{/if}}
@@ -12,9 +14,11 @@ Nobody! Aren't you special?
 {{#if showdead}}
 {{#subheader}}Dead:{{/subheader}}
 {{#if dead.length}}
+<ul>
 {{#each dead}}
- - {{username}}
+<li>{{username}}</li>
 {{/each}}
+</ul>
 {{else}}
 Nobody! Aren't you special?
 {{/if}}
@@ -23,9 +27,11 @@ Nobody! Aren't you special?
 
 {{#subheader}}Mods:{{/subheader}}
 {{#if mods.length}}
+<ul>
 {{#each mods}}
- - {{username}}
+<li>{{username}}</li>
 {{/each}}
+</ul>
 {{else}}
 None. Weird.
 {{/if}}
