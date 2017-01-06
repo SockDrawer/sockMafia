@@ -44,7 +44,7 @@ module.exports = function() {
 		xml += `<rect width="100%" height="100%" fill="${bgColor}"/>`;
 		xml += `<rect x="${(100.0 - percent)}%" width="${percent}" height="100%" fill="${fillColor}"/>`;
 		if (barStyle === 'open') {
-			xml += `<text x="${(100.0 - percent)}%" font-size="10" fill="${bgColor}">${votes}/${toExecute + modifier}</text>`;
+			xml += `<text x="${(100.0 - percent)}%" font-size="0" fill="${bgColor}">${votes}/${toExecute + modifier}</text>`;
 		}
 		xml += '</svg>';
 		
