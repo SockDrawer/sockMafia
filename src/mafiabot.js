@@ -171,57 +171,62 @@ function registerPlayers(game, players) {
 exports.createFromFile = function (plugConfig) {
 	let game;
 
-	return dao.createGame(plugConfig.thread, plugConfig.name)
-		.catch((err) => {
-			/*eslint-disable no-console*/
-			if (err === 'E_GAME_EXISTS') {
-				console.log('Existing game found, augmenting');
-				return dao.getGameByTopicId(plugConfig.thread);
-			} else {
+	if (plugConfig.thread) {
+		return dao.createGame(plugConfig.thread, plugConfig.name)
+			.catch((err) => {
+				/*eslint-disable no-console*/
+				if (err === 'E_GAME_EXISTS') {
+					console.log('Existing game found, augmenting');
+					return dao.getGameByTopicId(plugConfig.thread);
+				} else {
+					console.log('ERROR! ' + err, err.stack);
+					/*eslint-enable no-console*/
+					throw err; // rethrow error to fail bot startup
+				}
+	
+			})
+			.then((g) => {
+				game = g;
+				if (plugConfig.players) {
+					return registerPlayers(game, plugConfig.players);
+				} else {
+					return Promise.resolve();
+				}
+			})
+			.then(() => {
+				if (plugConfig.mods) {
+					return registerMods(game, plugConfig.mods);
+				} else {
+					return Promise.resolve();
+				}
+			})
+			.then(() => {
+				const prom = Object.keys(plugConfig.options).map((key) => {
+					if (game.getValue(key) === undefined) {
+						return game.setValue(key, plugConfig.options[key]);
+					}
+					return Promise.resolve();
+				});
+				return Promise.all(prom);
+			})
+			.then(() => {
+				if (plugConfig.voteBars) {
+					console.log('WARNING: Setting voteBars via old style config detected!'); //eslint-disable-line no-console
+					if (game.getValue('voteBars') === undefined) {
+						return game.setValue('voteBars', plugConfig.voteBars);
+					}
+					return Promise.resolve();
+				}
+				return Promise.resolve();
+			})
+			.catch((err) => {
+				/*eslint-disable no-console*/
 				console.log('ERROR! ' + err, err.stack);
 				/*eslint-enable no-console*/
 				throw err; // rethrow error to fail bot startup
-			}
-
-		})
-		.then((g) => {
-			game = g;
-			if (plugConfig.players) {
-				return registerPlayers(game, plugConfig.players);
-			} else {
-				return Promise.resolve();
-			}
-		})
-		.then(() => {
-			if (plugConfig.mods) {
-				return registerMods(game, plugConfig.mods);
-			} else {
-				return Promise.resolve();
-			}
-		})
-		.then(() => {
-			const prom = Object.keys(plugConfig.options).map((key) => {
-				if (game.getValue(key) === undefined) {
-					return game.setValue(key, plugConfig.options[key]);
-				}
-				return Promise.resolve();
 			});
-			return Promise.all(prom);
-		})
-		.then(() => {
-			if (plugConfig.voteBars) {
-				console.log('WARNING: Setting voteBars via old style config detected!'); //eslint-disable-line no-console
-				if (game.getValue('voteBars') === undefined) {
-					return game.setValue('voteBars', plugConfig.voteBars);
-				}
-				return Promise.resolve();
-			}
-			return Promise.resolve();
-		})
-		.catch((err) => {
-			/*eslint-disable no-console*/
-			console.log('ERROR! ' + err, err.stack);
-			/*eslint-enable no-console*/
-			throw err; // rethrow error to fail bot startup
-		});
+	} else {
+		debug('No game specified, skipping creation');
+		return Promise.resolve();
+	}
 };
