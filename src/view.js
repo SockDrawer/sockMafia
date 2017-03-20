@@ -18,10 +18,17 @@ let formatter = {
 	},
 	quotePost: (text) => {
 		return text;
-	}
+	},
+	bold: (text) => text,
+	header: (text) => text,
+	subheader: (text) => text,
+	link: (url, text) => `${text} (${url})`
+	
 };
 
 let chat;
+let templateDir = '/templates/multiline/markdown/'; //Sensible default
+let splitLines = false;
 
 let readFile = require('fs-readfile-promise');
 
@@ -35,12 +42,31 @@ exports.activate = function(forum, rf) {
 	}
 	formatter = forum ? forum.Format : formatter;
 	readFile = rf || require('fs-readfile-promise');
+	
+	//Which templates to use
+	if (forum.supports) {
+		if (forum.supports('Formatting.Multiline')) {
+			splitLines = false;
+			//Until we have lists in formatter, use separate templates
+			if (forum.supports('Formatting.Markup.HTML')) {
+				templateDir = '/templates/multiline/html/';
+			} else {
+				templateDir = '/templates/multiline/markdown/';
+			}
+		} else {
+			templateDir = '/templates/singleline/';
+			splitLines = true;
+		}
+	}
 
 	//Template helpers
 	Handlebars.unregisterHelper('voteChart');
 	Handlebars.unregisterHelper('listNames');
 	Handlebars.registerHelper('voteChart', require('./templates/helpers/voteChart')(formatter));
 	Handlebars.registerHelper('listNames', require('./templates/helpers/listNames')(formatter));
+	Handlebars.registerHelper('header', require('./templates/helpers/header')(formatter));
+	Handlebars.registerHelper('subheader', require('./templates/helpers/subheader')(formatter));
+	Handlebars.registerHelper('bold', require('./templates/helpers/bold')(formatter));
 };
 
 exports.respond = function(command, output) {
@@ -61,24 +87,39 @@ exports.respondInThread = function(thread, output) {
 };
 
 exports.respondWithTemplate  = function(templateFile, data, command) {
-	return readFile(__dirname + '/' + templateFile)
+	return readFile(__dirname + templateDir + templateFile)
 	.then((buffer) => {
 		const source = buffer.toString();
 		const template = Handlebars.compile(source);
 
 		const output = template(data);
-		return command.reply(output);
+		if (splitLines) {
+			return command.getPost().then((p) => Promise.all(
+				output.split('\n').map((line) => p.reply(line))
+			));
+		} else {
+			return command.reply(output);
+		}
 	});
 };
 
 exports.respondWithTemplateInThread  = function(templateFile, data, thread) {
-	return readFile(__dirname + '/' + templateFile)
+	return readFile(__dirname + templateDir + templateFile)
 	.then((buffer) => {
 		const source = buffer.toString();
 		const template = Handlebars.compile(source);
 
 		const output = template(data);
-		return post.reply(thread, undefined, output);
+		if (splitLines) {
+			return Promise.all(
+				output.trim().split('\n').map((line) => {
+					if (line.trim()) {
+						post.reply(line);
+					}
+				}));
+		} else {
+			return post.reply(output);
+		}
 	});
 };
 

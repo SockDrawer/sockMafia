@@ -1,0 +1,18 @@
+{{#header}}Votecount for Day {{day}}:{{/header}}
+
+  <table>
+  {{#each votes}}
+  <tr>
+  <td>{{voteChart num mod ../toExecute ../barStyle}}</td>
+  <td><b>{{target}} ({{num}})</b>:</td>
+  <td>{{listNames votes}}</td>
+  </tr>
+  {{/each}}
+  <tr>
+  <td></td>
+  <td>Not Voting ({{numNotVoting}}):</td>
+  <td>{{listNames notVoting}}</td>
+  </tr>
+  </table>
+  
+  With {{numPlayers}} playing, it's {{#bold}}{{toExecute}} to lynch!{{/bold}} {{#if showEndTime}}The phase will end {{endTime}}. {{/if}}

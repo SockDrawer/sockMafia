@@ -1,0 +1,4 @@
+Votecount for Day {{day}}:
+{{#each votes}}{{target}} ({{num}}): {{listNames votes}}{{/each}}
+Not Voting ({{numNotVoting}}):{{listNames notVoting}}
+With {{numPlayers}} playing, it's {{#bold}}{{toExecute}} to lynch!{{/bold}} {{#if showEndTime}}The phase will end {{endTime}}. {{/if}}

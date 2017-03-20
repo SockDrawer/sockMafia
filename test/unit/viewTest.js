@@ -8,6 +8,7 @@ const chai = require('chai'),
 require('sinon-as-promised');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
+chai.use(require('sinon-chai'));
 
 chai.should();
 
@@ -33,7 +34,11 @@ describe('View helpers', () => {
 			},
 			urlForPost: (postId) => {
 				return '/p/' + postId;
-			}
+			},
+			bold: (text) => `<b>${text}</b>`,
+			header: (text) => text,
+			subheader: (text) => text,
+			link: (url, text) => `<a href="${url}">${text}</a>`
 		};
 		
 	});
@@ -88,8 +93,9 @@ describe('View helpers', () => {
 				},
 				isCurrent: true
 			}];
-			listNamesHelper(input).toString().should.contain('<b>');
-			listNamesHelper(input).toString().should.contain('</b>');
+			sandbox.spy(fakeFormatter, 'bold');
+			listNamesHelper(input);
+			fakeFormatter.bold.should.have.been.called;
 		});
 		
 		it('Should strikeout retracted posts', () => {
@@ -199,7 +205,7 @@ describe('View helpers', () => {
 			}, fakeGame);
 			
 			const output = listNamesHelper([voteOne, voteTwo]).toString();
-			output.should.contain('<a href="/p/1"><b>yamikuronue</b></a> ');
+			output.should.contain('<a href="/p/1"><b>yamikuronue</b></a>');
 			output.should.contain('<a href="/p/2"><s>dreikin</s></a> <a href="/p/3">[X]</a>');
 		});
 	});
@@ -362,12 +368,13 @@ describe('View', () => {
 		};
 		
 		fakeCommand = {
-			reply: sandbox.stub().resolves()
+			reply: sandbox.stub().resolves(),
+			getPost: () => Promise.resolve(postShim)
 		};
 		
 		readFileShim = sandbox.stub().resolves(new Buffer('read file'));
 
-		view.activate({Post: postShim, Format: undefined}, readFileShim);
+		view.activate({Post: postShim, Format: undefined, supports: () => false}, readFileShim);
 	});
 	
 	afterEach(() => {
@@ -395,12 +402,32 @@ describe('View', () => {
 	it('should reply with Handlebars', () => {
 		const data = {123: 435};
 		const fakeTemplate = sandbox.stub().returns('a compiled string');
-
+		view.activate({
+			supports: () => true
+		}, readFileShim);
+		
 		sandbox.stub(Handlebars, 'compile').returns(fakeTemplate);
 		return view.respondWithTemplate('foo.hbrs', data, fakeCommand).then(() => {
 			Handlebars.compile.calledWith('read file').should.equal(true);
 			fakeTemplate.calledWith(data).should.equal(true);
 			fakeCommand.reply.calledWith('a compiled string').should.equal(true);
+		});
+	});
+	
+	it('should reply with Handlebars in split-lines mode', () => {
+		const data = {123: 435};
+		const fakeTemplate = sandbox.stub().returns('a compiled string\nwith two lines');
+		view.activate({
+			supports: () => false
+		}, readFileShim);
+
+		sandbox.stub(Handlebars, 'compile').returns(fakeTemplate);
+		return view.respondWithTemplate('foo.hbrs', data, fakeCommand).then(() => {
+			Handlebars.compile.calledWith('read file').should.equal(true);
+			fakeTemplate.calledWith(data).should.equal(true);
+			postShim.reply.should.be.calledTwice;
+			postShim.reply.should.be.calledWith('a compiled string');
+			postShim.reply.should.be.calledWith('with two lines');
 		});
 	});
 });

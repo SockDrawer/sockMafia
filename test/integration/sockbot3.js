@@ -48,6 +48,9 @@ describe('SockMafia', function() {
 			Commands: Commands,
 			Post: {
 				reply: sinon.stub().resolves()
+			},
+			supports: (input) => {
+				return input === 'Chats' || input === 'Formatting.Markup.HTML' || input === 'Formatting.Multiline';
 			}
 		};
 
