@@ -60,7 +60,7 @@ describe('player controller', () => {
 				parent: {
 					ids: {
 						topic: -1,
-						room: 12
+						pm: 12
 					}
 				},
 				args: []

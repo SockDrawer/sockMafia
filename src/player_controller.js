@@ -264,7 +264,7 @@ class MafiaPlayerController {
 		
 		if (command.parent.ids.topic === -1) {
 			//Command came from a chat
-			return this.dao.getGameByChatId(command.parent.ids.room);
+			return this.dao.getGameByChatId(command.parent.ids.pm);
 		} else {
 			return this.dao.getGameByTopicId(command.parent.ids.topic);
 		}
