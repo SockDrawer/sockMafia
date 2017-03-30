@@ -5,7 +5,6 @@ const chai = require('chai'),
     sinon = require('sinon');
 
 //promise library plugins
-require('sinon-as-promised');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 
@@ -29,7 +28,7 @@ describe('Utils helpers', () => {
             input.should.eql(expected);
         });
     });
-    
+
     describe('isNumeric()', () => {
         it('Should return true for 123', () => {
             Utils.isNumeric(123).should.be.true;

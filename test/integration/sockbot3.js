@@ -7,7 +7,6 @@ chai.use(chaiAsPromised);
 chai.should();
 
 const sinon = require('sinon');
-require('sinon-as-promised');
 
 const sockMafia = require('../../src/mafiabot');
 const PlayerController = require('../../src/player_controller');
@@ -28,11 +27,11 @@ describe('SockMafia', function() {
 			Commands.commandList[name] = handler;
 			return Promise.resolve();
 		},
-		
+
 		addExtendedHelp: (name, help) => {
 			return Promise.resolve();
 		},
-		
+
 		addAlias: (name, help, handler) => {
 			Commands.commandList[name] = handler;
 			return Promise.resolve();
@@ -80,7 +79,7 @@ describe('SockMafia', function() {
 		before(() => {
 			playerController = new PlayerController(require('../../src/dao'), null);
 			modController = new ModController(require('../../src/dao'), null);
-			
+
 			knownCommands = {
 				'for': playerController.forHandler,
 				'join': playerController.joinHandler,

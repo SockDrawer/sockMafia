@@ -5,7 +5,6 @@ const chai = require('chai'),
 	sinon = require('sinon');
 
 //promise library plugins
-require('sinon-as-promised');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 

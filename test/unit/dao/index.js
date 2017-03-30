@@ -4,7 +4,6 @@ const chai = require('chai'),
     sinon = require('sinon');
 
 //promise library plugins
-require('sinon-as-promised');
 chai.use(require('chai-as-promised'));
 chai.use(require('sinon-chai'));
 
@@ -264,7 +263,7 @@ describe('nouveau dao', () => {
         });
         it('should resolve to game by name when ID does not match', () => {
             const expected = Math.random();
-            dao.getGameByTopicId.rejects('E_NO_GAME');
+            dao.getGameByTopicId.rejects(new Error('E_NO_GAME'));
             dao.getGameByName.resolves(expected);
             return dao.getGame('name').then((value) => {
                 dao.getGameByName.called.should.be.true;
@@ -273,13 +272,13 @@ describe('nouveau dao', () => {
             });
         });
         it('should reject wehn neither id nor name match', () => {
-            dao.getGameByTopicId.rejects('E_NO_GAME');
-            dao.getGameByName.rejects('E_NO_GAME');
+            dao.getGameByTopicId.rejects(new Error('E_NO_GAME'));
+            dao.getGameByName.rejects(new Error('E_NO_GAME'));
             return dao.getGame('name').should.be.rejectedWith('E_NO_GAME');
         });
         it('should reject wehn error occurs', () => {
-            dao.getGameByTopicId.rejects('E_OOGY_BOOY_BOO');
-            dao.getGameByName.rejects('E_NO_GAME');
+            dao.getGameByTopicId.rejects(new Error('E_OOGY_BOOY_BOO'));
+            dao.getGameByName.rejects(new Error('E_NO_GAME'));
             return dao.getGame('name').should.be.rejectedWith('E_OOGY_BOOY_BOO');
         });
     });

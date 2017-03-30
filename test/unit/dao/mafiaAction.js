@@ -4,7 +4,6 @@ const chai = require('chai'),
     sinon = require('sinon');
 
 //promise library plugins
-require('sinon-as-promised');
 chai.use(require('chai-as-promised'));
 
 chai.should();

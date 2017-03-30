@@ -5,7 +5,6 @@ const chai = require('chai'),
 	sinon = require('sinon');
 
 //promise library plugins
-require('sinon-as-promised');
 require('chai-as-promised');
 chai.use(require('sinon-chai'));
 chai.use(require('chai-string'));
@@ -437,7 +436,7 @@ describe('mod controller', () => {
 				},
 			};
 
-			sandbox.stub(mockdao, 'getGameByTopicId').rejects('No such game');
+			sandbox.stub(mockdao, 'getGameByTopicId').rejects(new Error('No such game'));
 			sandbox.spy(mockGame, 'nextPhase');
 
 			return modController.phaseHandler(command).then(() => {
@@ -720,7 +719,7 @@ describe('mod controller', () => {
 				},
 			};
 
-			sandbox.stub(mockdao, 'getGameByTopicId').rejects('No such game');
+			sandbox.stub(mockdao, 'getGameByTopicId').rejects(new Error('No such game'));
 			sandbox.spy(mockGame, 'nextPhase');
 
 			return modController.dayHandler(command).then(() => {

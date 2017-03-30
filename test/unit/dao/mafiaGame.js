@@ -4,7 +4,6 @@ const chai = require('chai'),
     sinon = require('sinon');
 
 //promise library plugins
-require('sinon-as-promised');
 chai.use(require('chai-as-promised'));
 
 chai.should();
@@ -414,7 +413,7 @@ describe('nouveau dao/MafiaGame', () => {
             });
         });
         it('should reject when dao save rejects', () => {
-            dao.save.rejects('E_BAD_THINGS');
+            dao.save.rejects(new Error('E_BAD_THINGS'));
             return game.save().should.be.rejectedWith('E_BAD_THINGS');
         });
     });
@@ -1579,11 +1578,11 @@ describe('nouveau dao/MafiaGame', () => {
             game.addAlias(`cthulu4prez${Math.random()}`).should.be.rejectedWith('E_ALIAS_EXISTS');
         });
         it('should reject when getGameByAlias rejects with non E_NO_GAME reason', () => {
-            getGameByAlias.rejects('E_DIRTY_DIRTY_GIRL');
+            getGameByAlias.rejects(new Error('E_DIRTY_DIRTY_GIRL'));
             return game.addAlias('foobar').should.be.rejected;
         });
         it('should add alias to aliases list when aliase is available', () => {
-            getGameByAlias.rejects('E_NO_GAME');
+            getGameByAlias.rejects(new Error('E_NO_GAME'));
             const alias = `sekret name ${Math.random()}`;
             game._data.aliases.should.not.contain(alias);
             return game.addAlias(alias).then(() => {
@@ -1592,7 +1591,7 @@ describe('nouveau dao/MafiaGame', () => {
             });
         });
         it('should add case safe alias to aliases list when aliase is available', () => {
-            getGameByAlias.rejects('E_NO_GAME');
+            getGameByAlias.rejects(new Error('E_NO_GAME'));
             const alias = `sekret name ${Math.random()}`;
             game._data.aliases.should.not.contain(alias);
             return game.addAlias(alias.toUpperCase()).then(() => {

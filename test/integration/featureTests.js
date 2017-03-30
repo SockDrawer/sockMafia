@@ -5,7 +5,6 @@ const chai = require('chai'),
 	sinon = require('sinon');
 
 //promise library plugins
-require('sinon-as-promised');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 
@@ -80,7 +79,7 @@ describe('MafiaBot', function () {
 				urlForPost: () => '',
 				quoteText: (input) => input
 			};
-			
+
 			view.activate(mockForum);
 
 			return dao.createGame(1, 'Game 1')
@@ -234,7 +233,7 @@ describe('MafiaBot', function () {
 						topic: 1
 					}
 				}
-				
+
 			};
 
 			//Spies
@@ -1212,7 +1211,7 @@ describe('MafiaBot', function () {
 
 	describe('Special voting', () => {
 		let dao, playerController, game;
-		
+
 		describe('Doublevoting', () => {
 			before(() => {
 				//Set up the database
@@ -1222,8 +1221,8 @@ describe('MafiaBot', function () {
 					urlForPost: () => '',
 					quoteText: (input) => input
 				};
-				
-	
+
+
 				return dao.createGame(2, 'Game 2')
 					.then((g) => {
 						game = g;
@@ -1237,11 +1236,11 @@ describe('MafiaBot', function () {
 					.then((ninja) => ninja.addProperty('doublevoter'))
 					.then(() => game.newDay());
 			});
-	
+
 			after(() => {
 				dao.getGameByTopicId.restore();
 			});
-			
+
 			it('Should allow two votes', () => {
 				let command = {
 					args: ['@accalia'],
@@ -1256,15 +1255,15 @@ describe('MafiaBot', function () {
 						}
 					}
 				};
-				
+
 				sandbox.spy(game, 'registerAction');
-			
+
 				return playerController.forHandler(command).then(() => {
 					game.registerAction.called.should.equal(true);
-	
+
 					command.reply.called.should.equal(true);
 					command.reply.firstCall.args[0].should.include('@tehNinja voted for @accalia');
-					
+
 					command = {
 						args: ['@dreikin'],
 						input: '!vote @dreikin',
@@ -1278,17 +1277,17 @@ describe('MafiaBot', function () {
 							}
 						}
 					};
-		
+
 					view.respond.reset();
 					view.reportError.reset();
 					game.registerAction.reset();
 					return playerController.voteHandler(command);
 				}).then(() => {
 					game.registerAction.called.should.equal(true);
-	
+
 					command.reply.called.should.equal(true);
 					command.reply.firstCall.args[0].should.include('@tehNinja voted for @dreikin');
-					
+
 					command = {
 						args: [''],
 						input: '!list-votes',
@@ -1302,7 +1301,7 @@ describe('MafiaBot', function () {
 							}
 						}
 					};
-					
+
 					view.respond.reset();
 					view.reportError.reset();
 					game.registerAction.reset();
@@ -1310,7 +1309,7 @@ describe('MafiaBot', function () {
 				}).then(() => {
 					view.reportError.called.should.be.false;
 					command.reply.called.should.be.true;
-					
+
 					//List both votes
 					const output = command.reply.firstCall.args[0];
 					output.should.include('<td><b>accalia');
@@ -1318,7 +1317,7 @@ describe('MafiaBot', function () {
 					output.should.include('<a href="/p/2"><b>tehNinja</b></a>');
 				});
 			});
-			
+
 			it('Should retract one of the votes', () => {
 				let command = {
 					args: ['@dreikin'],
@@ -1333,12 +1332,12 @@ describe('MafiaBot', function () {
 							}
 						}
 				};
-				
+
 				sandbox.spy(game, 'registerAction');
-			
+
 				return playerController.forHandler(command).then(() => {
 					game.registerAction.called.should.equal(true);
-	
+
 					command.reply.called.should.equal(true);
 					command.reply.firstCall.args[0].should.include('@tehNinja voted for @dreikin');
 					command = {
@@ -1354,7 +1353,7 @@ describe('MafiaBot', function () {
 							}
 						}
 					};
-					
+
 					view.respond.reset();
 					view.reportError.reset();
 					game.registerAction.reset();
@@ -1362,7 +1361,7 @@ describe('MafiaBot', function () {
 				}).then(() => {
 					view.reportError.called.should.be.false;
 					command.reply.called.should.be.true;
-					
+
 					//List both votes
 					const output = command.reply.firstCall.args[0];
 					output.should.include('<td><b>accalia');
@@ -1370,7 +1369,7 @@ describe('MafiaBot', function () {
 					output.should.include('<a href="/p/1"><s>tehNinja</s></a> <a href="/p/5">[X]</a>'); //retracted vote
 				});
 			});
-			
+
 			it('Should allow two votes for the same person', () => {
 				let command = {
 					args: ['@yamikuronue'],
@@ -1385,15 +1384,15 @@ describe('MafiaBot', function () {
 						}
 					}
 				};
-				
+
 				sandbox.spy(game, 'registerAction');
-			
+
 				return playerController.forHandler(command).then(() => {
 					game.registerAction.called.should.equal(true);
-	
+
 					command.reply.called.should.equal(true);
 					command.reply.firstCall.args[0].should.include('@tehNinja voted for @yamikuronue');
-					
+
 					command = {
 						args: ['@yamikuronue'],
 						input: '!vote @yamikuronue',
@@ -1407,17 +1406,17 @@ describe('MafiaBot', function () {
 							}
 						}
 					};
-		
+
 					view.respond.reset();
 					view.reportError.reset();
 					game.registerAction.reset();
 					return playerController.voteHandler(command);
 				}).then(() => {
 					game.registerAction.called.should.equal(true);
-	
+
 					command.reply.called.should.equal(true);
 					command.reply.firstCall.args[0].should.include('@tehNinja voted for @yamikuronue');
-					
+
 					command = {
 						args: [''],
 						input: '!list-votes',
@@ -1431,7 +1430,7 @@ describe('MafiaBot', function () {
 							}
 						}
 					};
-					
+
 					view.respond.reset();
 					view.reportError.reset();
 					game.registerAction.reset();
@@ -1439,7 +1438,7 @@ describe('MafiaBot', function () {
 				}).then(() => {
 					view.reportError.called.should.be.false;
 					command.reply.called.should.be.true;
-					
+
 					//List all votes
 					const output = command.reply.firstCall.args[0];
 					output.should.include('<td><b>yamikuronue');
@@ -1450,7 +1449,7 @@ describe('MafiaBot', function () {
 					output.should.include('<a href="/p/8"><b>tehNinja</b></a>');
 				});
 			});
-			
+
 			it('Should unvote everything', () => {
 				let command = {
 					args: [''],
@@ -1465,15 +1464,15 @@ describe('MafiaBot', function () {
 							}
 						}
 				};
-				
+
 				sandbox.spy(game, 'registerAction');
 				sandbox.spy(game, 'revokeAction');
-			
+
 				return playerController.unvoteHandler(command).then(() => {
 					game.revokeAction.called.should.equal(true);
-	
+
 					command.reply.called.should.equal(true);
-					
+
 					command = {
 						args: [''],
 						input: '!list-votes',
@@ -1487,7 +1486,7 @@ describe('MafiaBot', function () {
 							}
 						}
 					};
-		
+
 					view.respond.reset();
 					view.reportError.reset();
 					game.registerAction.reset();
@@ -1495,7 +1494,7 @@ describe('MafiaBot', function () {
 				}).then(() => {
 					view.reportError.called.should.be.false;
 					command.reply.called.should.be.true;
-					
+
 					//List all votes
 					const output = command.reply.firstCall.args[0];
 					output.should.include('<td><b>yamikuronue');
@@ -1508,10 +1507,10 @@ describe('MafiaBot', function () {
 			});
 		});
 	});
-	
+
 	describe('Night Actions', () => {
 		let dao, playerController, modController, game;
-		
+
 		before(() => {
 			//Set up the database
 			dao = new DAO(':memory:');
@@ -1520,9 +1519,9 @@ describe('MafiaBot', function () {
 				urlForPost: () => '',
 				quoteText: (input) => input
 			};
-			
+
 			modController = new ModController(dao, testConfig);
-		
+
 			view.activate(mockForum);
 
 			return dao.createGame(3, 'Game 3')
@@ -1539,7 +1538,7 @@ describe('MafiaBot', function () {
 				.then(() => game.newDay())
 				.then(() => game.nextPhase()); //Make it night
 		});
-		
+
 		it('Should allow setting of properties', () => {
 			let command = {
 				args: ['accalia', 'scum', 'in', '3'],
@@ -1554,10 +1553,10 @@ describe('MafiaBot', function () {
 					}
 				}
 			};
-		
+
 			return modController.setHandler(command).then(() => {
 				game.getPlayer('accalia').hasProperty('scum').should.be.true;
-				
+
 				command = {
 					args: ['@yamikuronue', 'scum2', 'in', '3'],
 					line: '!set @yamikuronue scum2 in 3',
@@ -1571,14 +1570,14 @@ describe('MafiaBot', function () {
 						}
 					}
 				};
-		
+
 				view.respond.reset();
 				view.reportError.reset();
 				return modController.setHandler(command);
 			}).then(() => {
 				game.getPlayer('yamikuronue').hasProperty('scum2').should.be.true;
 				game.getPlayer('yamikuronue').hasProperty('scum').should.be.false;
-				
+
 				command = {
 					args: ['@tehninja', 'scum2', 'in', '3'],
 					line: '!set @tehninja scum2 in 3',
@@ -1592,7 +1591,7 @@ describe('MafiaBot', function () {
 						}
 					}
 				};
-				
+
 				view.respond.reset();
 				view.reportError.reset();
 				return modController.setHandler(command);
@@ -1601,10 +1600,10 @@ describe('MafiaBot', function () {
 				game.getPlayer('tehninja').hasProperty('scum').should.be.false;
 			});
 		});
-		
+
 		it('Should allow night actions by factions', () => {
-			
-			/* 
+
+			/*
 				----------------------------------
 				Move 1: Scum targets Dreikin
 			 	----------------------------------
@@ -1623,11 +1622,11 @@ describe('MafiaBot', function () {
 					}
 				}
 			};
-			
+
 			sandbox.spy(game, 'registerAction');
 			return playerController.targetHandler(command).then(() => {
 
-			/* 
+			/*
 				----------------------------------
 				Move 2: Scum2 targets Dreikin
 			 	----------------------------------
@@ -1645,11 +1644,11 @@ describe('MafiaBot', function () {
 						}
 					}
 				};
-				
+
 				return playerController.targetHandler(command);
 			}).then(() => {
 
-			/* 
+			/*
 				----------------------------------
 				Move 3: God lists actions
 			 	----------------------------------
@@ -1667,14 +1666,14 @@ describe('MafiaBot', function () {
 						}
 					}
 				};
-				
+
 				return modController.listNAHandler(command);
 			}).then(() => {
 				const output = command.reply.firstCall.args[0];
 				output.should.include('<b>Scum</b>: Target dreikin');
 				output.should.include('<b>Scum 2</b>: Target dreikin');
-				
-			/* 
+
+			/*
 				----------------------------------
 				Move 4: TehNinja targets Accalia
 			 	----------------------------------
@@ -1692,11 +1691,11 @@ describe('MafiaBot', function () {
 						}
 					}
 				};
-				
+
 				return playerController.targetHandler(command);
 			}).then(() => {
-				
-			/* 
+
+			/*
 				----------------------------------
 				Move 5: God lists actions
 			 	----------------------------------
@@ -1714,7 +1713,7 @@ describe('MafiaBot', function () {
 						}
 					}
 				};
-				
+
 				return modController.listNAHandler(command);
 			}).then(() => {
 				const output = command.reply.firstCall.args[0];
@@ -1738,10 +1737,10 @@ describe('MafiaBot', function () {
 						}
 					}
 				};
-			
+
 				return playerController.targetHandler(command);
 			}).then(() => {
-					
+
 			/*
 				----------------------------------
 				Move 7: God lists actions
@@ -1760,7 +1759,7 @@ describe('MafiaBot', function () {
 						}
 					}
 				};
-				
+
 				return modController.listNAHandler(command);
 			}).then(() => {
 				const output = command.reply.firstCall.args[0];

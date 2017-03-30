@@ -5,7 +5,6 @@ const chai = require('chai'),
 	sinon = require('sinon');
 
 //promise library plugins
-require('sinon-as-promised');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 chai.use(require('sinon-chai'));
@@ -45,7 +44,7 @@ const mockForum = {
 
 
 describe('Postman Scenarios', function () {
-	
+
 	this.timeout(50000);
 	let sandbox;
 
@@ -74,9 +73,9 @@ describe('Postman Scenarios', function () {
 				urlForPost: () => '',
 				quoteText: (input) => input
 			};
-			
+
 			view.activate(mockForum);
-			
+
 			playerController.forum = mockForum;
 
 			return dao.createGame(1, 'Game 1')
@@ -94,11 +93,11 @@ describe('Postman Scenarios', function () {
 				.then(() => game.setValue('postman-public', 'day'))
 				.then(() => game.newDay());
 		});
-		
+
 		after(() => {
 			dao.getGameByTopicId.restore();
 		});
-		
+
 		it('Should add postman chats to the game', () => {
 			let command = {
 				args: 'to Accalia hi this is a test'.split(' '),
@@ -113,7 +112,7 @@ describe('Postman Scenarios', function () {
 					}
 				}
 			};
-			
+
 			sandbox.spy(game, 'addAlias');
 			sandbox.spy(game, 'addChat');
 			sandbox.stub(mockForum.Chat, 'create').resolves({
@@ -138,8 +137,8 @@ describe('Postman Scenarios', function () {
 						}
 					}
 				};
-				
-				
+
+
 				return playerController.listVotesHandler(command);
 			}).then(() => {
 				const output = command.reply.firstCall.args[0];
