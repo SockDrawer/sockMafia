@@ -1,8 +1,7 @@
 'use strict';
 /*globals describe, it*/
 
-const chai = require('chai'),
-    sinon = require('sinon');
+const chai = require('chai');
 
 //promise library plugins
 const chaiAsPromised = require('chai-as-promised');

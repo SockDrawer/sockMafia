@@ -28,7 +28,7 @@ describe('SockMafia', function() {
 			return Promise.resolve();
 		},
 
-		addExtendedHelp: (name, help) => {
+		addExtendedHelp: () => {
 			return Promise.resolve();
 		},
 

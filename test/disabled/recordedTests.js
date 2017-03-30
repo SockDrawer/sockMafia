@@ -12,9 +12,7 @@ chai.use(chaiAsPromised);
 chai.should();
 
 const PlayerController = require('../../src/player_controller');
-const modController = require('../../src/mod_controller');
 const DAO = require('../../src/dao');
-const Handlebars = require('handlebars');
 const view = require('../../src/view.js');
 
 const testConfig = {
@@ -72,7 +70,7 @@ describe('Recorded test cases', function () {
 		after(() => {
 			dao.getGameByTopicId.restore();
 		});
-		
+
 		it('Onyx revote bug', () => {
 			let command = {
 				args: ['@fbmac'],
@@ -86,7 +84,7 @@ describe('Recorded test cases', function () {
 			//Spies
 			sandbox.spy(game, 'registerAction');
 			sandbox.spy(game, 'revokeAction');
-			
+
 			return playerController.voteHandler(command).then(() => {
 				command = {
 					args: [''],
@@ -96,10 +94,10 @@ describe('Recorded test cases', function () {
 					getPost: () => Promise.resolve({id: 912533}),
 					getUser: () => Promise.resolve({username: 'Vault_Dweller'}),
 				};
-	
+
 				return playerController.nolynchHandler(command);
 			}).then(() => {
-				
+
 				command = {
 					args: [''],
 					input: '!nolynch',
@@ -108,14 +106,14 @@ describe('Recorded test cases', function () {
 					getPost: () => Promise.resolve({id: 912543}),
 					getUser: () => Promise.resolve({username: 'asdf'}),
 				};
-	
+
 				return playerController.nolynchHandler(command);
 			}).then(() => {
-				
+
 				view.respond.reset();
 				view.reportError.reset();
 				game.registerAction.reset();
-				
+
 				command = {
 					args: ['@fbmac'],
 					input: '!vote @fbmac',
@@ -132,7 +130,7 @@ describe('Recorded test cases', function () {
 				command.reply.called.should.equal(true);
 				command.reply.firstCall.args[0].should.include('@asdf voted for @fbmac');
 				// During live play, he received "TypeError: Cannot read property 'userslug' of null"
-				
+
 				command = {
 					args: [],
 					input: '!unvote',
@@ -141,7 +139,7 @@ describe('Recorded test cases', function () {
 					getPost: () => Promise.resolve({id: 4}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
 				};
-				
+
 				command = {
 					args: [],
 					input: '!list-votes',
@@ -150,12 +148,12 @@ describe('Recorded test cases', function () {
 					getPost: () => Promise.resolve({id: 5}),
 					getUser: () => Promise.resolve({username: 'yamikuronue'}),
 				};
-				
+
 				view.respond.reset();
 				view.reportError.reset();
 				return playerController.listVotesHandler(command);
 			});
 		});
-		
+
 	});
 });

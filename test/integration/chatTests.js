@@ -12,7 +12,6 @@ chai.use(require('sinon-chai'));
 chai.should();
 
 const PlayerController = require('../../src/player_controller');
-const ModController = require('../../src/mod_controller');
 const DAO = require('../../src/dao');
 const view = require('../../src/view.js');
 
@@ -89,7 +88,8 @@ describe('Postman Scenarios', function () {
 				.then(() => game.addPlayer('tehninja'))
 				.then(() => game.setValue('chats', 'on'))
 				.then(() => game.setValue('postman', 'on'))
-				.then(() => game.setValue('postman-cc', 2)) //Not sure if this and the next line are necessary, but they were set when we found the bug
+				//Not sure if these two lines are necessary, but they were set when we found the bug
+				.then(() => game.setValue('postman-cc', 2))
 				.then(() => game.setValue('postman-public', 'day'))
 				.then(() => game.newDay());
 		});

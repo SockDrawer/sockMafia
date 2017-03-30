@@ -225,11 +225,11 @@ describe('View helpers', () => {
 			WHITE: '#FFFFFF'
 		};
 
-		function decode(string) {
+		const decode = (string) => {
 			const capture = /<img src="data:image\/svg\+xml;base64,(.+)">/i;
 			const b64 = capture.exec(string)[1];
 			return new Buffer(b64, 'base64').toString('ascii');
-		}
+		};
 
 		it('Should produce a 100x12 image', () => {
 			const output = decode(voteChartHelper(1, 0, 12).toString());

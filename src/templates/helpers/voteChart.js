@@ -1,6 +1,5 @@
 'use strict';
 const Handlebars = require('handlebars');
-const mafia = require('../../mafiabot');
 
 /*colors*/
 const colors = {
@@ -13,7 +12,7 @@ const colors = {
 };
 
 module.exports = function() {
-	return function(votes, modifier, toExecute, barStyle) {
+	return function(votes, modifier, toExecute, barStyle) { // eslint-disable-line max-statements
 		let fillColor, bgColor, percent;
 		barStyle = (barStyle || 'bastard').toLowerCase();
 
@@ -27,8 +26,8 @@ module.exports = function() {
 
 		//Dead when they are dead, full stop
 		const dead = toExecute + modifier - votes  <= 0;
-		
-		
+
+
 		if (dead) {
 			fillColor = colors.DARK_RED;
 			bgColor = colors.RED;
@@ -47,7 +46,7 @@ module.exports = function() {
 			xml += `<text x="${(100.0 - percent)}%" font-size="10" y="60%" fill="${bgColor}">${votes}/${toExecute + modifier}</text>`;
 		}
 		xml += '</svg>';
-		
+
 		const b64 = new Buffer(xml).toString('base64');
 		const html = '<img src="data:image/svg+xml;base64,' + b64 + '">';
 		return new Handlebars.SafeString(html);

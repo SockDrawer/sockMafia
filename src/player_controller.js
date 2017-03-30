@@ -17,20 +17,20 @@ let myName, myOwner, eventLogger;
 
 
 
-function logWarning(error) {
+function logWarning(error) { // eslint-disable-line require-jsdoc
 	if (eventLogger && eventLogger.emit) {
 		eventLogger.emit('logWarning', error);
 	}
 }
 
-function logRecoveredError(error) {
+function logRecoveredError(error) { // eslint-disable-line require-jsdoc
 	if (eventLogger && eventLogger.emit) {
 		eventLogger.emit('logExtended', 3, error);
 	}
 }
 
 
-function logDebug(statement) {
+function logDebug(statement) { // eslint-disable-line require-jsdoc
 	debug(statement);
 
 	if (eventLogger && eventLogger.emit) {
@@ -52,7 +52,7 @@ class MafiaPlayerController {
 	 * Activation function for the plugin
 	 * @param   {Forum} forum The forum object to activate for
 	 */
-	activate(forum) {
+	activate(forum) { // eslint-disable-line max-statements
 		//Set name
 		myName = forum.username;
 		this.formatter = forum.Format;
@@ -197,13 +197,13 @@ class MafiaPlayerController {
 	}
 
 	/**
-	 * Check to see if a lynch should happen. 
+	 * Check to see if a lynch should happen.
 	 * Game rules:
 	 *  - If a simple majority of players vote for a single player:
 	 *    - The game enters the night phase
 	 *    - That player's information is revealed
-	 *    
-	 * @param   {MafiaGame}   game   The game 
+	 *
+	 * @param   {MafiaGame}   game   The game
 	 * @param   {MafiaPlayer} target The person why may be lynched
 	 * @returns {Promise}        A promise that resolves when the lynch is done or not required
 	 */
@@ -261,7 +261,7 @@ class MafiaPlayerController {
 				}
 			}
 		}
-		
+
 		if (command.parent.ids.topic === -1) {
 			//Command came from a chat
 			return this.dao.getGameByChatId(command.parent.ids.pm);
@@ -529,7 +529,7 @@ class MafiaPlayerController {
 	 *
 	 * @example !vote playerName
 	 * @example !for playerName
-	 * 
+	 *
 	 * @param  {commands.command} command The command that was passed in.
 	 * @returns {Promise}        A promise that will resolve when the game is ready
 	 */
@@ -707,15 +707,14 @@ class MafiaPlayerController {
 				const alive = game.livePlayers;
 				const mods = game.moderators;
 
-				
+
 				logDebug('List resolved');
-				return view.respondWithTemplate('listPlayers.handlebars', 
-				{
-					alive: alive,
-					mods: mods,
-					showdead: false
-				},
-				command);
+				return view.respondWithTemplate('listPlayers.handlebars', {
+						alive: alive,
+						mods: mods,
+						showdead: false
+					},
+					command);
 			})
 			.catch((err) => {
 				if (err === E_NOGAME) {
@@ -758,14 +757,13 @@ class MafiaPlayerController {
 				const dead = game.deadPlayers;
 
 				logDebug('List resolved');
-				return view.respondWithTemplate('listPlayers.handlebars', 
-				{
-					alive: alive,
-					mods: mods,
-					dead: dead,
-					showdead: true
-				},
-				command);
+				return view.respondWithTemplate('listPlayers.handlebars', {
+						alive: alive,
+						mods: mods,
+						dead: dead,
+						showdead: true
+					},
+					command);
 			})
 			.catch((err) => {
 				if (err === E_NOGAME) {
@@ -805,13 +803,13 @@ class MafiaPlayerController {
 		};
 
 
-		let game, id;
+		let game;
 		return this.getGame(command)
 			.catch(() => {
 				logWarning('Ignoring message in nonexistant game thread ' + game);
 				throw (E_NOGAME);
 			})
-			.then((g) => {
+			.then((g) => { // eslint-disable-line max-statements
 				game = g;
 
 				logDebug('Received list request in game ' + game.name);
@@ -927,43 +925,43 @@ class MafiaPlayerController {
 	 * @returns {Promise}        A promise that will resolve when the game is ready
 	 */
 	createChatHandler(command) {
-		
+
 		if ('with' === (command.args[0] || '').toLowerCase()) {
 			command.args.shift();
 		}
 		if ('to' === (command.args[0] || '').toLowerCase()) {
 			command.args.shift();
 		}
-		
+
 		let target = command.args.shift();
 		//const gameName = Utils.argParse(command.args, []) || command.parent.ids.topic;
-		
-		
+
+
 		if (!target) {
 			command.reply('Invalid command: Usage `!chat with somePlayer`');
 			return Promise.resolve();
 		}
-		
+
 		if (target.startsWith('@')) {
 			target = target.replace('@', '');
 		}
 		let game = null;
 		let postmanToggle;
 		let user;
-		
-		
+
+
 		return Promise.all([
 				this.getGame(command),
 				command.getUser()
 			])
-			.then((data) => {
+			.then((data) => {  // eslint-disable-line max-statements
 				game = data[0],
-				user = data[1];
+					user = data[1];
 				const targets = game.moderators.map((mod) => mod.username);
 				if (!Utils.isEnabled(game.getValue('chats'))) {
 					throw new Error('Chats are not enabled for this game');
 				}
-				
+
 				postmanToggle = game.getValue('postman');
 				let originator;
 				try {
@@ -973,11 +971,11 @@ class MafiaPlayerController {
 					debug('Error determining chat originator', usererr);
 					throw new Error('You are not a living player in this game');
 				}
-				
+
 				if (!postmanToggle || postmanToggle.toLowerCase() === 'off') {
 					targets.unshift(originator);
 				}
-				
+
 				try {
 					targets.unshift(game.getPlayer(target).username);
 					debug('Chat target: ' + game.getPlayer(target).username);
@@ -985,23 +983,23 @@ class MafiaPlayerController {
 					debug('Error determining chat target', targeterr);
 					throw new Error(`'${target}' is not a living player in this game`);
 				}
-				
+
 				return Promise.all(targets.map((t) => this.forum.User.getByName(t)));
 			}).then((targets) => {
 				const title = `Sanctioned chat for ${game.name}`,
 					message = `This is an officially sanctioned chat for ${game.name}`;
-	
+
 				//Attempt to re-use chats.
-				if (postmanToggle === 'on' 
-				|| postmanToggle === 'open') {
+				if (postmanToggle === 'on' ||
+					postmanToggle === 'open') {
 					let existingChats = game.getValue('postman_chats');
 					if (!existingChats) {
 						existingChats = {};
 					}
-					
+
 					if (existingChats[target]) {
 						debug('Reusing existing chat: ' + existingChats[target]);
-						
+
 						return this.forum.Chat.get(existingChats[target]);
 					} else {
 						debug('creating chat');
@@ -1015,7 +1013,7 @@ class MafiaPlayerController {
 						});
 					}
 				}
-				
+
 				return this.forum.Chat.create(targets, message, title);
 			})
 			.then((chatroom) => {
@@ -1025,11 +1023,11 @@ class MafiaPlayerController {
 					let message = command.args.join(' ');
 					const sender = postmanToggle.toLowerCase() === 'open' ? user.username : 'Someone';
 					message = `${sender} said: ${message}`;
-					
+
 					return chatroom.send(message).then(() => {
 						//Split on commas, but filter out any empty strings (falsey values)
-						const ccValue = (game.getValue('postman-cc') ? game.getValue('postman-cc').toString() : '').split(',').filter((cc)=>cc);
-						
+						const ccValue = (game.getValue('postman-cc') ? game.getValue('postman-cc').toString() : '').split(',').filter((cc) => cc);
+
 						if (ccValue.length > 0) {
 							const promises = ccValue.map((val) => {
 								return view.respondInThread(val, `Message sent from ${user.username} to ${target}: \n${message}`);
@@ -1105,12 +1103,14 @@ class MafiaPlayerController {
 
 				return command.getPost().catch(() => {
 					//So we tried to get a post and failed
-					//The most common reason for that is that 
+					//The most common reason for that is that
 					//there is no post. Which means we're in a chat.
 					//So return a pseudo object with the chat ID.
 					//Why not a real chat? They can't be retrieved by ID
 					//which is also why we can't just call command.getChat()
-					return {id: command.parent.ids.chat};
+					return {
+						id: command.parent.ids.chat
+					};
 				});
 			}).then((post) => {
 				let actionToken = 'target';

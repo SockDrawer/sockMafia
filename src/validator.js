@@ -1,7 +1,8 @@
 const dao = require('./dao/index.js');
 const Promise = require('bluebird');
 
-function mustBeTrue(check, args, error) {
+
+function mustBeTrue(check, args, error) { // eslint-disable-line require-jsdoc
 	return check.apply(null, args).then((result) => {
 		if (result) {
 			return Promise.resolve();
@@ -11,7 +12,7 @@ function mustBeTrue(check, args, error) {
 	});
 }
 
-function mustBeFalse(check, args, error) {
+function mustBeFalse(check, args, error) { // eslint-disable-line require-jsdoc
 	return check.apply(null, args).then((result) => {
 		if (!result) {
 			return Promise.resolve();
@@ -21,7 +22,7 @@ function mustBeFalse(check, args, error) {
 	});
 }
 
-function isDaytime(game) {
+function isDaytime(game) { // eslint-disable-line require-jsdoc
 	return dao.getCurrentTime(game).then((time) => {
 		return time === dao.gameTime.day;
 	});

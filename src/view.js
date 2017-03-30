@@ -23,7 +23,7 @@ let formatter = {
 	header: (text) => text,
 	subheader: (text) => text,
 	link: (url, text) => `${text} (${url})`
-	
+
 };
 
 let chat;
@@ -32,7 +32,7 @@ let splitLines = false;
 
 let readFile = require('fs-readfile-promise');
 
-exports.activate = function(forum, rf) {
+exports.activate = function(forum, rf) { // eslint-disable-line max-statements
 	debug('activating view');
 	post = forum ? forum.Post : post;
 	try {
@@ -42,7 +42,7 @@ exports.activate = function(forum, rf) {
 	}
 	formatter = forum ? forum.Format : formatter;
 	readFile = rf || require('fs-readfile-promise');
-	
+
 	//Which templates to use
 	if (forum.supports) {
 		if (forum.supports('Formatting.Multiline')) {
@@ -78,7 +78,7 @@ exports.respondInChat = function(chatId, output) {
 	if (!chat) {
 		return Promise.reject('Cannot output to chat; provider does not support it.');
 	}
-	
+
 	return chat.get(chatId).then((chatroom) => chatroom.send(output));
 };
 
@@ -103,7 +103,7 @@ exports.respondWithTemplate  = function(templateFile, data, command) {
 	});
 };
 
-exports.respondWithTemplateInThread  = function(templateFile, data, thread) {
+exports.respondWithTemplateInThread  = function(templateFile, data) {
 	return readFile(__dirname + templateDir + templateFile)
 	.then((buffer) => {
 		const source = buffer.toString();

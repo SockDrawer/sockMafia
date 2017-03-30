@@ -340,7 +340,7 @@ describe('player controller', () => {
 					}
 				};
 				sandbox.stub(playerController, 'doVote').resolves();
-				return playerController.forHandler(command).then((value) => {
+				return playerController.forHandler(command).then(() => {
 					playerController.doVote.called.should.be.false;
 					view.reportError.called.should.be.true;
 				});
@@ -367,7 +367,7 @@ describe('player controller', () => {
 				const resolution = 'Some resolution value';
 
 				sandbox.stub(playerController, 'doVote').resolves(resolution);
-				return playerController.forHandler(command).then((value) => {
+				return playerController.forHandler(command).then(() => {
 					playerController.doVote.called.should.be.false;
 					view.reportError.called.should.be.true;
 				});
@@ -482,7 +482,7 @@ describe('player controller', () => {
 					}
 				};
 				sandbox.stub(playerController, 'doVote').resolves();
-				return playerController.voteHandler(command).then((value) => {
+				return playerController.voteHandler(command).then(() => {
 					playerController.doVote.called.should.be.false;
 					view.reportError.called.should.be.true;
 				});
@@ -509,7 +509,7 @@ describe('player controller', () => {
 				const resolution = 'Some resolution value';
 
 				sandbox.stub(playerController, 'doVote').resolves(resolution);
-				return playerController.voteHandler(command).then((value) => {
+				return playerController.voteHandler(command).then(() => {
 					playerController.doVote.called.should.be.false;
 					view.reportError.called.should.be.true;
 				});
@@ -971,7 +971,7 @@ describe('player controller', () => {
 				};
 
 				sandbox.spy(mockGame, 'revokeAction');
-				return playerController.unvoteHandler(command).then((value) => {
+				return playerController.unvoteHandler(command).then(() => {
 					mockGame.revokeAction.called.should.be.false;
 				});
 			});
@@ -1186,7 +1186,7 @@ describe('player controller', () => {
 				};
 
 				sandbox.spy(mockGame, 'registerAction');
-				return playerController.nolynchHandler(command).then((value) => {
+				return playerController.nolynchHandler(command).then(() => {
 					mockGame.registerAction.called.should.be.false;
 				});
 			});
@@ -1985,18 +1985,11 @@ describe('player controller', () => {
 
 	describe('target()', () => {
 
-		let mockGame, mockUser, mockTarget, mockdao, playerController;
+		let mockGame, mockUser, mockdao, playerController;
 		beforeEach(() => {
 
 			mockUser = {
 				username: 'tehNinja',
-				getProperties: () => [],
-				hasProperty: () => false,
-				isAlive: true
-			};
-
-			mockTarget = {
-				username: 'noLunch',
 				getProperties: () => [],
 				hasProperty: () => false,
 				isAlive: true
@@ -2223,11 +2216,11 @@ describe('player controller', () => {
 
 	describe('createChatHandler()', () => {
 
-		function makeUserObject (name) {
+		const makeUserObject = (name) => {
 			return {
 				username: name
 			};
-		}
+		};
 
 		let controller = null,
 			dao = null,
@@ -2450,7 +2443,6 @@ describe('player controller', () => {
 		describe('Postman mode', () => {
 
 			it('should not include sender in user list', () => {
-				const target = `user${Math.random()}`;
 				game.getPlayer.onFirstCall().returns({
 					username: 'accalia'
 				});
@@ -2537,7 +2529,6 @@ describe('player controller', () => {
 				game.getValue.withArgs('postman').returns('on');
 				game.getValue.withArgs('postman-cc').returns(undefined);
 				command.args = ['with', target, 'hi', 'how', 'are', 'you'];
-				const expected = `Message sent from accalia to ${target}: \nSomeone said: hi how are you`;
 
 				sandbox.stub(view, 'respondInThread').resolves();
 				return controller.createChatHandler(command).then(() => {
@@ -2706,7 +2697,6 @@ describe('player controller', () => {
 		describe('Postman mode open', () => {
 
 			it('should not include sender in user list', () => {
-				const target = `user${Math.random()}`;
 				game.getPlayer.onFirstCall().returns({
 					username: 'accalia'
 				});

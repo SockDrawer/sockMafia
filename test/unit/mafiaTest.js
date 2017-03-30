@@ -10,17 +10,6 @@ require('chai-as-promised');
 chai.should();
 
 const mafia = require('../../src/mafiabot');
-const view = require('../../src/view.js');
-
-const fakeConfig = {
-	mergeObjects: sinon.stub().returns({
-		db: './mafiadbTesting'
-	}),
-	core: {
-		owner: 'tehNinja',
-		username: 'votebot'
-	}
-};
 
 const browser = {
 	createPost: sinon.stub().yields()

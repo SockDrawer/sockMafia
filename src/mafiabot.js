@@ -67,7 +67,7 @@ exports.internals = internals;
 exports.activate = function activate() {
 	debug('activating mafiabot');
 	const plugConfig = internals.configuration;
-	
+
 	modController = new MafiaModController(dao, plugConfig);
 	playerController = new MafiaPlayerController(dao, plugConfig);
 
@@ -120,6 +120,7 @@ exports.plugin = function plugin(forum, config) {
  *
  * @param {Number} game Thread number for the game.
  * @param {string[]} mods Array of mod names to add to the game.
+ * @returns {Object} something
  */
 function registerMods(game, mods) {
 	return Promise.mapSeries(
@@ -142,6 +143,7 @@ function registerMods(game, mods) {
  *
  * @param {Number} game Thread number for the game.
  * @param {string[]} players Array of player names to add to the game.
+ * @returns {Object} something
  */
 function registerPlayers(game, players) {
 	return Promise.mapSeries(
@@ -183,7 +185,7 @@ exports.createFromFile = function (plugConfig) {
 					/*eslint-enable no-console*/
 					throw err; // rethrow error to fail bot startup
 				}
-	
+
 			})
 			.then((g) => {
 				game = g;

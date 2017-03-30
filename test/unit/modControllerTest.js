@@ -922,15 +922,9 @@ describe('mod controller', () => {
 	});
 
 	describe('add()', () => {
-		let mockGame, mockUser, mockdao, modController;
+		let mockGame, mockdao, modController;
 
 		beforeEach(() => {
-			mockUser = {
-				username: 'God',
-				getPlayerProperty: () => [],
-				isModerator: true
-			};
-
 			mockGame = {
 				addTopic: () => Promise.resolve(),
 				addChat: () => Promise.resolve(),
