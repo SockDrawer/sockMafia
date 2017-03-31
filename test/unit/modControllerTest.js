@@ -747,7 +747,7 @@ describe('mod controller', () => {
 					}
 				},
 			};
-			sandbox.stub(mockGame, 'newDay', () => {
+			sandbox.stub(mockGame, 'newDay').callsFake(() => {
 				mockGame.day++;
 				return Promise.resolve();
 			});
@@ -782,7 +782,7 @@ describe('mod controller', () => {
 					}
 				},
 			};
-			sandbox.stub(mockGame, 'newDay', () => {
+			sandbox.stub(mockGame, 'newDay').callsFake(() => {
 				mockGame.day++;
 				return Promise.resolve();
 			});

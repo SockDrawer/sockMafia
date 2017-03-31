@@ -420,9 +420,9 @@ class MafiaModController {
 			.then(() => {
 				view.respond(command, 'Sucess! That thread/chat is now part of the game.');
 				if (chat) {
-					view.respondInChat(itemId, 'This chat is now sanctioned as part of ' + game.name);
+					return view.respondInChat(itemId, 'This chat is now sanctioned as part of ' + game.name);
 				} else {
-					view.respondInThread(itemId, 'This thread is now sanctioned as part of ' + game.name);
+					return view.respondInThread(itemId, 'This thread is now sanctioned as part of ' + game.name);
 				}
 			})
 			.catch((err) => {

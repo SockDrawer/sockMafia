@@ -149,13 +149,13 @@ describe('player controller', () => {
 
 			it('should return 4 for 4 players + loved', () => {
 				mockGame.livePlayers = ['Lars', 'Sadie', 'Steven', 'Pearl'];
-				sandbox.stub(mockUser, 'hasProperty', (prop) => prop === 'loved');
+				sandbox.stub(mockUser, 'hasProperty').callsFake((prop) => prop === 'loved');
 				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(4);
 			});
 
 			it('should return 2 for 4 players + hated', () => {
 				mockGame.livePlayers = ['Lars', 'Sadie', 'Steven', 'Pearl'];
-				sandbox.stub(mockUser, 'hasProperty', (prop) => prop === 'hated');
+				sandbox.stub(mockUser, 'hasProperty').callsFake((prop) => prop === 'hated');
 				playerController.getNumVotesRequired(mockGame, mockUser).should.equal(2);
 			});
 		});
@@ -1891,7 +1891,7 @@ describe('player controller', () => {
 					}
 				};
 
-				sandbox.stub(mockUsers.dreikin, 'hasProperty', (prop) => prop === 'loved');
+				sandbox.stub(mockUsers.dreikin, 'hasProperty').callsFake((prop) => prop === 'loved');
 				return playerController.listVotesHandler(command).then(() => {
 					view.respondWithTemplate.called.should.be.true;
 					const dataSent = view.respondWithTemplate.getCall(0).args[1];
@@ -1916,7 +1916,7 @@ describe('player controller', () => {
 					}
 				};
 
-				sandbox.stub(mockUsers.dreikin, 'hasProperty', (prop) => prop === 'hated');
+				sandbox.stub(mockUsers.dreikin, 'hasProperty').callsFake((prop) => prop === 'hated');
 				return playerController.listVotesHandler(command).then(() => {
 					view.respondWithTemplate.called.should.be.true;
 					const dataSent = view.respondWithTemplate.getCall(0).args[1];
