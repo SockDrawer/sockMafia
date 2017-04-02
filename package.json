@@ -31,7 +31,8 @@
     "debug": "^2.2.0",
     "fs-readfile-promise": "^3.0.0",
     "handlebars": "^4.0.5",
-    "string": "^3.3.1"
+    "string": "^3.3.1",
+    "uuid": "^3.0.1"
   },
   "peerDependencies": {
     "sockbot": ">=5.0.0"

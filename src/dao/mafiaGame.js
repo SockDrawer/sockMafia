@@ -7,7 +7,8 @@
  */
 
 
-const string = require('string');
+const string = require('string'),
+    uuid = require('uuid');
 const MafiaUser = require('./mafiaUser'),
     MafiaAction = require('./mafiaAction');
 
@@ -99,6 +100,7 @@ class MafiaGame {
      * @param {MafiaDao} dao MafiaDao this game is a part of
      */
     constructor(data, dao) {
+        data.id = setDefault(data.id, uuid());
         data.name = setDefault(data.name, `mafia_${data.topicId}`);
         data.day = setDefault(data.day, 1);
         data.phases = setDefault(data.phases, ['day', 'night']);
@@ -115,6 +117,15 @@ class MafiaGame {
         data.aliases = setDefault(data.aliases, [data.name.toLowerCase(), `t_${data.topicId}`]);
         this._data = data;
         this._dao = dao;
+    }
+
+    /**
+     * Get the id of this game
+     *
+     * @returns {gameToken} the id of the game
+     */
+    get id() {
+        return this._data.id;
     }
 
     /**

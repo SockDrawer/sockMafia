@@ -31,6 +31,14 @@ describe('nouveau dao/MafiaGame', () => {
             const game = new MafiaGame({}, obj);
             game._dao.should.equal(obj);
         });
+        it('should store provided id', () => {
+            const id = `id${Math.random()}`;
+            const obj = {
+                id: id
+            };
+            const game = new MafiaGame(obj);
+            game._data.id.should.equal(id);
+        });
         it('should store provided name', () => {
             const name = `name${Math.random()}`;
             const obj = {
@@ -103,6 +111,12 @@ describe('nouveau dao/MafiaGame', () => {
             });
             activeGame._data.actions.should.equal(obj);
         });
+        it('should generate id when not provided', () => {
+            const expected = /[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}/;
+            const obj = {};
+            const game = new MafiaGame(obj);
+            game._data.id.should.match(expected);
+        });
         it('should generate name when not provided', () => {
             const topic = Math.random();
             const expected = `mafia_${topic}`;
@@ -164,7 +178,7 @@ describe('nouveau dao/MafiaGame', () => {
     describe('simple getters', () => {
         let game = null;
         beforeEach(() => game = new MafiaGame({}));
-        ['topicId', 'name', 'day', 'phase', 'isActive'].forEach((getter) => {
+        ['topicId', 'name', 'day', 'phase', 'isActive', 'id'].forEach((getter) => {
             it(`should have a simple getter for ${getter}`, () => {
                 const expected = Math.random();
                 game._data[getter] = expected;

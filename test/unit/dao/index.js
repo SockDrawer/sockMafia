@@ -364,14 +364,14 @@ describe('nouveau dao', () => {
             const name = `name name ${Math.random()}`;
             dao._data.push({
                 aliases: [name],
-                id: 0
+                idx: 0
             });
             dao._data.push({
                 aliases: [name],
-                id: 1
+                idx: 1
             });
             return dao.getGameByAlias(name).then((game) => {
-                game._data.id.should.equal(0);
+                game._data.idx.should.equal(0);
             });
         });
         it('should resolve to an instance of MafiaGame', () => {
