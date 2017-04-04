@@ -14,7 +14,8 @@
     "integration_tests": "mocha ./test/integration/*.js",
     "integration_coverage": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/integration/*.js",
     "publish-please": "publish-please",
-    "prepublish": "publish-please guard"
+    "prepublish": "publish-please guard",
+    "build_docs": "python build/build_docs.py"
   },
   "repository": {
     "type": "git",
