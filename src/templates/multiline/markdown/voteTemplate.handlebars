@@ -1,18 +1,9 @@
 {{#header}}Votecount for Day {{day}}:{{/header}}
 
-  <table>
-  {{#each votes}}
-  <tr>
-  <td>{{voteChart num mod ../toExecute ../barStyle}}</td>
-  <td><b>{{target}} ({{num}})</b>:</td>
-  <td>{{listNames votes}}</td>
-  </tr>
+    &nbsp;|Target|Votes
+       ---|---|---
+  {{#each votes}}{{voteChart num mod ../toExecute ../barStyle}}|**{{target}} ({{num}})**:|{{listNames votes}}|
   {{/each}}
-  <tr>
-  <td></td>
-  <td>Not Voting ({{numNotVoting}}):</td>
-  <td>{{listNames notVoting}}</td>
-  </tr>
-  </table>
+  &nbsp;|Not Voting ({{numNotVoting}}):|{{listNames notVoting}}|
   
   With {{numPlayers}} playing, it's {{#bold}}{{toExecute}} to lynch!{{/bold}} {{#if showEndTime}}The phase will end {{endTime}}. {{/if}}
