@@ -75,13 +75,13 @@ class MafiaDao {
     /**
      * @namespace
      * @name addGameData
-     * @property {string}    name
-     * @property {Topic}     topic
-     * @property {User[]}  players
-     * @property {User[]}  moderators
-     * @property {string[]}  phases
-     * @property {string}    startPhase
-     * @property {number}    startDay
+     * @property {string}       name            Name of the Game to add
+     * @property {Topic}        topic           Topic the Game will be played in
+     * @property {User|User[]}  players         Initial players of the Game
+     * @property {User|User[]}  moderators      Initial moderators of the Game
+     * @property {string[]}     [phases]        Phases of day that the Game will proceed through
+     * @property {string}       [startPhase]    Start Phase of Day
+     * @property {number}       [startDay]      Start day of the game
      */
 
     /**
@@ -127,7 +127,12 @@ class MafiaDao {
                         throw new Error(`Cannot add ${player.username} as player: ${e.message || e}`);
                     })));
             })
-            .then(() => game);
+            .then(() => game, (rejection) => {
+                this._data = this._data.filter((e) => e.id !== game.id);
+                return this.save().then(() => {
+                    throw rejection;
+                });
+            });
     }
 
 

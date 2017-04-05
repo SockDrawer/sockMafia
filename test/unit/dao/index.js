@@ -229,6 +229,20 @@ describe('nouveau dao', () => {
             });
             return dao.addGame(gameData).should.be.rejectedWith('E_GAME_EXISTS');
         });
+        it('should remove game from data store when add fails', () => {
+            const expected = Math.floor(1 + Math.random() * 50);
+            for (let i = 0; i < expected; i += 1) {
+                dao._data.push({
+                    name: `testGame${Math.random()}`,
+                    topicId: gameData.topic.id
+                });
+            }
+            return dao.addGame(gameData).then(() => {
+                throw new Error('Expected promise chain to reject');
+            }, () => {
+                dao._data.should.have.length(expected);
+            });
+        });
         it('should add a moderator to the game', () => {
             const name = `username${Math.random()}`;
             const slug = string(name).slugify().s;
