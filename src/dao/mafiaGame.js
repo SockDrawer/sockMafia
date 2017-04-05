@@ -99,7 +99,7 @@ class MafiaGame {
      * @param {object} data.values Key value map of custom values stored as part of the game
      * @param {MafiaDao} dao MafiaDao this game is a part of
      */
-    constructor(data, dao) {
+    constructor(data, dao) { //eslint-disable-line max-statements
         data.id = setDefault(data.id, uuid());
         data.name = setDefault(data.name, `mafia_${data.topicId}`);
         data.day = setDefault(data.day, 1);

@@ -73,6 +73,66 @@ class MafiaDao {
     }
 
     /**
+     * @namespace
+     * @name addGameData
+     * @property {string}    name
+     * @property {Topic}     topic
+     * @property {User[]}  players
+     * @property {User[]}  moderators
+     * @property {string[]}  phases
+     * @property {string}    startPhase
+     * @property {number}    startDay
+     */
+
+    /**
+     * Create a new MafiaGame and store it in this DAO
+     *
+     * @param {addGameData} gameData Data of the game to create
+     * @returns {Promise<MafiaGame>} Resolves to created game, rejects if preconditions or save state fails
+     */
+    addGame(gameData) {
+        let game;
+        return this.load()
+            .then((data) => {
+                debug('Creating game from data object');
+                game = new MafiaGame({
+                    name: gameData.name,
+                    topicId: gameData.topic.id,
+                    phases: gameData.phases,
+                    phase: gameData.startPhase,
+                    day: gameData.startDay
+                }, this);
+                const conflicts = data.filter((candidate) => {
+                    return candidate.topicId === game.topicId || candidate.name === game.name;
+                });
+                if (conflicts.length !== 0) {
+                    debug('Game already exists!');
+                    throw new Error('E_GAME_EXISTS');
+                }
+                this._data.push(game._data);
+                debug(`Created game with ID ${game.id} and name ${game.name}`);
+            })
+            .then(this.save)
+            .then(() => {
+                const mods = Array.isArray(gameData.moderators) ? gameData.moderators : [gameData.moderators];
+                return Promise.all(mods.map((mod) => game.addModerator(mod.username)
+                    .catch((e) => {
+                        throw new Error(`Cannot add ${mod.username} as moderator: ${e.message || e}`);
+                    })));
+            })
+            .then(() => {
+                const players = Array.isArray(gameData.players) ? gameData.players : [gameData.players];
+                return Promise.all(players.map((player) => game.addPlayer(player.username)
+                    .catch((e) => {
+                        throw new Error(`Cannot add ${player.username} as player: ${e.message || e}`);
+                    })));
+            })
+            .then(() => game);
+    }
+
+
+
+    /**
      * Create a new MafiaGame and store it in this DAO
      *
      * @param {number} topicId Game topic. Must be an integer
@@ -81,10 +141,10 @@ class MafiaDao {
      * @returns {Promise<MafiaGame>} Resolves to created game, rejects if preconditions or save state fails
      */
     createGame(topicId, name, active) {
-        //Force number coercsion
-        topicId = parseInt(topicId, 10);
         return this.load().then((data) => {
             debug('Creating game');
+            //Force number coercsion
+            topicId = parseInt(topicId, 10);
             const conflicts = data.filter((candidate) => {
                 return candidate.topicId === topicId || candidate.name === name;
             });
@@ -99,6 +159,7 @@ class MafiaDao {
             }, this);
             this._data.push(game._data);
             debug(`Created game with topic ID ${topicId} and name ${name}`);
+
             return this.save().then(() => game);
         });
     }

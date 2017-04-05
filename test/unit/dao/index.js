@@ -1,7 +1,8 @@
 'use strict';
 
 const chai = require('chai'),
-    sinon = require('sinon');
+    sinon = require('sinon'),
+    string = require('string');
 
 //promise library plugins
 chai.use(require('chai-as-promised'));
@@ -174,6 +175,125 @@ describe('nouveau dao', () => {
             const err = new Error('E_BAD_DATA');
             fs.writeFile.yields(err);
             return obj.save().should.be.rejectedWith(err);
+        });
+    });
+    describe('addGame()', () => {
+        let sandbox = null,
+            dao = null,
+            gameData = null;
+        beforeEach(() => {
+            dao = new MafiaDao();
+            dao._data = [];
+            sandbox = sinon.sandbox.create();
+            sandbox.stub(dao, 'load').resolves(dao._data);
+            sandbox.stub(dao, 'save').resolves(dao);
+            gameData = {
+                name: `name${Math.random()}`,
+                topic: {
+                    id: Math.random()
+                },
+                players: [],
+                moderators: []
+            };
+        });
+        afterEach(() => sandbox.restore());
+        it('should load from disk', () => {
+            return dao.addGame(gameData).then(() => {
+                dao.load.called.should.be.true;
+            });
+        });
+        it('should save to disk', () => {
+            return dao.addGame(gameData).then(() => {
+                dao.save.called.should.be.true;
+            });
+        });
+        it('should load before save', () => {
+            return dao.addGame(gameData).then(() => {
+                dao.load.calledBefore(dao.save);
+            });
+        });
+        it('should resolve to newly created game', () => {
+            return dao.addGame(gameData).then((game) => {
+                game.should.be.an.instanceOf(MafiaGame);
+            });
+        });
+        it('should reject when topic is already a game', () => {
+            dao._data.push({
+                topicId: gameData.topic.id
+            });
+            return dao.addGame(gameData).should.be.rejectedWith('E_GAME_EXISTS');
+        });
+        it('should reject when name is already a game', () => {
+            dao._data.push({
+                name: gameData.name
+            });
+            return dao.addGame(gameData).should.be.rejectedWith('E_GAME_EXISTS');
+        });
+        it('should add a moderator to the game', () => {
+            const name = `username${Math.random()}`;
+            const slug = string(name).slugify().s;
+            gameData.moderators = {
+                username: name
+            };
+            return dao.addGame(gameData).then(() => {
+                dao._data[0].moderators.should.have.keys([slug]);
+            });
+        });
+        it('should add moderators to the game', () => {
+            const name1 = `username${Math.random()}`;
+            const slug1 = string(name1).slugify().s;
+            const name2 = `username${Math.random()}`;
+            const slug2 = string(name2).slugify().s;
+            gameData.moderators = [{
+                username: name1
+            }, {
+                username: name2
+            }];
+            return dao.addGame(gameData).then(() => {
+                dao._data[0].moderators.should.have.keys([slug1, slug2]);
+            });
+        });
+        it('should reject when moderator exists', () => {
+            const name = `username${Math.random()}`;
+            gameData.moderators = [{
+                username: name
+            }, {
+                username: name
+            }];
+            return dao.addGame(gameData).should.be.rejectedWith(`Cannot add ${name} as moderator: E_USER_EXIST`);
+        });
+        it('should add a player to the game', () => {
+            const name = `username${Math.random()}`;
+            const slug = string(name).slugify().s;
+            gameData.players = {
+                username: name
+            };
+            return dao.addGame(gameData).then(() => {
+                dao._data[0].livePlayers.should.have.keys([slug]);
+            });
+        });
+        it('should add players to the game', () => {
+            const name1 = `username${Math.random()}`;
+            const slug1 = string(name1).slugify().s;
+            const name2 = `username${Math.random()}`;
+            const slug2 = string(name2).slugify().s;
+            gameData.players = [{
+                username: name1
+            }, {
+                username: name2
+            }];
+            return dao.addGame(gameData).then(() => {
+                dao._data[0].livePlayers.should.have.keys([slug1, slug2]);
+            });
+        });
+        it('should reject when player exists', () => {
+            const name = `username${Math.random()}`;
+            gameData.players = [{
+                username: name
+            }, {
+                username: name
+            }];
+            return dao.addGame(gameData).should.be.rejectedWith(`Cannot add ${name} as player: E_USER_EXIST`);
         });
     });
     describe('createGame()', () => {
