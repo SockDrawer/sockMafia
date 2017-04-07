@@ -23,7 +23,7 @@ describe('api/query', () => {
             sandbox = sinon.sandbox.create();
             forum = {};
 
-            dao = new Dao('test.json');
+            dao = new Dao(':memory:');
             query = queryApi.bindForum(forum, dao);
         });
         afterEach(() => sandbox.restore());
@@ -41,7 +41,7 @@ describe('api/query', () => {
                 stubGetGameByChatId = sinon.stub(dao, 'getGameByChatId').resolves({});
             });
             it('should be a function in the query API', () => {
-                query.should.have.any.key('findGame');
+                chai.expect(query.findGame).to.be.a.function;
             });
             it('should query via Alias when passed a string', () => {
                 const search = `FOOOOOO${Math.random()}`;

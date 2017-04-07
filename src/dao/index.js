@@ -75,13 +75,13 @@ class MafiaDao {
     /**
      * @namespace
      * @name addGameData
-     * @property {string}       name            Name of the Game to add
-     * @property {Topic}        topic           Topic the Game will be played in
-     * @property {User|User[]}  players         Initial players of the Game
-     * @property {User|User[]}  moderators      Initial moderators of the Game
-     * @property {string[]}     [phases]        Phases of day that the Game will proceed through
-     * @property {string}       [startPhase]    Start Phase of Day
-     * @property {number}       [startDay]      Start day of the game
+     * @property {string}               name            Name of the Game to add
+     * @property {Topic|number}         topic           Topic the Game will be played in
+     * @property {User|User[]|string[]} players         Initial players of the Game
+     * @property {User|User[]|string[]} moderators      Initial moderators of the Game
+     * @property {string[]}             [phases]        Phases of day that the Game will proceed through
+     * @property {string}               [startPhase]    Start Phase of Day
+     * @property {number}               [startDay]      Start day of the game
      */
 
     /**
@@ -95,9 +95,10 @@ class MafiaDao {
         return this.load()
             .then((data) => {
                 debug('Creating game from data object');
+                const topic = typeof gameData.topic === 'number' ? gameData.topic : gameData.topic.id;
                 game = new MafiaGame({
                     name: gameData.name,
-                    topicId: gameData.topic.id,
+                    topicId: topic,
                     phases: gameData.phases,
                     phase: gameData.startPhase,
                     day: gameData.startDay
@@ -115,17 +116,23 @@ class MafiaDao {
             .then(this.save)
             .then(() => {
                 const mods = Array.isArray(gameData.moderators) ? gameData.moderators : [gameData.moderators];
-                return Promise.all(mods.map((mod) => game.addModerator(mod.username)
-                    .catch((e) => {
-                        throw new Error(`Cannot add ${mod.username} as moderator: ${e.message || e}`);
-                    })));
+                return Promise.all(mods.map((mod) => {
+                    const modName = typeof mod === 'string' ? mod : mod.username;
+                    return game.addModerator(modName)
+                        .catch((e) => {
+                            throw new Error(`Cannot add ${modName} as moderator: ${e.message || e}`);
+                        });
+                }));
             })
             .then(() => {
                 const players = Array.isArray(gameData.players) ? gameData.players : [gameData.players];
-                return Promise.all(players.map((player) => game.addPlayer(player.username)
-                    .catch((e) => {
-                        throw new Error(`Cannot add ${player.username} as player: ${e.message || e}`);
-                    })));
+                return Promise.all(players.map((player) => {
+                    const playerName = typeof player === 'string' ? player : player.username;
+                    return game.addPlayer(playerName)
+                        .catch((e) => {
+                            throw new Error(`Cannot add ${playerName} as player: ${e.message || e}`);
+                        });
+                }));
             })
             .then(() => game, (rejection) => {
                 this._data = this._data.filter((e) => e.id !== game.id);

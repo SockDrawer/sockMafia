@@ -223,6 +223,10 @@ describe('nouveau dao', () => {
             });
             return dao.addGame(gameData).should.be.rejectedWith('E_GAME_EXISTS');
         });
+        it('should accept a number as TopicId for new game', () => {
+            gameData.topic = Math.random();
+            return dao.addGame(gameData).should.resolve;
+        });
         it('should reject when name is already a game', () => {
             dao._data.push({
                 name: gameData.name
@@ -253,6 +257,14 @@ describe('nouveau dao', () => {
                 dao._data[0].moderators.should.have.keys([slug]);
             });
         });
+        it('should add a moderator as string to the game', () => {
+            const name = `username${Math.random()}`;
+            const slug = string(name).slugify().s;
+            gameData.moderators = name;
+            return dao.addGame(gameData).then(() => {
+                dao._data[0].moderators.should.have.keys([slug]);
+            });
+        });
         it('should add moderators to the game', () => {
             const name1 = `username${Math.random()}`;
             const slug1 = string(name1).slugify().s;
@@ -263,6 +275,16 @@ describe('nouveau dao', () => {
             }, {
                 username: name2
             }];
+            return dao.addGame(gameData).then(() => {
+                dao._data[0].moderators.should.have.keys([slug1, slug2]);
+            });
+        });
+        it('should add moderators as strings to the game', () => {
+            const name1 = `username${Math.random()}`;
+            const slug1 = string(name1).slugify().s;
+            const name2 = `username${Math.random()}`;
+            const slug2 = string(name2).slugify().s;
+            gameData.moderators = [name1, name2];
             return dao.addGame(gameData).then(() => {
                 dao._data[0].moderators.should.have.keys([slug1, slug2]);
             });
@@ -286,6 +308,14 @@ describe('nouveau dao', () => {
                 dao._data[0].livePlayers.should.have.keys([slug]);
             });
         });
+        it('should add a player as string to the game', () => {
+            const name = `username${Math.random()}`;
+            const slug = string(name).slugify().s;
+            gameData.players = name;
+            return dao.addGame(gameData).then(() => {
+                dao._data[0].livePlayers.should.have.keys([slug]);
+            });
+        });
         it('should add players to the game', () => {
             const name1 = `username${Math.random()}`;
             const slug1 = string(name1).slugify().s;
@@ -296,6 +326,16 @@ describe('nouveau dao', () => {
             }, {
                 username: name2
             }];
+            return dao.addGame(gameData).then(() => {
+                dao._data[0].livePlayers.should.have.keys([slug1, slug2]);
+            });
+        });
+        it('should add players as strings to the game', () => {
+            const name1 = `username${Math.random()}`;
+            const slug1 = string(name1).slugify().s;
+            const name2 = `username${Math.random()}`;
+            const slug2 = string(name2).slugify().s;
+            gameData.players = [name1, name2];
             return dao.addGame(gameData).then(() => {
                 dao._data[0].livePlayers.should.have.keys([slug1, slug2]);
             });

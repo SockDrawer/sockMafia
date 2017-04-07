@@ -9,8 +9,8 @@
 const debug = require('debug')('sockbot:mafia:api:query');
 
 exports.bindForum = (forum, dao) => {
-    const queryObj = {
-        findGame: (query) => {
+    class Query {
+        static findGame(query) {
             if (typeof query === 'string') {
                 debug(`findGame: Finding game by alias: ${query}`);
                 return dao.getGameByName(query).then((game) => game.id);
@@ -24,6 +24,6 @@ exports.bindForum = (forum, dao) => {
             debug(`findGame: Cannot find game for ${query}`);
             return Promise.reject(new Error('E_INVALID_QUERY'));
         }
-    };
-    return queryObj;
+    }
+    return Query;
 };
