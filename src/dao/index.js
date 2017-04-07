@@ -142,8 +142,6 @@ class MafiaDao {
             });
     }
 
-
-
     /**
      * Create a new MafiaGame and store it in this DAO
      *
@@ -240,6 +238,23 @@ class MafiaDao {
         });
     }
 
+    /**
+     * Retrieve a previously created game by identifier
+     *
+     * @param {string} id Game Id
+     * @returns {Promise<MafiaGame>} Resolves to requested game, rejects when read error occurs or game not found
+     */
+    getGameById(id) {
+        return this.load().then((data) => {
+            debug(`Searching for game by id: ${id}`);
+            const game = data.filter((candidate) => candidate.id === id)[0];
+            if (!game) {
+                debug('No game found!');
+                return Promise.reject('E_NO_GAME');
+            }
+            return new MafiaGame(game, this);
+        });
+    }
 
     /**
      * Load data from disk, once.

@@ -567,6 +567,68 @@ describe('nouveau dao', () => {
             });
         });
     });
+    describe('getGameById()', () => {
+        let dao = null;
+        beforeEach(() => {
+            dao = new MafiaDao();
+            dao._data = [];
+        });
+        it('should reject when there are no games', () => {
+            return dao.getGameById('foobar').should.be.rejectedWith('E_NO_GAME');
+        });
+        it('should reject when there are no matching games', () => {
+            dao._data.push({
+                id: 'quux'
+            });
+            return dao.getGameById('foobar').should.be.rejectedWith('E_NO_GAME');
+        });
+        it('should reject when there is no matching id, but there is a lookalike that differs in case only', () => {
+            const id = `id id ${Math.random()}`;
+            dao._data.push({
+                id: id
+            });
+            return dao.getGameById(id.toUpperCase()).should.be.rejectedWith('E_NO_GAME');
+        });
+        it('should resolve when there is a matching game', () => {
+            const id = `id id ${Math.random()}`;
+            dao._data.push({
+                id: id
+            });
+            return dao.getGameById(id).should.be.fulfilled;
+        });
+        it('should resolve to first matching game', () => {
+            const id = `id id ${Math.random()}`;
+            dao._data.push({
+                id: id,
+                idx: 0
+            });
+            dao._data.push({
+                id: id,
+                idx: 1
+            });
+            return dao.getGameById(id).then((game) => {
+                game._data.idx.should.equal(0);
+            });
+        });
+        it('should resolve to an instance of MafiaGame', () => {
+            const id = `id id ${Math.random()}`;
+            dao._data.push({
+                id: id
+            });
+            return dao.getGameById(id).then((game) => {
+                game.should.be.an.instanceOf(MafiaGame);
+            });
+        });
+        it('should bind result to this dao', () => {
+            const id = `id id ${Math.random()}`;
+            dao._data.push({
+                id: id
+            });
+            return dao.getGameById(id).then((game) => {
+                game._dao.should.equal(dao);
+            });
+        });
+    });
     describe('toJSON()', () => {
         it('should produce clone of data', () => {
             const obj = {
