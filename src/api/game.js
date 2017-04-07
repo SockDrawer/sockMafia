@@ -24,6 +24,8 @@ const debug = require('debug')('sockbot:mafia:api:game');
 exports.bindForum = (forum, dao) => {
     class Game {
         /**
+         * Create a new Mafia Game
+         *
          * @param {createGameData} gameData - Information nexessary to create the game.
          * @returns {Promise<GameIdentifier>} Resolves to the id of the created game, rejects if game creation fails.
          */
@@ -43,6 +45,60 @@ exports.bindForum = (forum, dao) => {
                 })
                 .then(() => dao.addGame(gameData))
                 .then((game) => game.id);
+        }
+
+        /**
+         * Add a player to an existing mafia game
+         *
+         * @param {GameIdentifier} gameId ID of the game to add the player to.
+         * @param {User|string} user User to add to the game
+         */
+        static addPlayer(gameId, user) {
+            let username = null;
+            return new Promise((resolve) => {
+                    if (!gameId) {
+                        throw new Error('E_MISSING_GAME_IDENTIFIER');
+                    }
+                    if (typeof user === 'string' && user.length > 0) {
+                        username = user;
+                        return resolve();
+                    }
+                    if (user instanceof forum.User) {
+                        username = user.username;
+                        return resolve();
+                    }
+                    throw new Error('E_INVALID_USER');
+                })
+                .then(() => dao.getGameById(gameId))
+                .then((game) => game.addPlayer(username))
+                .then(() => undefined);
+        }
+
+        /**
+         * Add a moderator to an existing mafia game
+         *
+         * @param {GameIdentifier} gameId ID of the game to add the moderator to.
+         * @param {User|string} user User to add to the game
+         */
+        static addModerator(gameId, user) {
+            let username = null;
+            return new Promise((resolve) => {
+                    if (!gameId) {
+                        throw new Error('E_MISSING_GAME_IDENTIFIER');
+                    }
+                    if (typeof user === 'string' && user.length > 0) {
+                        username = user;
+                        return resolve();
+                    }
+                    if (user instanceof forum.User) {
+                        username = user.username;
+                        return resolve();
+                    }
+                    throw new Error('E_INVALID_USER');
+                })
+                .then(() => dao.getGameById(gameId))
+                .then((game) => game.addModerator(username))
+                .then(() => undefined);
         }
     }
     return Game;
