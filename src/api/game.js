@@ -74,7 +74,7 @@ exports.bindForum = (forum, dao) => {
                     if (typeof alias === 'string' && alias.length > 0) {
                         return game.addAlias(alias);
                     }
-                    return Promise.reject(new Error('E_INVALID_ALIAS'));
+                    throw new Error('E_INVALID_ALIAS');
                 })
                 .then(() => undefined);
         }
@@ -92,7 +92,7 @@ exports.bindForum = (forum, dao) => {
                     if (typeof alias === 'string' && alias.length > 0) {
                         return game.removeAlias(alias);
                     }
-                    return Promise.reject(new Error('E_INVALID_ALIAS'));
+                    throw new Error('E_INVALID_ALIAS');
                 })
                 .then((result) => {
                     if (!result) {
@@ -116,7 +116,7 @@ exports.bindForum = (forum, dao) => {
                     } else if (area instanceof forum.PrivateMessage) {
                         return game.addChat(area.id);
                     }
-                    return Promise.reject(new Error('E_INVALID_PLAY_AREA'));
+                    throw new Error('E_INVALID_PLAY_AREA');
                 })
                 .then(() => undefined);
         }
@@ -136,7 +136,7 @@ exports.bindForum = (forum, dao) => {
                     } else if (area instanceof forum.PrivateMessage) {
                         return game.removeChat(area.id);
                     }
-                    return Promise.reject(new Error('E_INVALID_PLAY_AREA'));
+                    throw new Error('E_INVALID_PLAY_AREA');
                 })
                 .then(result => {
                     if (!result) {
@@ -175,6 +175,24 @@ exports.bindForum = (forum, dao) => {
                 .then(() => dao.getGameById(gameId))
                 .then((game) => game.addModerator(username))
                 .then(() => undefined);
+        }
+
+        /**
+         * Set a stored value in the game
+         *
+         * @param {GameIdentifier} gameId ID of the game to add the moderator to.
+         * @param {string} key Key to store the value under
+         * @param {*} value Value to store
+         * @returns {Promise<*>} Resolves to the prior value held
+         */
+        static setGameValue(gameId, key, value) {
+            return dao.getGameById(gameId)
+                .then((game) => {
+                    if (typeof key !== 'string' || key.length <= 0) {
+                        throw new Error('E_INVALID_KEY');
+                    }
+                    return game.setValue(key, value);
+                });
         }
     }
     return Game;

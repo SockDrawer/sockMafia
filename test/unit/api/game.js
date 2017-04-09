@@ -395,5 +395,50 @@ describe('api/query', () => {
                 return Game.removeGameAlias('id', 'foobar').should.be.rejectedWith('E_ALIAS_NOT_EXISTS');
             });
         });
+        describe('setGameValue()', () => {
+            let stubGetGameById, stubSetValue, mockGame;
+            beforeEach(() => {
+                mockGame = new MafiaGame({}, {});
+                stubSetValue = sinon.stub(mockGame, 'setValue').resolves();
+                stubGetGameById = sinon.stub(dao, 'getGameById').resolves(mockGame);
+            });
+            it('should retrieve game by id', () => {
+                const id = `id ${Math.random()} id`;
+                return Game.setGameValue(id, 'boo', 'foo').then(() => {
+                    stubGetGameById.calledWith(id).should.be.true;
+                });
+            });
+            it('should pass key and value to setValue()', () => {
+                const key = `key ${Math.random()}`;
+                const value = `value ${Math.random()}`;
+                return Game.setGameValue('id', key, value).then(() => {
+                    stubSetValue.calledWith(key, value).should.be.true;
+                });
+            });
+            it('should resolve to result of setValue()', () => {
+                const expected = `value ${Math.random()}`;
+                stubSetValue.resolves(expected);
+                return Game.setGameValue('a', 'b', 'c').should.become(expected);
+            });
+            it('should tolerate missing value', () => {
+                return Game.setGameValue('a', 'b').should.resolve;
+            });
+            it('should reject non string key', () => {
+                return Game.setGameValue('a', false).should.be.rejectedWith('E_INVALID_KEY');
+            });
+            it('should reject empty key', () => {
+                return Game.setGameValue('a', '').should.be.rejectedWith('E_INVALID_KEY');
+            });
+            it('should reject when getGameById rejects', () => {
+                const expected = new Error(`value ${Math.random()}`);
+                stubGetGameById.rejects(expected);
+                return Game.setGameValue('a', 'b', 'c').should.be.rejectedWith(expected);
+            });
+            it('should reject when setValue() rejects', () => {
+                const expected = new Error(`value ${Math.random()}`);
+                stubSetValue.rejects(expected);
+                return Game.setGameValue('a', 'b', 'c').should.be.rejectedWith(expected);
+            });
+        });
     });
 });
