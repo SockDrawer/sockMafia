@@ -69,10 +69,8 @@ exports.bindForum = (forum, dao) => {
          * @returns {Promise} Resolves on completion, rejects on failure.
          */
         static addGameAlias(gameId, alias) {
-            console.log('HI!') //eslint-disable-line
             return dao.getGameById(gameId)
                 .then((game) => {
-                    console.log(1, alias, typeof alias, alias.length); //eslint-disable-line no-console
                     if (typeof alias === 'string' && alias.length > 0) {
                         return game.addAlias(alias);
                     }
@@ -101,24 +99,6 @@ exports.bindForum = (forum, dao) => {
                         throw new Error('E_ALIAS_NOT_EXISTS');
                     }
                 });
-        }
-
-        /**
-         * Add an alias to the game
-         *
-         * @param {gameIdentifier} gameId Id of the game to add the play area to
-         * @param {string} alias Alias to add to the game.
-         * @returns {Promise} Resolves on completion, rejects on failure.
-         */
-        static addGameAlias(gameId, alias) {
-            return dao.getGameById(gameId)
-                .then((game) => {
-                    if (typeof alias === 'string') {
-                        return game.addAlias(alias);
-                    }
-                    return Promise.reject(new Error('E_INVALID_ALIAS'));
-                })
-                .then(() => undefined);
         }
 
         /**

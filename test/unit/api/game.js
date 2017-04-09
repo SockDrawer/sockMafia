@@ -115,7 +115,7 @@ describe('api/query', () => {
             it('should reject when user is generic object', () => {
                 return Game.addPlayer('1f2a3d4e5d', {}).should.be.rejectedWith('E_INVALID_USER');
             });
-            it('should retrieve game by GameIdentifier', () =>{
+            it('should retrieve game by GameIdentifier', () => {
                 const id = `id ${Math.random()} id`;
                 return Game.addPlayer(id, 'george').then(() => {
                     stubGetGameById.calledWith(id).should.be.true;
@@ -138,7 +138,7 @@ describe('api/query', () => {
                 });
             });
             it('should resolve to undefined', () => {
-                 return Game.addPlayer('1f2a3d4e5d', 'foobar').should.become(undefined);
+                return Game.addPlayer('1f2a3d4e5d', 'foobar').should.become(undefined);
             });
         });
         describe('addModerator()', () => {
@@ -165,7 +165,7 @@ describe('api/query', () => {
             it('should reject when user is generic object', () => {
                 return Game.addModerator('1f2a3d4e5d', {}).should.be.rejectedWith('E_INVALID_USER');
             });
-            it('should retrieve game by GameIdentifier', () =>{
+            it('should retrieve game by GameIdentifier', () => {
                 const id = `id ${Math.random()} id`;
                 return Game.addModerator(id, 'george').then(() => {
                     stubGetGameById.calledWith(id).should.be.true;
@@ -188,7 +188,7 @@ describe('api/query', () => {
                 });
             });
             it('should resolve to undefined', () => {
-                 return Game.addModerator('1f2a3d4e5d', 'foobar').should.become(undefined);
+                return Game.addModerator('1f2a3d4e5d', 'foobar').should.become(undefined);
             });
         });
         describe('addPlayArea()', () => {
@@ -249,11 +249,11 @@ describe('api/query', () => {
             });
         });
         describe('removePlayArea()', () => {
-            let stubGetGameById, stubremoveTopic, stubremoveChat, mockGame;
+            let stubGetGameById, stubRemoveTopic, stubRemoveChat, mockGame;
             beforeEach(() => {
                 mockGame = new MafiaGame({}, {});
-                stubremoveTopic = sinon.stub(mockGame, 'removeTopic').resolves(true);
-                stubremoveChat = sinon.stub(mockGame, 'removeChat').resolves(true);
+                stubRemoveTopic = sinon.stub(mockGame, 'removeTopic').resolves(true);
+                stubRemoveChat = sinon.stub(mockGame, 'removeChat').resolves(true);
                 stubGetGameById = sinon.stub(dao, 'getGameById').resolves(mockGame);
                 forum.Topic = function(id) {
                     this.id = id;
@@ -271,13 +271,13 @@ describe('api/query', () => {
             it('should remove topic when presented with a Topic', () => {
                 const id = Math.random();
                 return Game.removePlayArea('id', new forum.Topic(id)).then(() => {
-                    stubremoveTopic.calledWith(id).should.be.true;
+                    stubRemoveTopic.calledWith(id).should.be.true;
                 });
             });
             it('should remove chat when presented with a PrivateMessage', () => {
                 const id = Math.random();
                 return Game.removePlayArea('id', new forum.PrivateMessage(id)).then(() => {
-                    stubremoveChat.calledWith(id).should.be.true;
+                    stubRemoveChat.calledWith(id).should.be.true;
                 });
             });
             it('should resolve to undefined when presented with a Topic', () => {
@@ -293,13 +293,24 @@ describe('api/query', () => {
             });
             it('should reject when removeTopic rejects', () => {
                 const error = new Error(`Something bad ${Math.random()}`);
-                stubremoveTopic.rejects(error);
+                stubRemoveTopic.rejects(error);
                 return Game.removePlayArea('id', new forum.Topic()).should.be.rejectedWith(error);
             });
             it('should reject when removeChat rejects', () => {
                 const error = new Error(`Something bad ${Math.random()}`);
-                stubremoveChat.rejects(error);
+                stubRemoveChat.rejects(error);
                 return Game.removePlayArea('id', new forum.PrivateMessage()).should.be.rejectedWith(error);
+            });
+            it('should reject when proviced wrong play area type', () => {
+                return Game.removePlayArea('id', 'bad').should.be.rejectedWith('E_INVALID_PLAY_AREA');
+            });
+            it('should reject when removing topic fails', () => {
+                stubRemoveTopic.resolves(false);
+                return Game.removePlayArea('id', new forum.Topic()).should.be.rejectedWith('E_PLAY_AREA_NOT_IN_GAME');
+            });
+            it('should reject when removing chat fails', () => {
+                stubRemoveChat.resolves(false);
+                return Game.removePlayArea('id', new forum.PrivateMessage()).should.be.rejectedWith('E_PLAY_AREA_NOT_IN_GAME');
             });
         });
         describe('addAlias()', () => {
@@ -324,9 +335,7 @@ describe('api/query', () => {
             it('should resolve to undefined when presented with a string', () => {
                 return Game.addGameAlias('id', 'foobar').should.become(undefined);
             });
-            it.only('should reject zero length alias', () => {
-                stubAddAlias.rejects(new Error('FOOBAR'));
-                console.log('HI!2') //eslint-disable-line
+            it('should reject zero length alias', () => {
                 return Game.addGameAlias('id', '').should.be.rejectedWith('E_INVALID_ALIAS');
             });
             it('should reject non string alias', () => {
