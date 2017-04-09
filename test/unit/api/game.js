@@ -9,6 +9,7 @@ chai.use(require('chai-as-promised'));
 chai.should();
 
 const Dao = require('../../../src/dao'),
+    MafiaGame = require('../../../src/dao/mafiaGame'),
     gameApi = require('../../../src/api/game');
 
 describe('api/query', () => {
@@ -188,6 +189,201 @@ describe('api/query', () => {
             });
             it('should resolve to undefined', () => {
                  return Game.addModerator('1f2a3d4e5d', 'foobar').should.become(undefined);
+            });
+        });
+        describe('addPlayArea()', () => {
+            let stubGetGameById, stubAddTopic, stubAddChat, mockGame;
+            beforeEach(() => {
+                mockGame = new MafiaGame({}, {});
+                stubAddTopic = sinon.stub(mockGame, 'addTopic').resolves();
+                stubAddChat = sinon.stub(mockGame, 'addChat').resolves();
+                stubGetGameById = sinon.stub(dao, 'getGameById').resolves(mockGame);
+                forum.Topic = function(id) {
+                    this.id = id;
+                };
+                forum.PrivateMessage = function(id) {
+                    this.id = id;
+                };
+            });
+            it('should retrieve game by id', () => {
+                const id = `id ${Math.random()} id`;
+                return Game.addPlayArea(id, new forum.Topic()).then(() => {
+                    stubGetGameById.calledWith(id).should.be.true;
+                });
+            });
+            it('should add topic when presented with a Topic', () => {
+                const id = Math.random();
+                return Game.addPlayArea('id', new forum.Topic(id)).then(() => {
+                    stubAddTopic.calledWith(id).should.be.true;
+                });
+            });
+            it('should add chat when presented with a PrivateMessage', () => {
+                const id = Math.random();
+                return Game.addPlayArea('id', new forum.PrivateMessage(id)).then(() => {
+                    stubAddChat.calledWith(id).should.be.true;
+                });
+            });
+            it('should resolve to undefined when presented with a Topic', () => {
+                return Game.addPlayArea('id', new forum.Topic()).should.become(undefined);
+            });
+            it('should resolve to undefined when presented with a PrivateMessage', () => {
+                return Game.addPlayArea('id', new forum.PrivateMessage()).should.become(undefined);
+            });
+            it('should reject when getGameById rejects', () => {
+                const error = new Error(`Something bad ${Math.random()}`);
+                stubGetGameById.rejects(error);
+                return Game.addPlayArea('id', new forum.Topic()).should.be.rejectedWith(error);
+            });
+            it('should reject when addTopic rejects', () => {
+                const error = new Error(`Something bad ${Math.random()}`);
+                stubAddTopic.rejects(error);
+                return Game.addPlayArea('id', new forum.Topic()).should.be.rejectedWith(error);
+            });
+            it('should reject when addChat rejects', () => {
+                const error = new Error(`Something bad ${Math.random()}`);
+                stubAddChat.rejects(error);
+                return Game.addPlayArea('id', new forum.PrivateMessage()).should.be.rejectedWith(error);
+            });
+            it('should reject when proviced wron play area type', () => {
+                return Game.addPlayArea('id', 'bad').should.be.rejectedWith('E_INVALID_PLAY_AREA');
+            });
+        });
+        describe('removePlayArea()', () => {
+            let stubGetGameById, stubremoveTopic, stubremoveChat, mockGame;
+            beforeEach(() => {
+                mockGame = new MafiaGame({}, {});
+                stubremoveTopic = sinon.stub(mockGame, 'removeTopic').resolves(true);
+                stubremoveChat = sinon.stub(mockGame, 'removeChat').resolves(true);
+                stubGetGameById = sinon.stub(dao, 'getGameById').resolves(mockGame);
+                forum.Topic = function(id) {
+                    this.id = id;
+                };
+                forum.PrivateMessage = function(id) {
+                    this.id = id;
+                };
+            });
+            it('should retrieve game by id', () => {
+                const id = `id ${Math.random()} id`;
+                return Game.removePlayArea(id, new forum.Topic()).then(() => {
+                    stubGetGameById.calledWith(id).should.be.true;
+                });
+            });
+            it('should remove topic when presented with a Topic', () => {
+                const id = Math.random();
+                return Game.removePlayArea('id', new forum.Topic(id)).then(() => {
+                    stubremoveTopic.calledWith(id).should.be.true;
+                });
+            });
+            it('should remove chat when presented with a PrivateMessage', () => {
+                const id = Math.random();
+                return Game.removePlayArea('id', new forum.PrivateMessage(id)).then(() => {
+                    stubremoveChat.calledWith(id).should.be.true;
+                });
+            });
+            it('should resolve to undefined when presented with a Topic', () => {
+                return Game.removePlayArea('id', new forum.Topic()).should.become(undefined);
+            });
+            it('should resolve to undefined when presented with a PrivateMessage', () => {
+                return Game.removePlayArea('id', new forum.PrivateMessage()).should.become(undefined);
+            });
+            it('should reject when getGameById rejects', () => {
+                const error = new Error(`Something bad ${Math.random()}`);
+                stubGetGameById.rejects(error);
+                return Game.removePlayArea('id', new forum.Topic()).should.be.rejectedWith(error);
+            });
+            it('should reject when removeTopic rejects', () => {
+                const error = new Error(`Something bad ${Math.random()}`);
+                stubremoveTopic.rejects(error);
+                return Game.removePlayArea('id', new forum.Topic()).should.be.rejectedWith(error);
+            });
+            it('should reject when removeChat rejects', () => {
+                const error = new Error(`Something bad ${Math.random()}`);
+                stubremoveChat.rejects(error);
+                return Game.removePlayArea('id', new forum.PrivateMessage()).should.be.rejectedWith(error);
+            });
+        });
+        describe('addAlias()', () => {
+            let stubGetGameById, stubAddAlias, mockGame;
+            beforeEach(() => {
+                mockGame = new MafiaGame({}, {});
+                stubAddAlias = sinon.stub(mockGame, 'addAlias').resolves();
+                stubGetGameById = sinon.stub(dao, 'getGameById').resolves(mockGame);
+            });
+            it('should retrieve game by id', () => {
+                const id = `id ${Math.random()} id`;
+                return Game.addGameAlias(id, 'boo').then(() => {
+                    stubGetGameById.calledWith(id).should.be.true;
+                });
+            });
+            it('should add alias when presented with a string', () => {
+                const id = `${Math.random()}`;
+                return Game.addGameAlias('id', id).then(() => {
+                    stubAddAlias.calledWith(id).should.be.true;
+                });
+            });
+            it('should resolve to undefined when presented with a string', () => {
+                return Game.addGameAlias('id', 'foobar').should.become(undefined);
+            });
+            it.only('should reject zero length alias', () => {
+                stubAddAlias.rejects(new Error('FOOBAR'));
+                console.log('HI!2') //eslint-disable-line
+                return Game.addGameAlias('id', '').should.be.rejectedWith('E_INVALID_ALIAS');
+            });
+            it('should reject non string alias', () => {
+                return Game.addGameAlias('id', 42).should.be.rejectedWith('E_INVALID_ALIAS');
+            });
+            it('should reject when getGameById rejects', () => {
+                const error = new Error(`DANGER ${Math.random()}! DANGER!`);
+                stubGetGameById.rejects(error);
+                return Game.addGameAlias('id', 'foobar').should.be.rejectedWith(error);
+            });
+            it('should reject when addAlias rejects', () => {
+                const error = new Error(`DANGER ${Math.random()}! DANGER!`);
+                stubAddAlias.rejects(error);
+                return Game.addGameAlias('id', 'foobar').should.be.rejectedWith(error);
+            });
+        });
+        describe('removeAlias()', () => {
+            let stubGetGameById, stubRemoveAlias, mockGame;
+            beforeEach(() => {
+                mockGame = new MafiaGame({}, {});
+                stubRemoveAlias = sinon.stub(mockGame, 'removeAlias').resolves(true);
+                stubGetGameById = sinon.stub(dao, 'getGameById').resolves(mockGame);
+            });
+            it('should retrieve game by id', () => {
+                const id = `id ${Math.random()} id`;
+                return Game.removeGameAlias(id, 'boo').then(() => {
+                    stubGetGameById.calledWith(id).should.be.true;
+                });
+            });
+            it('should remove alias when presented with a string', () => {
+                const id = `${Math.random()}`;
+                return Game.removeGameAlias('id', id).then(() => {
+                    stubRemoveAlias.calledWith(id).should.be.true;
+                });
+            });
+            it('should resolve to undefined when presented with a string', () => {
+                return Game.removeGameAlias('id', 'foobar').should.become(undefined);
+            });
+            it('should reject zero length alias', () => {
+                return Game.removeGameAlias('id', '').should.be.rejectedWith('E_INVALID_ALIAS');
+            });
+            it('should reject non string alias', () => {
+                return Game.removeGameAlias('id', 42).should.be.rejectedWith('E_INVALID_ALIAS');
+            });
+            it('should resject when getGameById rejects', () => {
+                const error = new Error(`DANGER ${Math.random()}! DANGER!`);
+                stubGetGameById.rejects(error);
+                return Game.removeGameAlias('id', 'foobar').should.be.rejectedWith(error);
+            });
+            it('should reject when removeAlias rejects', () => {
+                const error = new Error(`DANGER ${Math.random()}! DANGER!`);
+                stubRemoveAlias.rejects(error);
+                return Game.removeGameAlias('id', 'foobar').should.be.rejectedWith(error);
+            });
+            it('should reject when removeAlias resolves falsy', () => {
+                stubRemoveAlias.resolves(false);
+                return Game.removeGameAlias('id', 'foobar').should.be.rejectedWith('E_ALIAS_NOT_EXISTS');
             });
         });
     });
