@@ -314,5 +314,126 @@ describe('api/player', () => {
                 return Player.getPlayerProperties('id', 'george').should.be.rejectedWith(expected);
             });
         });
+        describe('addPlayerProperty()', () => {
+            let stubGetGameById, stubGetPlayer, stubSetValue, mockGame, mockPlayer;
+            beforeEach(() => {
+                mockPlayer = new MafiaUser({}, {});
+                stubSetValue = sinon.stub(mockPlayer, 'setValue').resolves(true);
+                mockGame = new MafiaGame({}, {});
+                stubGetPlayer = sinon.stub(mockGame, 'getPlayer').resolves(mockPlayer);
+                stubGetGameById = sinon.stub(dao, 'getGameById').resolves(mockGame);
+                forum.User = function(username) {
+                    this.username = username;
+                };
+            });
+            it('should retrieve game by GameIdentifier', () => {
+                const id = `id ${Math.random()} id`;
+                return Player.setPlayerValue(id, 'george', 'foo', 'bar').then(() => {
+                    stubGetGameById.calledWith(id).should.be.true;
+                });
+            });
+            it('should retrieve user by string username', () => {
+                const name = `name ${Math.random()} name`;
+                return Player.setPlayerValue('id', name, 'foo', 'bar').then(() => {
+                    stubGetPlayer.calledWith(name).should.be.true;
+                });
+            });
+            it('should retrieve user by forum.User', () => {
+                const name = `name ${Math.random()} name`;
+                return Player.setPlayerValue('id', new forum.User(name), 'foo', 'bar').then(() => {
+                    stubGetPlayer.calledWith(name).should.be.true;
+                });
+            });
+            it('should setValue as provided', () => {
+                const name = `name ${Math.random()} name`;
+                const value = `value ${Math.random()} value`;
+                return Player.setPlayerValue('id', 'foo', name, value).then(() => {
+                    stubSetValue.calledWith(name, value).should.be.true;
+                });
+            });
+            it('should resolve to result of setValue()', () => {
+                const expected = {
+                    id: Math.random()
+                };
+                stubSetValue.resolves(expected);
+                return Player.setPlayerValue('id', 'foo', 'bar', 'bar').should.become(expected);
+            });
+            it('should reject if gameId not provided', () => {
+                return Player.setPlayerValue('', 'george', 'king', 'bar').should.be.rejectedWith('E_MISSING_GAME_IDENTIFIER');
+            });
+            it('should reject if wrong user type provided', () => {
+                return Player.setPlayerValue('id', 42, 'king', 'bar').should.be.rejectedWith('E_INVALID_USER');
+            });
+            it('should reject if game retrieval fails', () => {
+                stubGetGameById.rejects(new Error('E_NO_GAME'));
+                return Player.setPlayerValue('id', 'george', 'king', 'bar').should.be.rejectedWith('E_NO_GAME');
+            });
+            it('should reject if user retrieval fails', () => {
+                const expected = new Error(`error ${Math.random()}`);
+                stubGetPlayer.rejects(expected);
+                return Player.setPlayerValue('id', 'george', 'king', 'bar').should.be.rejectedWith(expected);
+            });
+            it('should reject if property setting rejects', () => {
+                const expected = new Error(`error ${Math.random()}`);
+                stubSetValue.rejects(expected);
+                return Player.setPlayerValue('id', 'george', 'king', 'bar').should.be.rejectedWith(expected);
+            });
+        });
+        describe('getPlayerValues()', () => {
+            let stubGetGameById, stubGetPlayer, mockGame, mockPlayer;
+            beforeEach(() => {
+                mockPlayer = new MafiaUser({}, {});
+                mockGame = new MafiaGame({}, {});
+                stubGetPlayer = sinon.stub(mockGame, 'getPlayer').resolves(mockPlayer);
+                stubGetGameById = sinon.stub(dao, 'getGameById').resolves(mockGame);
+                forum.User = function(username) {
+                    this.username = username;
+                };
+            });
+            it('should retrieve game by GameIdentifier', () => {
+                const id = `id ${Math.random()} id`;
+                return Player.getPlayerValues(id, 'george').then(() => {
+                    stubGetGameById.calledWith(id).should.be.true;
+                });
+            });
+            it('should retrieve user by string username', () => {
+                const name = `name ${Math.random()} name`;
+                return Player.getPlayerValues('id', name).then(() => {
+                    stubGetPlayer.calledWith(name).should.be.true;
+                });
+            });
+            it('should retrieve user by forum.User', () => {
+                const name = `name ${Math.random()} name`;
+                return Player.getPlayerValues('id', new forum.User(name)).then(() => {
+                    stubGetPlayer.calledWith(name).should.be.true;
+                });
+            });
+            it('should return values as retrieved from game', () => {
+                const expected = {
+                    'key ${Math.random()}': Math.random()
+                };
+                stubGetPlayer.resolves({
+                    values: expected
+                });
+                return Player.getPlayerValues('id', 'id').then((values) => {
+                    values.should.equal(expected);
+                });
+            });
+            it('should reject if gameId not provided', () => {
+                return Player.getPlayerValues('', 'george').should.be.rejectedWith('E_MISSING_GAME_IDENTIFIER');
+            });
+            it('should reject if wrong user type provided', () => {
+                return Player.getPlayerValues('id', 42).should.be.rejectedWith('E_INVALID_USER');
+            });
+            it('should reject if game retrieval fails', () => {
+                stubGetGameById.rejects(new Error('E_NO_GAME'));
+                return Player.getPlayerValues('id', 'george').should.be.rejectedWith('E_NO_GAME');
+            });
+            it('should reject if user retrieval fails', () => {
+                const expected = new Error(`error ${Math.random()}`);
+                stubGetPlayer.rejects(expected);
+                return Player.getPlayerValues('id', 'george').should.be.rejectedWith(expected);
+            });
+        });
     });
 });

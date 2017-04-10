@@ -138,6 +138,32 @@ exports.bindForum = (forum, dao) => {
             return getPlayerFromParams(gameId, user)
                 .then((player) => player.getProperties());
         }
+
+        /**
+         * Set a value on a user
+         *
+         * @param {GameIdentifier} gameId ID of the game manipulate.
+         * @param {User|string} user User to modify
+         * @param {string} name Value name to set
+         * @param {*} value Value to store
+         * @returns {Promise} Resolves on completion, rejects on failure.
+         */
+        static setPlayerValue(gameId, user, name, value) {
+            return getPlayerFromParams(gameId, user)
+                .then((player) => player.setValue(name, value));
+        }
+
+        /**
+         * Set a value on a user
+         *
+         * @param {GameIdentifier} gameId ID of the game manipulate.
+         * @param {User|string} user User to modify
+         * @returns {Promise} Resolves on completion, rejects on failure.
+         */
+        static getPlayerValues(gameId, user) {
+            return getPlayerFromParams(gameId, user)
+                .then((player) => player.values);
+        }
     }
 
     return Player;
