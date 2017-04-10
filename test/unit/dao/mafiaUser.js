@@ -91,6 +91,29 @@ describe('nouveau dao/MafiaUser', () => {
             });
         });
     });
+    describe('getter values', () => {
+        let user = null;
+        beforeEach(() => user = new MafiaUser({}));
+        it('should return an object', () => {
+            user.values.should.be.an('object');
+        });
+        it('should return values as set', () => {
+            const expected = {};
+            for (let i = 0; i < 50; i += 1) {
+                expected[`key ${Math.random()}`] = Math.random();
+            }
+            user._data.values = expected;
+            user.values.should.deep.equal(expected);
+        });
+        it('should return copy of values', () => {
+            const expected = {};
+            for (let i = 0; i < 50; i += 1) {
+                expected[`key ${Math.random()}`] = Math.random();
+            }
+            user._data.values = expected;
+            user.values.should.not.equal(expected);
+        });
+    });
     describe('toJSON()', () => {
         it('should return inner data', () => {
             const obj = {};
@@ -124,7 +147,6 @@ describe('nouveau dao/MafiaUser', () => {
             user.getProperties(filter).should.eql(expected);
         });
     });
-
     describe('hasProperty()', () => {
         let user = null;
         const properties = ['strawberry', 'chocolate', 'vanilla', 'wasabi'];
@@ -225,6 +247,57 @@ describe('nouveau dao/MafiaUser', () => {
             const expected = ['strawberry', 'chocolate', 'vanilla', 'wasabi'];
             return user.removeProperty('orange').then(() => {
                 user._data.properties.should.eql(expected);
+            });
+        });
+    });
+    describe('getValue()', () => {
+        let user = null,
+            values = null;
+        beforeEach(() => {
+            user = new MafiaUser({});
+            user.save = sinon.stub().resolves(user);
+            values = user._data.values;
+        });
+        it('should return undefined for unknown key', () => {
+            const name = `keykey${Math.random()}`;
+            values.should.not.have.any.key(name);
+            chai.expect(user.getValue(name)).to.be.undefined;
+        });
+        it('should return saved value for key', () => {
+            const name = `keykey${Math.random()}`;
+            const expected = `valuevalue${Math.random()}`;
+            values[name] = expected;
+            user.getValue(name).should.equal(expected);
+        });
+    });
+    describe('setValue()', () => {
+        let user = null,
+            values = null;
+        beforeEach(() => {
+            user = new MafiaUser({});
+            user.save = sinon.stub().resolves(user);
+            values = user._data.values;
+        });
+        it('should set value', () => {
+            const name = `keykey${Math.random()}`;
+            const expected = `valuevalue${Math.random()}`;
+            return user.setValue(name, expected).then(() => {
+                values[name].should.equal(expected);
+            });
+        });
+        it('should save new value', () => {
+            const name = `keykey${Math.random()}`;
+            const expected = `valuevalue${Math.random()}`;
+            return user.setValue(name, expected).then(() => {
+                user.save.called.should.be.true;
+            });
+        });
+        it('should resolve to overridden value', () => {
+            const name = `keykey${Math.random()}`;
+            const expected = `valuevalue${Math.random()}`;
+            values[name] = expected;
+            return user.setValue(name, 'foobar').then((oldvalue) => {
+                oldvalue.should.equal(expected);
             });
         });
     });

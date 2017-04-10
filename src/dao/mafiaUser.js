@@ -24,6 +24,7 @@ class MafiaUser {
         data.isAlive = data.isAlive !== undefined ? data.isAlive : true;
         data.isModerator = data.isModerator !== undefined ? data.isModerator : false;
         data.properties = data.properties || [];
+        data.values = data.values || {};
         this._data = data;
         this._game = game;
     }
@@ -75,6 +76,15 @@ class MafiaUser {
      */
     get isModerator() {
         return this._data.isModerator;
+    }
+
+    /**
+     * Get custom values attached to the user
+     *
+     * @returns {object} Stored values
+     */
+    get values() {
+        return JSON.parse(JSON.stringify(this._data.values));
     }
 
     /**
@@ -134,6 +144,29 @@ class MafiaUser {
         this._data.properties = this._data.properties.filter((prop) => prop !== property);
         return this._game.save()
             .then(() => props.length !== this._data.properties.length);
+    }
+
+    /**
+     * Get a custom value attached to the game
+     *
+     * @param {string} key Value storage key
+     * @returns {*} Stored value for `key`
+     */
+    getValue(key) {
+        return this.values[key];
+    }
+
+    /**
+     * Store a custom value attached to the game
+     *
+     * @param {string} key Value storage key
+     * @param {*} data Value to store
+     * @returns {Promise<*>} Resolves to prior stored value
+     */
+    setValue(key, data) {
+        const oldVal = this._data.values[key];
+        this._data.values[key] = data;
+        return this.save().then(() => oldVal);
     }
 
     /**
