@@ -8,34 +8,7 @@
 
 const debug = require('debug')('sockbot:mafia:api:game');
 
-/**
- * @namespace
- * @name addGameData
- * @property {string}               name            Name of the Game to add
- * @property {Number|Topic}         topic           Topic the Game will be played in
- * @property {User|User[]|string[]} players         Initial players of the Game
- * @property {User|User[]|string[]} moderators      Initial moderators of the Game
- * @property {string[]}             [phases]        Phases of day that the Game will proceed through
- * @property {string}               [startPhase]    Start Phase of Day
- * @property {number}               [startDay]      Start day of the game
- */
-
-
 exports.bindForum = (forum, dao) => {
-
-    const validateGameIdUserParams = (gameId, user) => new Promise((resolve) => {
-        if (!gameId) {
-            throw new Error('E_MISSING_GAME_IDENTIFIER');
-        }
-        if (typeof user === 'string' && user.length > 0) {
-            return resolve(user);
-        }
-        if (user instanceof forum.User) {
-            return resolve(user.username);
-        }
-        throw new Error('E_INVALID_USER');
-    });
-
     class Game {
         /**
          * Create a new Mafia Game
@@ -143,38 +116,6 @@ exports.bindForum = (forum, dao) => {
                         throw new Error('E_PLAY_AREA_NOT_IN_GAME');
                     }
                 });
-        }
-
-        /**
-         * Add a player to an existing mafia game
-         *
-         * @param {GameIdentifier} gameId ID of the game to add the player to.
-         * @param {User|string} user User to add to the game
-         * @returns {Promise} Resolves on completion, rejects on failure.
-         */
-        static addPlayer(gameId, user) {
-            let username = null;
-            return validateGameIdUserParams(gameId, user)
-                .then((parsedUser) => username = parsedUser)
-                .then(() => dao.getGameById(gameId))
-                .then((game) => game.addPlayer(username))
-                .then(() => undefined);
-        }
-
-        /**
-         * Add a moderator to an existing mafia game
-         *
-         * @param {GameIdentifier} gameId ID of the game to add the moderator to.
-         * @param {User|string} user User to add to the game
-         * @returns {Promise} Resolves on completion, rejects on failure.
-         */
-        static addModerator(gameId, user) {
-            let username = null;
-            return validateGameIdUserParams(gameId, user)
-                .then((parsedUser) => username = parsedUser)
-                .then(() => dao.getGameById(gameId))
-                .then((game) => game.addModerator(username))
-                .then(() => undefined);
         }
 
         /**
