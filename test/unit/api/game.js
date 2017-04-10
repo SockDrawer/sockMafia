@@ -440,5 +440,34 @@ describe('api/query', () => {
                 return Game.setGameValue('a', 'b', 'c').should.be.rejectedWith(expected);
             });
         });
+        describe('getGameValues()', () => {
+            let stubGetGameById, mockGame;
+            beforeEach(() => {
+                mockGame = new MafiaGame({}, {});
+                stubGetGameById = sinon.stub(dao, 'getGameById').resolves(mockGame);
+            });
+            it('should retrieve game by id', () => {
+                const id = `id ${Math.random()} id`;
+                return Game.getGameValues(id, 'boo', 'foo').then(() => {
+                    stubGetGameById.calledWith(id).should.be.true;
+                });
+            });
+            it('should return values as retrieved from game', () => {
+                const expected = {
+                    'key ${Math.random()}': Math.random()
+                };
+                stubGetGameById.resolves({
+                    values: expected
+                });
+                return Game.getGameValues('id').then((values) => {
+                    values.should.equal(expected);
+                });
+            });
+            it('should reject when getGameById rejects', () => {
+                const expected = new Error(`value ${Math.random()}`);
+                stubGetGameById.rejects(expected);
+                return Game.getGameValues('a').should.be.rejectedWith(expected);
+            });
+        });
     });
 });

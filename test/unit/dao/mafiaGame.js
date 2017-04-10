@@ -409,6 +409,29 @@ describe('nouveau dao/MafiaGame', () => {
             game.aliases.should.not.equal(game.aliases);
         });
     });
+    describe('getter values', () => {
+        let game = null;
+        beforeEach(() => game = new MafiaGame({}));
+        it('should return an object', () => {
+            game.values.should.be.an('object');
+        });
+        it('should return values as set', () => {
+            const expected = {};
+            for (let i = 0; i < 50; i += 1) {
+                expected[`key ${Math.random()}`] = Math.random();
+            }
+            game._data.values = expected;
+            game.values.should.deep.equal(expected);
+        });
+        it('should return copy of values', () => {
+            const expected = {};
+            for (let i = 0; i < 50; i += 1) {
+                expected[`key ${Math.random()}`] = Math.random();
+            }
+            game._data.values = expected;
+            game.values.should.not.equal(expected);
+        });
+    });
     describe('save()', () => {
         let game = null,
             dao = null;

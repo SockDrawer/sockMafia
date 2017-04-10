@@ -180,7 +180,7 @@ exports.bindForum = (forum, dao) => {
         /**
          * Set a stored value in the game
          *
-         * @param {GameIdentifier} gameId ID of the game to add the moderator to.
+         * @param {GameIdentifier} gameId ID of the game to set values on.
          * @param {string} key Key to store the value under
          * @param {*} value Value to store
          * @returns {Promise<*>} Resolves to the prior value held
@@ -194,6 +194,18 @@ exports.bindForum = (forum, dao) => {
                     return game.setValue(key, value);
                 });
         }
+
+        /**
+         * Get stored values from the game
+         *
+         * @param {GameIdentifier} gameId ID of the game to retrieve data from.
+         * @returns {Promise<*>} Resolves to the prior value held
+         */
+        static getGameValues(gameId) {
+            return dao.getGameById(gameId)
+                .then((game) => game.values);
+        }
+
     }
     return Game;
 };

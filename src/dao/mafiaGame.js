@@ -268,6 +268,17 @@ class MafiaGame {
         return this._data.aliases.slice();
     }
 
+
+    /**
+     * Get a custom value attached to the game
+     *
+     * @param {string} key Value storage key
+     * @returns {*} Stored value for `key`
+     */
+    get values() {
+        return JSON.parse(JSON.stringify(this._data.values));
+    }
+
     /**
      * Save game data to disk
      *
@@ -603,7 +614,7 @@ class MafiaGame {
      * @returns {*} Stored value for `key`
      */
     getValue(key) {
-        return this._data.values[key];
+        return this.values[key];
     }
 
     /**
