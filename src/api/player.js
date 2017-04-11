@@ -34,14 +34,17 @@ exports.bindForum = (forum, dao) => {
         throw new Error('E_INVALID_USER');
     });
 
-    const getPlayerFromParams = (gameId, user) => new Promise((resolve) => {
+    const getGame = (gameId) =>
+        new Promise((resolve) => {
             if (!gameId) {
                 throw new Error('E_MISSING_GAME_IDENTIFIER');
             }
             resolve();
         })
-        .then(() => dao.getGameById(gameId))
-        .then((game) => {
+        .then(() => dao.getGameById(gameId));
+
+    const getUser = (game, user) => Promise.resolve()
+        .then(() => {
             if (typeof user === 'string' && user.length > 0) {
                 return game.getPlayer(user);
             }
@@ -50,6 +53,9 @@ exports.bindForum = (forum, dao) => {
             }
             throw new Error('E_INVALID_USER');
         });
+
+    const getPlayerFromParams = (gameId, user) => getGame(gameId)
+        .then((game) => getUser(game, user));
 
     class Player {
         /**
@@ -163,6 +169,56 @@ exports.bindForum = (forum, dao) => {
         static getPlayerValues(gameId, user) {
             return getPlayerFromParams(gameId, user)
                 .then((player) => player.values);
+        }
+
+        /**
+         * Send RoleCard to a user
+         *
+         * @param {GameIdentifier} gameId ID of the game to manipulate.
+         * @param {User|string} sender User who is sending the role card
+         * @param {User|string} target User who should receive the role card
+         * @param {string} text Role Card Text
+         * @returns {Promise} Resolves on completion, rejects on failure.
+         */
+        static sendRoleCard(gameId, sender, target, text) {
+            let game, user, title;
+            return getGame(gameId)
+                .then((mafiaGame) => game = mafiaGame)
+                .then(() => getUser(game, sender))
+                .then((mafiaUser) => {
+                    if (!mafiaUser.isModerator) {
+                        throw new Error('E_SENDER_IS_NOT_MODERATOR');
+                    }
+                })
+                .then(() => getUser(game, target))
+                .then((mafiaUser) => {
+                    if (!mafiaUser.isAlive) {
+                        throw new Error('E_TARGET_IS_NOT_ALIVE');
+                    }
+                    if (mafiaUser.isModerator) {
+                        throw new Error('E_TARGET_IS_MODERATOR');
+                    }
+                    user = mafiaUser;
+                })
+                .then(() => {
+                    title = `Rolecard for ${game.name}`;
+                    if (game.values['rolecard-title']) {
+                        title = game.values['rolecard-title'];
+                    }
+                })
+                .then(() => {
+                    const targets = game.moderators.map((mod) => mod.username);
+                    targets.push(user.username);
+                    return Promise.all(targets.map((t) => forum.User.getByName(t)));
+                })
+                .then((targets) => forum.PrivateMessage.create(targets, text, title))
+                .then((chatroom) => Promise.all([
+                    game.addChat(chatroom.id),
+                    user.setValue('rolecard-id', chatroom.id),
+                    user.setValue('rolecard-title', title),
+                    user.setValue('rolecard-text', text)
+                ]))
+                .then(() => undefined);
         }
     }
 
