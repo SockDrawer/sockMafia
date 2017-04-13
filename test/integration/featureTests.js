@@ -933,6 +933,53 @@ describe('MafiaBot', function () {
 				output.should.include('<a href="/p/3"><s>dreikin</s></a> <a href="/p/5">[X]</a>');
 			});
 		});
+		
+		it('Should include to-lynch', () => {
+
+			let command = {
+				args: ['@accalia'],
+				input: '!vote @accalia',
+				reply: sandbox.stub(),
+				getTopic: () => Promise.resolve({id: 2}),
+				getPost: () => Promise.resolve({id: 1}),
+				getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
+			};
+
+			//Spies
+			sandbox.spy(game, 'registerAction');
+			sandbox.spy(game, 'revokeAction');
+
+			//First, register a vote
+			return playerController.voteHandler(command).then(() => {
+				command = {
+					args: [],
+					input: '!list-votes',
+					reply: sandbox.stub(),
+					getTopic: () => Promise.resolve({id: 2}),
+					getPost: () => Promise.resolve({id: 2}),
+					getUser: () => Promise.resolve({username: 'yamikuronue'}),
+					parent: {
+						ids: {
+							topic: 2
+						}
+					}
+				};
+
+				view.reportError.reset();
+				return playerController.listVotesHandler(command);
+			}).then(() => {
+				view.reportError.called.should.be.false;
+				command.reply.called.should.be.true;
+
+				const output = command.reply.firstCall.args[0];
+				output.should.include('With 4 playing, it\'s <b>3 to lynch!</b>');
+			});
+		});
 
 	});
 

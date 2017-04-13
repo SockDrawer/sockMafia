@@ -87,6 +87,7 @@ exports.respondInThread = function(thread, output) {
 };
 
 exports.respondWithTemplate  = function(templateFile, data, command) {
+	debug('Replying with template ' + templateDir + templateFile);
 	return readFile(__dirname + templateDir + templateFile)
 	.then((buffer) => {
 		const source = buffer.toString();
