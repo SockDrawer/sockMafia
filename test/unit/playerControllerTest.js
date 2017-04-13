@@ -1697,6 +1697,7 @@ describe('player controller', () => {
 			}];
 
 			mockGame = {
+				day: 1,
 				allPlayers: [mockUsers.yamikuronue, mockUsers.dreikin, mockUsers.accalia, mockUsers.ninja],
 				livePlayers: [mockUsers.yamikuronue, mockUsers.dreikin, mockUsers.accalia, mockUsers.ninja],
 				deadPlayers: [],
@@ -1753,6 +1754,32 @@ describe('player controller', () => {
 				return playerController.listVotesHandler(command).then(() => {
 					view.respondInThread.called.should.be.false;
 					view.reportError.called.should.be.false;
+				});
+			});
+			
+			it('should output extra info', () => {
+				const command = {
+					getTopic: () => Promise.resolve({
+						id: 12345
+					}),
+					getUser: () => Promise.resolve({
+						username: 'tehNinja'
+					}),
+					args: [],
+					parent: {
+						ids: {
+							topic: 123
+						}
+					}
+				};
+
+				return playerController.listVotesHandler(command).then(() => {
+					view.respondWithTemplate.called.should.be.true;
+					const dataSent = view.respondWithTemplate.getCall(0).args[1];
+
+					dataSent.day.should.equal(1);
+					dataSent.numPlayers.should.equal(4);
+					dataSent.toExecute.should.equal(3);
 				});
 			});
 

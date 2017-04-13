@@ -15,6 +15,7 @@ chai.should();
 const view = require('../../src/view');
 const nameHelperGenerator = require('../../src/templates/helpers/listNames');
 const voteChartGenerator = require('../../src/templates/helpers/voteChart');
+const boldHelper = require('../../src/templates/helpers/bold');
 const mafia = require('../../src/mafiabot');
 const MafiaAction = require('../../src/dao/mafiaAction');
 const MafiaUser = require('../../src/dao/mafiaUser');
@@ -45,6 +46,12 @@ describe('View helpers', () => {
 	
 	afterEach(() => {
 		sandbox.restore();
+	});
+	
+	describe('bold()', () => {
+		it('should bold input', () => {
+			boldHelper(fakeFormatter)('input').should.equal('<b>input</b>');
+		});
 	});
 
 	describe('listNames()', () => {
