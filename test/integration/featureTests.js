@@ -833,6 +833,11 @@ describe('MafiaBot', function () {
 				const output = command.reply.firstCall.args[0];
 				output.should.include('<td><b>accalia');
 				output.should.include('<a href="/p/1"><b>yamikuronue</b></a>');
+				
+				
+				//Longer output tests: which day is it, and what number to lynch
+				output.should.include('<u>Votecount for Day 2</u>');
+				output.should.include('With 4 playing, it\'s <b>3 to lynch!</b>');
 			});
 		});
 

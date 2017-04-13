@@ -250,6 +250,7 @@ class MafiaPlayerController {
 	}
 
 	getGame(command) {
+		debug(JSON.stringify(command.parent.ids))
 		//First check for 'in soandso' syntax
 		for (let i = 0; i < command.args.length; i++) {
 			if (command.args[i].toLowerCase() === 'in' && command.args[i + 1]) {
@@ -261,7 +262,6 @@ class MafiaPlayerController {
 				}
 			}
 		}
-		
 		if (command.parent.ids.topic === -1) {
 			//Command came from a chat
 			return this.dao.getGameByChatId(command.parent.ids.pm);
@@ -806,6 +806,7 @@ class MafiaPlayerController {
 
 
 		let game, id;
+		debug(JSON.stringify(command))
 		return this.getGame(command)
 			.catch(() => {
 				logWarning('Ignoring message in nonexistant game thread ' + game);
