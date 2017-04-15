@@ -393,7 +393,7 @@ class MafiaGame {
             debug(`Killed player ${user}`);
             return this.save().then(() => player);
         }
-        return Promise.reject('E_USER_NOT_LIVE');
+        return Promise.reject(new Error('E_USER_NOT_LIVE'));
     }
 
     /**

@@ -12,7 +12,7 @@ const Dao = require('../../../src/dao'),
     MafiaGame = require('../../../src/dao/mafiaGame'),
     gameApi = require('../../../src/api/game');
 
-describe('api/query', () => {
+describe('api/game', () => {
     describe('module', () => {
         it('should expose a `bindForum()` function', () => {
             gameApi.should.have.keys(['bindForum']);
