@@ -268,6 +268,15 @@ class MafiaGame {
         return this._data.aliases.slice();
     }
 
+    /**
+     * Get a list of the phases for this game
+     *
+     * @returns {Array<string>} A list of phases for this game.
+     */
+    get phases() {
+        return this._data.phases.slice();
+    }
+
 
     /**
      * Get a custom value attached to the game
