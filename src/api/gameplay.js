@@ -95,16 +95,17 @@ exports.bindForum = (forum, dao) => {
         }
 
         /**
-         * Unkill a player in the game
+         * Advance the game phase manually, may advance into the next day
          *
          * Game rules:
-         *  - A player can only be unkilled if they are already in the game.
-         *  - A player can only be unkilled if they are dead.
-         *  - A player can only be unkilled by the mod.
+         *  - The phase can only be altered forward, no time travel to the past allowed.
+         *  - The phase can only be altered if the game is active.
+         *  - Only a moderator may alter the phase directly.
          *
-         * @param {GameIdentifier}  gameId      The game to modify
-         * @param {string}          [nextStage] The name of the stage to advance to
-         * @returns {Promise}       Resolves on completion
+         * @param {GameIdentifier}      gameId      The game to modify
+         * @param {string|forum.User}   moderator   The Moderator modifying the game
+         * @param {string}              [nextPhase] The name of the stage to advance to
+         * @returns {Promise}           Resolves on completion
          */
         static advancePhase(gameId, moderator, nextPhase) {
             debug(`Received request to advance ${gameId} to ${nextPhase || 'the next stage'}`);
@@ -115,7 +116,7 @@ exports.bindForum = (forum, dao) => {
                         //advance a single stage
                         return game.nextPhase();
                     }
-                    if (game.phases.some((stage) => stage === nextPhase)) {
+                    if (game.phases.some((phase) => phase === nextPhase)) {
                         const next = () => game.nextPhase().then(() => {
                             if (game.phase !== nextPhase) {
                                 return next();
