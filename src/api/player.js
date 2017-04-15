@@ -7,7 +7,7 @@
  */
 
 const debug = require('debug')('sockbot:mafia:api:player');
-
+const utils = require('./utils');
 /**
  * @namespace
  * @name addGameData
@@ -21,41 +21,8 @@ const debug = require('debug')('sockbot:mafia:api:player');
  */
 
 exports.bindForum = (forum, dao) => {
-    const validateGameIdUserParams = (gameId, user) => new Promise((resolve) => {
-        if (!gameId) {
-            throw new Error('E_MISSING_GAME_IDENTIFIER');
-        }
-        if (typeof user === 'string' && user.length > 0) {
-            return resolve(user);
-        }
-        if (user instanceof forum.User) {
-            return resolve(user.username);
-        }
-        throw new Error('E_INVALID_USER');
-    });
-
-    const getGame = (gameId) =>
-        new Promise((resolve) => {
-            if (!gameId) {
-                throw new Error('E_MISSING_GAME_IDENTIFIER');
-            }
-            resolve();
-        })
-        .then(() => dao.getGameById(gameId));
-
-    const getUser = (game, user) => Promise.resolve()
-        .then(() => {
-            if (typeof user === 'string' && user.length > 0) {
-                return game.getPlayer(user);
-            }
-            if (user instanceof forum.User) {
-                return game.getPlayer(user.username);
-            }
-            throw new Error('E_INVALID_USER');
-        });
-
-    const getPlayerFromParams = (gameId, user) => getGame(gameId)
-        .then((game) => getUser(game, user));
+    const getPlayerFromParams = (gameId, user) => utils.getGame(gameId, dao)
+        .then((game) => utils.getUser(user, game, forum));
 
     class Player {
         /**
@@ -66,11 +33,11 @@ exports.bindForum = (forum, dao) => {
          * @returns {Promise} Resolves on completion, rejects on failure.
          */
         static addPlayer(gameId, user) {
-            let username = null;
-            return validateGameIdUserParams(gameId, user)
-                .then((parsedUser) => username = parsedUser)
-                .then(() => dao.getGameById(gameId))
-                .then((game) => {
+            let game = null;
+            return utils.getGame(gameId, dao)
+                .then((mafiaGame) => game = mafiaGame)
+                .then(() => utils.extractUsername(user, forum))
+                .then((username) => {
                     debug(`Adding player '${username}' to game '${gameId}'`);
                     return game.addPlayer(username);
                 })
@@ -85,11 +52,11 @@ exports.bindForum = (forum, dao) => {
          * @returns {Promise} Resolves on completion, rejects on failure.
          */
         static addModerator(gameId, user) {
-            let username = null;
-            return validateGameIdUserParams(gameId, user)
-                .then((parsedUser) => username = parsedUser)
-                .then(() => dao.getGameById(gameId))
-                .then((game) => {
+            let game = null;
+            return utils.getGame(gameId, dao)
+                .then((mafiaGame) => game = mafiaGame)
+                .then(() => utils.extractUsername(user, forum))
+                .then((username) => {
                     debug(`Adding moderator '${username}' to game '${gameId}'`);
                     return game.addModerator(username);
                 })
@@ -182,15 +149,15 @@ exports.bindForum = (forum, dao) => {
          */
         static sendRoleCard(gameId, sender, target, text) {
             let game, user, title;
-            return getGame(gameId)
+            return utils.getGame(gameId, dao)
                 .then((mafiaGame) => game = mafiaGame)
-                .then(() => getUser(game, sender))
+                .then(() => utils.getUser(sender, game, forum))
                 .then((mafiaUser) => {
                     if (!mafiaUser.isModerator) {
                         throw new Error('E_SENDER_IS_NOT_MODERATOR');
                     }
                 })
-                .then(() => getUser(game, target))
+                .then(() => utils.getUser(target, game, forum))
                 .then((mafiaUser) => {
                     if (!mafiaUser.isAlive) {
                         throw new Error('E_TARGET_IS_NOT_ALIVE');

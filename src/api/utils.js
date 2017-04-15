@@ -7,13 +7,16 @@ exports.getGame = (gameId, dao) =>
     })
     .then(() => dao.getGameById(gameId));
 
-exports.getUser = (user, game, forum) => Promise.resolve()
+exports.extractUsername = (user, forum) => Promise.resolve()
     .then(() => {
         if (typeof user === 'string' && user.length > 0) {
-            return game.getPlayer(user);
+            return user;
         }
         if (user instanceof forum.User) {
-            return game.getPlayer(user.username);
+            return user.username;
         }
         throw new Error('E_INVALID_USER');
     });
+
+exports.getUser = (user, game, forum) => exports.extractUsername(user, forum)
+    .then((username) => game.getPlayer(username));

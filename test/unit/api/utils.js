@@ -47,9 +47,39 @@ describe('api/gameplay', () => {
             return utilsApi.getGame('id', dao).should.be.rejectedWith(err);
         });
     });
-    describe('getUser()', () => {
-        let forum, game, stubGetPlayer, player;
+    describe('extractUsername()', () => {
+        let forum;
         beforeEach(() => {
+            forum = {
+                User: function User(username) {
+                    this.username = username;
+                }
+            };
+        });
+        it('should retrieve player from string', () => {
+            const name = `name${Math.random()}`;
+            return utilsApi.extractUsername(name, forum).should.become(name);
+        });
+        it('should retrieve player from forum.User', () => {
+            const name = `name${Math.random()}`;
+            return utilsApi.extractUsername(new forum.User(name), forum).should.become(name);
+        });
+        it('should reject for zero length string', () => {
+            return utilsApi.extractUsername('', forum).should.be.rejectedWith('E_INVALID_USER');
+        });
+        it('should reject for "duck-typed" user', () => {
+            return utilsApi.extractUsername({
+                username: 'name'
+            }, forum).should.be.rejectedWith('E_INVALID_USER');
+        });
+        it('should reject for random typed parameter', () => {
+            return utilsApi.extractUsername(Math.random(), forum).should.be.rejectedWith('E_INVALID_USER');
+        });
+    });
+    describe('getUser()', () => {
+        let forum, game, sandbox, stubExtractUsername, stubGetPlayer, player;
+        beforeEach(() => {
+            sandbox = sinon.sandbox.create();
             forum = {
                 User: function User(username) {
                     this.username = username;
@@ -58,47 +88,34 @@ describe('api/gameplay', () => {
             game = new MafiaGame({}, {});
             player = new MafiaUser({}, {});
             stubGetPlayer = sinon.stub(game, 'getPlayer').resolves(player);
+            stubExtractUsername = sandbox.stub(utilsApi, 'extractUsername').resolves();
         });
-        it('should retrieve player by string', () => {
+        afterEach(() => sandbox.restore());
+        it('should retrieve player username via extractUsername()', () => {
             const name = `name${Math.random()}`;
             return utilsApi.getUser(name, game, forum).then(() => {
-                stubGetPlayer.calledWith(name).should.be.true;
+                stubExtractUsername.calledWith(name).should.be.true;
             });
         });
-        it('should resolve to retrieved player by string', () => {
+        it('should retrieve player from game based on results of extractUsername()', () => {
+            const id = `name${Math.random()}`;
             const name = `name${Math.random()}`;
-            return utilsApi.getUser(name, game, forum).should.become(player);
+            stubExtractUsername.resolves(id);
+            return utilsApi.getUser(name, game, forum).then(() => {
+                stubGetPlayer.calledWith(id).should.be.true;
+            });
+        });
+        it('should resolve to results of getPlayer()', () => {
+            const name = new MafiaUser({
+                username: `name${Math.random()}`
+            }, {});
+            stubGetPlayer.resolves(name);
+            return utilsApi.getUser(name, game, forum).should.become(name);
         });
         it('should reject when getPlayer rejects by string', () => {
             const err = new Error(`name${Math.random()}`);
             stubGetPlayer.rejects(err);
             return utilsApi.getUser('name', game, forum).should.be.rejectedWith(err);
-        });
-        it('should retrieve player by forum.User', () => {
-            const name = `name${Math.random()}`;
-            return utilsApi.getUser(new forum.User(name), game, forum).then(() => {
-                stubGetPlayer.calledWith(name).should.be.true;
-            });
-        });
-        it('should resolve to retrieved player by forum.User', () => {
-            const name = `name${Math.random()}`;
-            return utilsApi.getUser(new forum.User(name), game, forum).should.become(player);
-        });
-        it('should reject when getPlayer rejects by forum.User', () => {
-            const err = new Error(`name${Math.random()}`);
-            stubGetPlayer.rejects(err);
-            return utilsApi.getUser(new forum.User('name'), game, forum).should.be.rejectedWith(err);
-        });
-        it('should reject for zero length string', () => {
-            return utilsApi.getUser('', game, forum).should.be.rejectedWith('E_INVALID_USER');
-        });
-        it('should reject for "duck-typed" user', () => {
-            return utilsApi.getUser({
-                username: 'name'
-            }, game, forum).should.be.rejectedWith('E_INVALID_USER');
-        });
-        it('should reject for random typed parameter', () => {
-            return utilsApi.getUser(Math.random(), game, forum).should.be.rejectedWith('E_INVALID_USER');
         });
     });
 });
