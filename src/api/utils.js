@@ -7,6 +7,25 @@ exports.getGame = (gameId, dao) =>
     })
     .then(() => dao.getGameById(gameId));
 
+exports.getActiveGame = (gameId, dao) => exports.getGame(gameId, dao)
+    .then(game => {
+        if (!game.isActive) {
+            throw new Error('E_GAME_NOT_ACTIVE');
+        }
+        return game;
+    });
+
+exports.getGameForModActivity = (gameId, moderator, dao, forum) => exports.getActiveGame(gameId, dao)
+    .then((game) => exports.getUser(moderator, game, forum).then((user) => [game, user]))
+    .then((args) => {
+        const game = args[0],
+            user = args[1];
+        if (!user.isModerator) {
+            throw new Error('E_ACTOR_NOT_MODERATOR');
+        }
+        return game;
+    });
+
 exports.extractUsername = (user, forum) => Promise.resolve()
     .then(() => {
         if (typeof user === 'string' && user.length > 0) {

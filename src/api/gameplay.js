@@ -10,22 +10,6 @@ const debug = require('debug')('sockbot:mafia:api:gameplay');
 const utils = require('./utils');
 
 exports.bindForum = (forum, dao) => {
-    const getActiveGame = (gameId) => utils.getGame(gameId, dao)
-        .then(mafiaGame => {
-            if (!mafiaGame.isActive) {
-                throw new Error('E_GAME_NOT_ACTIVE');
-            }
-            return mafiaGame;
-        });
-
-    const validateModerator = (moderator, game) => utils.getUser(moderator, game, forum)
-        .then((mafiaUser) => {
-            if (!mafiaUser.isModerator) {
-                throw new Error('E_ACTOR_NOT_MODERATOR');
-            }
-            return game;
-        });
-
     class GamePlay {
         /**
          * Kill a player in the game
@@ -43,9 +27,8 @@ exports.bindForum = (forum, dao) => {
         static killPlayer(gameId, moderator, player) {
             debug(`Received kill request for ${player} in ${gameId} from ${moderator}`);
             let game, user;
-            return getActiveGame(gameId)
+            return utils.getGameForModActivity(gameId, moderator, dao, forum)
                 .then(mafiaGame => game = mafiaGame)
-                .then(() => validateModerator(moderator, game))
                 .then(() => utils.getUser(player, game, forum))
                 .then((mafiaUser) => {
                     if (!mafiaUser.isAlive) {
@@ -77,9 +60,8 @@ exports.bindForum = (forum, dao) => {
         static unkillPlayer(gameId, moderator, player) {
             debug(`Received unkill request for ${player} in ${gameId} from ${moderator}`);
             let game, user;
-            return getActiveGame(gameId)
+            return utils.getGameForModActivity(gameId, moderator, dao, forum)
                 .then(mafiaGame => game = mafiaGame)
-                .then(() => validateModerator(moderator, game))
                 .then(() => utils.getUser(player, game, forum))
                 .then((mafiaUser) => {
                     if (mafiaUser.isAlive) {
@@ -109,8 +91,7 @@ exports.bindForum = (forum, dao) => {
          */
         static advancePhase(gameId, moderator, nextPhase) {
             debug(`Received request to advance ${gameId} to ${nextPhase || 'the next stage'}`);
-            return getActiveGame(gameId)
-                .then((game) => validateModerator(moderator, game))
+            return utils.getGameForModActivity(gameId, moderator, dao, forum)
                 .then((game) => {
                     if (nextPhase === undefined) {
                         //advance a single stage
@@ -127,6 +108,24 @@ exports.bindForum = (forum, dao) => {
                     // target stage is not valid
                     throw new Error('E_INVALID_TARGET_STAGE');
                 })
+                .then(() => undefined);
+        }
+
+        /**
+         * Advance the game to the next day
+         *
+         * Game rules:
+         *  - The day can only be altered if the game is active.
+         *  - Only a moderator may alter the day directly.
+         *
+         * @param {GameIdentifier}      gameId      The game to modify
+         * @param {string|forum.User}   moderator   The Moderator modifying the game
+         * @returns {Promise}           Resolves on completion
+         */
+        static advanceDay(gameId, moderator) {
+            debug(`Received request to advance ${gameId} to the next day`);
+            return utils.getGameForModActivity(gameId, moderator, dao, forum)
+                .then((game) => game.newDay())
                 .then(() => undefined);
         }
     }

@@ -35,12 +35,8 @@ describe('api/gameplay', () => {
         });
         afterEach(() => sandbox.restore());
         describe('killPlayer', () => {
-            let mod, user, game, stubGetGame, stubGetUser, stubKillPlayer;
+            let user, game, stubGetGameForModActivity, stubGetUser, stubKillPlayer;
             beforeEach(() => {
-                mod = new MafiaUser({
-                    username: `moderator${Math.random()}`,
-                    isModerator: true
-                });
                 user = new MafiaUser({
                     username: `player${Math.random()}`
                 });
@@ -50,34 +46,20 @@ describe('api/gameplay', () => {
                 }, {});
                 stubKillPlayer = sandbox.stub(game, 'killPlayer').resolves();
                 stubGetUser = sandbox.stub(utilsApi, 'getUser').rejects(new Error('TOO_MANY_TEST_CALLS'));
-                stubGetUser.onFirstCall().resolves(mod);
-                stubGetUser.onSecondCall().resolves(user);
-                stubGetGame = sandbox.stub(utilsApi, 'getGame').resolves(game);
+                stubGetUser.onFirstCall().resolves(user);
+                stubGetGameForModActivity = sandbox.stub(utilsApi, 'getGameForModActivity').resolves(game);
             });
-            it('should get game via getGame Utility', () => {
-                const expected = `id${Math.random()}`;
-                return GamePlay.killPlayer(expected, 'mod', 'user').then(() => {
-                    stubGetGame.calledWith(expected, dao).should.be.true;
+            it('should get game via getGameForModActivity Utility', () => {
+                const expectedid = `id${Math.random()}`;
+                const expectedname = `name${Math.random()}`;
+                return GamePlay.killPlayer(expectedid, expectedname, 'user').then(() => {
+                    stubGetGameForModActivity.calledWith(expectedid, expectedname, dao, forum).should.be.true;
                 });
             });
-            it('should reject for inactive game', () => {
-                game._data.isActive = false;
-                return GamePlay.killPlayer('id', 'mod', 'user').should.be.rejectedWith('E_GAME_NOT_ACTIVE');
-            });
-            it('should retrieve Moderator first', () => {
-                const expected = `mod${Math.random()}`;
-                return GamePlay.killPlayer('foo', expected, 'user').then(() => {
-                    stubGetUser.firstCall.calledWith(expected);
-                });
-            });
-            it('should reject if moderator is not a moderator', () => {
-                mod._data.isModerator = false;
-                return GamePlay.killPlayer('id', 'mod', 'user').should.be.rejectedWith('E_ACTOR_NOT_MODERATOR');
-            });
-            it('should retrieve player second', () => {
+            it('should retrieve player via GetUser utility', () => {
                 const expected = `player${Math.random()}`;
                 return GamePlay.killPlayer('foo', 'mod', expected).then(() => {
-                    stubGetUser.secondCall.calledWith(expected);
+                    stubGetUser.calledWith(expected);
                 });
             });
             it('should reject if target is not alive', () => {
@@ -94,17 +76,12 @@ describe('api/gameplay', () => {
             });
             it('should reject when game retrieval fails', () => {
                 const err = new Error(`err${Math.random()}`);
-                stubGetGame.rejects(err);
-                return GamePlay.killPlayer('id', 'mod', 'user').should.be.rejectedWith(err);
-            });
-            it('should reject when moderator retrieval fails', () => {
-                const err = new Error(`err${Math.random()}`);
-                stubGetUser.onFirstCall().rejects(err);
+                stubGetGameForModActivity.rejects(err);
                 return GamePlay.killPlayer('id', 'mod', 'user').should.be.rejectedWith(err);
             });
             it('should reject when user retrieval fails', () => {
                 const err = new Error(`err${Math.random()}`);
-                stubGetUser.onSecondCall().rejects(err);
+                stubGetUser.onFirstCall().rejects(err);
                 return GamePlay.killPlayer('id', 'mod', 'user').should.be.rejectedWith(err);
             });
             it('should reject when kill fails', () => {
@@ -114,12 +91,8 @@ describe('api/gameplay', () => {
             });
         });
         describe('unkillPlayer', () => {
-            let mod, user, game, stubGetGame, stubGetUser, stubResurectPlayer;
+            let user, game, stubGetGameForModActivity, stubGetUser, stubResurectPlayer;
             beforeEach(() => {
-                mod = new MafiaUser({
-                    username: `moderator${Math.random()}`,
-                    isModerator: true
-                });
                 user = new MafiaUser({
                     username: `player${Math.random()}`,
                     isAlive: false
@@ -130,34 +103,20 @@ describe('api/gameplay', () => {
                 }, {});
                 stubResurectPlayer = sandbox.stub(game, 'resurectPlayer').resolves();
                 stubGetUser = sandbox.stub(utilsApi, 'getUser').rejects(new Error('TOO_MANY_TEST_CALLS'));
-                stubGetUser.onFirstCall().resolves(mod);
-                stubGetUser.onSecondCall().resolves(user);
-                stubGetGame = sandbox.stub(utilsApi, 'getGame').resolves(game);
+                stubGetUser.onFirstCall().resolves(user);
+                stubGetGameForModActivity = sandbox.stub(utilsApi, 'getGameForModActivity').resolves(game);
             });
-            it('should get game via getGame Utility', () => {
-                const expected = `id${Math.random()}`;
-                return GamePlay.unkillPlayer(expected, 'mod', 'user').then(() => {
-                    stubGetGame.calledWith(expected, dao).should.be.true;
+            it('should get game via getGameForModActivity Utility', () => {
+                const expectedId = `id${Math.random()}`;
+                const expectedName = `name${Math.random()}`;
+                return GamePlay.unkillPlayer(expectedId, expectedName, 'user').then(() => {
+                    stubGetGameForModActivity.calledWith(expectedId, expectedName, dao, forum).should.be.true;
                 });
             });
-            it('should reject for inactive game', () => {
-                game._data.isActive = false;
-                return GamePlay.unkillPlayer('id', 'mod', 'user').should.be.rejectedWith('E_GAME_NOT_ACTIVE');
-            });
-            it('should retrieve Moderator first', () => {
-                const expected = `mod${Math.random()}`;
-                return GamePlay.unkillPlayer('foo', expected, 'user').then(() => {
-                    stubGetUser.firstCall.calledWith(expected);
-                });
-            });
-            it('should reject if moderator is not a moderator', () => {
-                mod._data.isModerator = false;
-                return GamePlay.unkillPlayer('id', 'mod', 'user').should.be.rejectedWith('E_ACTOR_NOT_MODERATOR');
-            });
-            it('should retrieve player second', () => {
+            it('should retrieve player via getUser utility', () => {
                 const expected = `player${Math.random()}`;
                 return GamePlay.unkillPlayer('foo', 'mod', expected).then(() => {
-                    stubGetUser.secondCall.calledWith(expected);
+                    stubGetUser.calledWith(expected);
                 });
             });
             it('should reject if target is alive', () => {
@@ -174,17 +133,12 @@ describe('api/gameplay', () => {
             });
             it('should reject when game retrieval fails', () => {
                 const err = new Error(`err${Math.random()}`);
-                stubGetGame.rejects(err);
-                return GamePlay.unkillPlayer('id', 'mod', 'user').should.be.rejectedWith(err);
-            });
-            it('should reject when moderator retrieval fails', () => {
-                const err = new Error(`err${Math.random()}`);
-                stubGetUser.onFirstCall().rejects(err);
+                stubGetGameForModActivity.rejects(err);
                 return GamePlay.unkillPlayer('id', 'mod', 'user').should.be.rejectedWith(err);
             });
             it('should reject when user retrieval fails', () => {
                 const err = new Error(`err${Math.random()}`);
-                stubGetUser.onSecondCall().rejects(err);
+                stubGetUser.onFirstCall().rejects(err);
                 return GamePlay.unkillPlayer('id', 'mod', 'user').should.be.rejectedWith(err);
             });
             it('should reject when kill fails', () => {
@@ -194,39 +148,26 @@ describe('api/gameplay', () => {
             });
         });
         describe('advancePhase()', () => {
-            let mod, game, stubGetGame, stubGetUser, stubNextPhase;
+            let game, stubGetGameForModActivity, stubNextPhase;
             beforeEach(() => {
-                mod = new MafiaUser({
-                    username: `moderator${Math.random()}`,
-                    isModerator: true
-                });
                 game = new MafiaGame({
                     id: 42,
                     isActive: true
                 }, {});
                 stubNextPhase = sandbox.stub(game, 'nextPhase').resolves();
-                stubGetUser = sandbox.stub(utilsApi, 'getUser').resolves(mod);
-                stubGetGame = sandbox.stub(utilsApi, 'getGame').resolves(game);
+                stubGetGameForModActivity = sandbox.stub(utilsApi, 'getGameForModActivity').resolves(game);
             });
-            it('should get game via getGame Utility', () => {
-                const expected = `id${Math.random()}`;
-                return GamePlay.advancePhase(expected, 'mod').then(() => {
-                    stubGetGame.calledWith(expected, dao).should.be.true;
+            it('should get game via getGameForModActivity Utility', () => {
+                const expectedId = `id${Math.random()}`;
+                const expectedName = `name${Math.random()}`;
+                return GamePlay.advancePhase(expectedId, expectedName).then(() => {
+                    stubGetGameForModActivity.calledWith(expectedId, expectedName, dao, forum).should.be.true;
                 });
             });
-            it('should reject for inactive game', () => {
-                game._data.isActive = false;
-                return GamePlay.advancePhase('id', 'mod').should.be.rejectedWith('E_GAME_NOT_ACTIVE');
-            });
-            it('should retrieve Moderator via utils function', () => {
-                const expected = `mod${Math.random()}`;
-                return GamePlay.advancePhase('foo', expected).then(() => {
-                    stubGetUser.firstCall.calledWith(expected);
-                });
-            });
-            it('should reject if moderator is not a moderator', () => {
-                mod._data.isModerator = false;
-                return GamePlay.advancePhase('id', 'mod').should.be.rejectedWith('E_ACTOR_NOT_MODERATOR');
+            it('should reject when getGameForModActivity rejects', () => {
+                const err = new Error(`err${Math.random()}`);
+                stubGetGameForModActivity.rejects(err);
+                return GamePlay.advancePhase('id', 'mod').should.be.rejectedWith(err);
             });
             it('should resolve to undefined', () => {
                 return GamePlay.advancePhase('id', 'mod').should.become(undefined);
@@ -263,6 +204,42 @@ describe('api/gameplay', () => {
             it('should reject when target phase is not a valid phase', () => {
                 game._data.phases = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
                 return GamePlay.advancePhase('foo', 'mod', 'eleven').should.be.rejectedWith('E_INVALID_TARGET_STAGE');
+            });
+        });
+        describe('advancePhase()', () => {
+            let game, stubGetGameForModActivity, stubNewDay;
+            beforeEach(() => {
+                game = new MafiaGame({
+                    id: 42,
+                    isActive: true
+                }, {});
+                stubNewDay = sandbox.stub(game, 'newDay').resolves();
+                stubGetGameForModActivity = sandbox.stub(utilsApi, 'getGameForModActivity').resolves(game);
+            });
+            it('should get game via getGameForModActivity Utility', () => {
+                const expectedId = `id${Math.random()}`;
+                const expectedName = `name${Math.random()}`;
+                return GamePlay.advanceDay(expectedId, expectedName).then(() => {
+                    stubGetGameForModActivity.calledWith(expectedId, expectedName, dao, forum).should.be.true;
+                });
+            });
+            it('should reject when getGameForModActivity rejects', () => {
+                const err = new Error(`err${Math.random()}`);
+                stubGetGameForModActivity.rejects(err);
+                return GamePlay.advanceDay('id', 'mod').should.be.rejectedWith(err);
+            });
+            it('should resolve to undefined', () => {
+                return GamePlay.advanceDay('id', 'mod').should.become(undefined);
+            });
+            it('should advance day via game.newDay()', () => {
+                return GamePlay.advanceDay('id', 'mod').then(() => {
+                    stubNewDay.callCount.should.equal(1);
+                });
+            });
+            it('should reject when game.newDay rejects', () => {
+                const err = new Error(`oops${Math.random()}`);
+                stubNewDay.rejects(err);
+                return GamePlay.advanceDay('id', 'mod').should.be.rejectedWith(err);
             });
         });
     });

@@ -14,6 +14,11 @@ const Dao = require('../../../src/dao'),
     utilsApi = require('../../../src/api/utils');
 
 describe('api/gameplay', () => {
+    let sandbox;
+    beforeEach(() => {
+        sandbox = sinon.sandbox.create();
+    });
+    afterEach(() => sandbox.restore());
     describe('module', () => {
         ['getGame', 'getUser'].forEach((fn) => {
             it(`should expose a '${fn}()' function`, () => {
@@ -27,7 +32,7 @@ describe('api/gameplay', () => {
         beforeEach(() => {
             dao = new Dao(':memory:');
             game = new MafiaGame({}, {});
-            stubGetGameById = sinon.stub(dao, 'getGameById').resolves(game);
+            stubGetGameById = sandbox.stub(dao, 'getGameById').resolves(game);
         });
         it('should require `gameId`', () => {
             return utilsApi.getGame('', dao).should.be.rejectedWith('E_MISSING_GAME_IDENTIFIER');
@@ -45,6 +50,75 @@ describe('api/gameplay', () => {
             const err = new Error(`ERROR${Math.random()}`);
             stubGetGameById.rejects(err);
             return utilsApi.getGame('id', dao).should.be.rejectedWith(err);
+        });
+    });
+    describe('getActiveGame()', () => {
+        let dao, game, stubGetGame;
+        beforeEach(() => {
+            dao = new Dao(':memory:');
+            game = new MafiaGame({}, {});
+            stubGetGame = sandbox.stub(utilsApi, 'getGame').resolves(game);
+        });
+        it('should retrieve game via self getGame()', () => {
+            const name = `name${Math.random()}`;
+            return utilsApi.getActiveGame(name, dao).then(() => {
+                stubGetGame.calledWith(name, dao);
+            });
+        });
+        it('should resolve to game when active', () => {
+            game._data.isActive = true;
+            return utilsApi.getActiveGame('', dao).should.become(game);
+        });
+        it('should reject game when inactive', () => {
+            game._data.isActive = false;
+            return utilsApi.getActiveGame('', dao).should.be.rejectedWith('E_GAME_NOT_ACTIVE');
+        });
+        it('should reject if fetch rejects', () => {
+            const err = new Error(`ERROR${Math.random()}`);
+            stubGetGame.rejects(err);
+            return utilsApi.getActiveGame('id', dao).should.be.rejectedWith(err);
+        });
+    });
+    describe('getGameForModActivity()', () => {
+        let dao, forum, game, user, stubGetActiveGame, stubGetUser;
+        beforeEach(() => {
+            dao = new Dao(':memory:');
+            forum = {
+                User: function User(username) {
+                    this.username = username;
+                }
+            };
+            game = new MafiaGame({}, {});
+            user = new MafiaUser({
+                isModerator: true
+            }, {});
+            stubGetActiveGame = sandbox.stub(utilsApi, 'getActiveGame').resolves(game);
+            stubGetUser = sandbox.stub(utilsApi, 'getUser').resolves(user);
+        });
+        it('should retrieve game via self getActiveGame()', () => {
+            const gameName = `name${Math.random()}`;
+            return utilsApi.getGameForModActivity(gameName, 'mod', dao, forum).then(() => {
+                stubGetActiveGame.calledWith(gameName, dao).should.be.true;
+            });
+        });
+        it('should reject if fetch rejects', () => {
+            const err = new Error(`ERROR${Math.random()}`);
+            stubGetActiveGame.rejects(err);
+            return utilsApi.getGameForModActivity('id', 'mod', dao, forum).should.be.rejectedWith(err);
+        });
+        it('should retrieve user via self GetUser', () => {
+            const name = `name${Math.random()}`;
+            return utilsApi.getGameForModActivity('id', name, dao, forum).then(() => {
+                stubGetUser.calledWith(name, game, forum).should.be.true;
+            });
+        });
+        it('should resolve to game when user is a moderator', () => {
+            user._data.isModerator = true;
+            return utilsApi.getGameForModActivity('id', 'mod', dao, forum).should.become(game);
+        });
+        it('should reject when user is not a moderator', () => {
+            user._data.isModerator = false;
+            return utilsApi.getGameForModActivity('id', 'mod', dao, forum).should.be.rejectedWith('E_ACTOR_NOT_MODERATOR');
         });
     });
     describe('extractUsername()', () => {
@@ -77,9 +151,8 @@ describe('api/gameplay', () => {
         });
     });
     describe('getUser()', () => {
-        let forum, game, sandbox, stubExtractUsername, stubGetPlayer, player;
+        let forum, game, stubExtractUsername, stubGetPlayer, player;
         beforeEach(() => {
-            sandbox = sinon.sandbox.create();
             forum = {
                 User: function User(username) {
                     this.username = username;
@@ -87,10 +160,9 @@ describe('api/gameplay', () => {
             };
             game = new MafiaGame({}, {});
             player = new MafiaUser({}, {});
-            stubGetPlayer = sinon.stub(game, 'getPlayer').resolves(player);
+            stubGetPlayer = sandbox.stub(game, 'getPlayer').resolves(player);
             stubExtractUsername = sandbox.stub(utilsApi, 'extractUsername').resolves();
         });
-        afterEach(() => sandbox.restore());
         it('should retrieve player username via extractUsername()', () => {
             const name = `name${Math.random()}`;
             return utilsApi.getUser(name, game, forum).then(() => {
