@@ -160,7 +160,7 @@ class MafiaDao {
             });
             if (conflicts.length !== 0) {
                 debug('Game already exists!');
-                return Promise.reject('E_GAME_EXISTS');
+                return Promise.reject(new Error('E_GAME_EXISTS'));
             }
             const game = new MafiaGame({
                 topicId: topicId,
@@ -232,7 +232,7 @@ class MafiaDao {
             const game = data.filter((candidate) => candidate.aliases.some((gamealias) => gamealias === alias))[0];
             if (!game) {
                 debug('No game found!');
-                return Promise.reject('E_NO_GAME');
+                return Promise.reject(new Error('E_NO_GAME'));
             }
             return new MafiaGame(game, this);
         });
@@ -250,7 +250,7 @@ class MafiaDao {
             const game = data.filter((candidate) => candidate.id === id)[0];
             if (!game) {
                 debug('No game found!');
-                return Promise.reject('E_NO_GAME');
+                return Promise.reject(new Error('E_NO_GAME'));
             }
             return new MafiaGame(game, this);
         });

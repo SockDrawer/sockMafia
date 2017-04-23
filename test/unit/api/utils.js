@@ -13,7 +13,7 @@ const Dao = require('../../../src/dao'),
     MafiaUser = require('../../../src/dao/mafiaUser'),
     utilsApi = require('../../../src/api/utils');
 
-describe('api/gameplay', () => {
+describe('api/utils', () => {
     let sandbox;
     beforeEach(() => {
         sandbox = sinon.sandbox.create();
@@ -80,7 +80,7 @@ describe('api/gameplay', () => {
         });
     });
     describe('getGameForModActivity()', () => {
-        let dao, forum, game, user, stubGetActiveGame, stubGetUser;
+        let dao, forum, game, user, stubGetActiveGame, stubGetModerator;
         beforeEach(() => {
             dao = new Dao(':memory:');
             forum = {
@@ -93,7 +93,7 @@ describe('api/gameplay', () => {
                 isModerator: true
             }, {});
             stubGetActiveGame = sandbox.stub(utilsApi, 'getActiveGame').resolves(game);
-            stubGetUser = sandbox.stub(utilsApi, 'getUser').resolves(user);
+            stubGetModerator = sandbox.stub(utilsApi, 'getModerator').resolves(user);
         });
         it('should retrieve game via self getActiveGame()', () => {
             const gameName = `name${Math.random()}`;
@@ -106,19 +106,17 @@ describe('api/gameplay', () => {
             stubGetActiveGame.rejects(err);
             return utilsApi.getGameForModActivity('id', 'mod', dao, forum).should.be.rejectedWith(err);
         });
-        it('should retrieve user via self GetUser', () => {
+        it('should retrieve user via self GetModerator', () => {
             const name = `name${Math.random()}`;
-            return utilsApi.getGameForModActivity('id', name, dao, forum).then(() => {
-                stubGetUser.calledWith(name, game, forum).should.be.true;
+            const tag = `name${Math.random()}`;
+            return utilsApi.getGameForModActivity('id', name, dao, forum, tag).then(() => {
+                stubGetModerator.calledWith(name, game, forum).should.be.true;
             });
         });
-        it('should resolve to game when user is a moderator', () => {
-            user._data.isModerator = true;
-            return utilsApi.getGameForModActivity('id', 'mod', dao, forum).should.become(game);
-        });
-        it('should reject when user is not a moderator', () => {
-            user._data.isModerator = false;
-            return utilsApi.getGameForModActivity('id', 'mod', dao, forum).should.be.rejectedWith('E_ACTOR_NOT_MODERATOR');
+        it('should reject when getModerator rejects', () => {
+            const name = new Error(`err${Math.random()}`);
+            stubGetModerator.rejects(name);
+            return utilsApi.getGameForModActivity('id', 'mod', dao, forum).should.be.rejectedWith(name);
         });
     });
     describe('extractUsername()', () => {
@@ -139,15 +137,19 @@ describe('api/gameplay', () => {
             return utilsApi.extractUsername(new forum.User(name), forum).should.become(name);
         });
         it('should reject for zero length string', () => {
-            return utilsApi.extractUsername('', forum).should.be.rejectedWith('E_INVALID_USER');
+            return utilsApi.extractUsername('', forum).should.be.rejectedWith('E_INVALID_ACTOR');
         });
         it('should reject for "duck-typed" user', () => {
             return utilsApi.extractUsername({
                 username: 'name'
-            }, forum).should.be.rejectedWith('E_INVALID_USER');
+            }, forum).should.be.rejectedWith('E_INVALID_ACTOR');
         });
         it('should reject for random typed parameter', () => {
-            return utilsApi.extractUsername(Math.random(), forum).should.be.rejectedWith('E_INVALID_USER');
+            return utilsApi.extractUsername(Math.random(), forum).should.be.rejectedWith('E_INVALID_ACTOR');
+        });
+        it('should reject with custom tag', () => {
+            const tag = `tag${Math.random()}`;
+            return utilsApi.extractUsername('', forum, tag).should.be.rejectedWith(`E_INVALID_${tag.toUpperCase()}`);
         });
     });
     describe('getUser()', () => {
@@ -188,6 +190,48 @@ describe('api/gameplay', () => {
             const err = new Error(`name${Math.random()}`);
             stubGetPlayer.rejects(err);
             return utilsApi.getUser('name', game, forum).should.be.rejectedWith(err);
+        });
+    });
+    describe('getModerator()', () => {
+        let stubGetUser, mockUser;
+        beforeEach(() => {
+            mockUser = {
+                isModerator: true
+            };
+            stubGetUser = sandbox.stub(utilsApi, 'getUser').resolves(mockUser);
+        });
+        it('should retrieve user via getUser', () => {
+            const mod = `mod${Math.random()}`;
+            const game = `game${Math.random()}`;
+            const forum = `forum${Math.random()}`;
+            const tag = `tag${Math.random()}`;
+            return utilsApi.getModerator(mod, game, forum, tag).then(() => {
+                stubGetUser.calledWith(mod, game, forum, tag).should.be.true;
+            });
+        });
+        it('should provide default tag for omitted parameter', () => {
+            const mod = `mod${Math.random()}`;
+            const game = `game${Math.random()}`;
+            const forum = `forum${Math.random()}`;
+            return utilsApi.getModerator(mod, game, forum).then(() => {
+                stubGetUser.calledWith(mod, game, forum, 'actor').should.be.true;
+            });
+        });
+        it('should provide default tag for invalid parameter', () => {
+            const mod = `mod${Math.random()}`;
+            const game = `game${Math.random()}`;
+            const forum = `forum${Math.random()}`;
+            return utilsApi.getModerator(mod, game, forum, 42).then(() => {
+                stubGetUser.calledWith(mod, game, forum, 'actor').should.be.true;
+            });
+        });
+        it('should resolve to moderator', () => {
+            return utilsApi.getModerator('mod', 'game', 'forum', 'tag').should.become(mockUser);
+        });
+        it('should reject when retrieved user is not a moderator', () => {
+            const tag = `t${Math.random()}t`;
+            mockUser.isModerator = false;
+            return utilsApi.getModerator('mod', 'game', 'forum', tag).should.be.rejectedWith(`E_${tag.toUpperCase()}_NOT_MODERATOR`);
         });
     });
 });

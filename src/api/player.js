@@ -21,22 +21,20 @@ const utils = require('./utils');
  */
 
 exports.bindForum = (forum, dao) => {
-    const getPlayerFromParams = (gameId, user) => utils.getGame(gameId, dao)
-        .then((game) => utils.getUser(user, game, forum));
-
-    class Player {
+        class Player {
         /**
          * Add a player to an existing mafia game
          *
          * @param {GameIdentifier} gameId ID of the game to add the player to.
+         * @param {User|string} actor User modifying the game
          * @param {User|string} user User to add to the game
          * @returns {Promise} Resolves on completion, rejects on failure.
          */
-        static addPlayer(gameId, user) {
+        static addPlayer(gameId, actor, user) {
             let game = null;
-            return utils.getGame(gameId, dao)
+            return utils.getGameForModActivity(gameId, actor, dao, forum)
                 .then((mafiaGame) => game = mafiaGame)
-                .then(() => utils.extractUsername(user, forum))
+                .then(() => utils.extractUsername(user, forum, 'user'))
                 .then((username) => {
                     debug(`Adding player '${username}' to game '${gameId}'`);
                     return game.addPlayer(username);
@@ -48,14 +46,15 @@ exports.bindForum = (forum, dao) => {
          * Add a moderator to an existing mafia game
          *
          * @param {GameIdentifier} gameId ID of the game to add the moderator to.
+         * @param {User|string} actor User modifying the game
          * @param {User|string} user User to add to the game
          * @returns {Promise} Resolves on completion, rejects on failure.
          */
-        static addModerator(gameId, user) {
+        static addModerator(gameId, actor, user) {
             let game = null;
-            return utils.getGame(gameId, dao)
+            return utils.getGameForModActivity(gameId, actor, dao, forum)
                 .then((mafiaGame) => game = mafiaGame)
-                .then(() => utils.extractUsername(user, forum))
+                .then(() => utils.extractUsername(user, forum, 'moderator'))
                 .then((username) => {
                     debug(`Adding moderator '${username}' to game '${gameId}'`);
                     return game.addModerator(username);
@@ -67,12 +66,14 @@ exports.bindForum = (forum, dao) => {
          * Add a property to a user
          *
          * @param {GameIdentifier} gameId ID of the game manipulate.
+         * @param {User|string} actor User modifying the game
          * @param {User|string} user User to modify
          * @param {string} property Property to add
          * @returns {Promise} Resolves on completion, rejects on failure.
          */
-        static addPlayerProperty(gameId, user, property) {
-            return getPlayerFromParams(gameId, user)
+        static addPlayerProperty(gameId, actor, user, property) {
+            return utils.getGameForModActivity(gameId, actor, dao, forum)
+                .then((game) => utils.getUser(user, game, forum, 'target'))
                 .then((player) => player.addProperty(property))
                 .then((result) => {
                     if (!result) {
@@ -85,12 +86,14 @@ exports.bindForum = (forum, dao) => {
          * Remove a property from a user
          *
          * @param {GameIdentifier} gameId ID of the game manipulate.
+         * @param {User|string} actor The user modifying the game
          * @param {User|string} user User to modify
          * @param {string} property Property to remove
          * @returns {Promise} Resolves on completion, rejects on failure.
          */
-        static removePlayerProperty(gameId, user, property) {
-            return getPlayerFromParams(gameId, user)
+        static removePlayerProperty(gameId, actor, user, property) {
+            return utils.getGameForModActivity(gameId, actor, dao, forum)
+                .then((game) => utils.getUser(user, game, forum, 'target'))
                 .then((player) => player.removeProperty(property))
                 .then((result) => {
                     if (!result) {
@@ -103,12 +106,14 @@ exports.bindForum = (forum, dao) => {
          * Get properties assigned to a user
          *
          * @param {GameIdentifier} gameId ID of the game manipulate.
+         * @param {User|string} actor The user modifying the game
          * @param {User|string} user User to modify
          * @param {string} property Property to remove
          * @returns {Promise} Resolves on completion, rejects on failure.
          */
-        static getPlayerProperties(gameId, user) {
-            return getPlayerFromParams(gameId, user)
+        static getPlayerProperties(gameId, actor, user) {
+            return utils.getGameForModActivity(gameId, actor, dao, forum)
+                .then((game) => utils.getUser(user, game, forum, 'target'))
                 .then((player) => player.getProperties());
         }
 
@@ -116,13 +121,15 @@ exports.bindForum = (forum, dao) => {
          * Set a value on a user
          *
          * @param {GameIdentifier} gameId ID of the game manipulate.
+         * @param {User|string} actor The user modifying the game
          * @param {User|string} user User to modify
          * @param {string} name Value name to set
          * @param {*} value Value to store
          * @returns {Promise} Resolves on completion, rejects on failure.
          */
-        static setPlayerValue(gameId, user, name, value) {
-            return getPlayerFromParams(gameId, user)
+        static setPlayerValue(gameId, actor, user, name, value) {
+            return utils.getGameForModActivity(gameId, actor, dao, forum)
+                .then((game) => utils.getUser(user, game, forum, 'target'))
                 .then((player) => player.setValue(name, value));
         }
 
@@ -130,11 +137,13 @@ exports.bindForum = (forum, dao) => {
          * Set a value on a user
          *
          * @param {GameIdentifier} gameId ID of the game manipulate.
+         * @param {User|string} actor The user modifying the game
          * @param {User|string} user User to modify
          * @returns {Promise} Resolves on completion, rejects on failure.
          */
-        static getPlayerValues(gameId, user) {
-            return getPlayerFromParams(gameId, user)
+        static getPlayerValues(gameId, actor, user) {
+            return utils.getGameForModActivity(gameId, actor, dao, forum)
+                .then((game) => utils.getUser(user, game, forum, 'target'))
                 .then((player) => player.values);
         }
 
@@ -147,17 +156,11 @@ exports.bindForum = (forum, dao) => {
          * @param {string} text Role Card Text
          * @returns {Promise} Resolves on completion, rejects on failure.
          */
-        static sendRoleCard(gameId, sender, target, text) {
+        static sendRoleCard(gameId, actor, target, text) {
             let game, user, title;
-            return utils.getGame(gameId, dao)
+            return utils.getGameForModActivity(gameId, actor, dao, forum)
                 .then((mafiaGame) => game = mafiaGame)
-                .then(() => utils.getUser(sender, game, forum))
-                .then((mafiaUser) => {
-                    if (!mafiaUser.isModerator) {
-                        throw new Error('E_SENDER_IS_NOT_MODERATOR');
-                    }
-                })
-                .then(() => utils.getUser(target, game, forum))
+                .then(() => utils.getUser(target, game, forum, 'target'))
                 .then((mafiaUser) => {
                     if (!mafiaUser.isAlive) {
                         throw new Error('E_TARGET_IS_NOT_ALIVE');

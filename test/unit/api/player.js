@@ -11,7 +11,8 @@ chai.should();
 const Dao = require('../../../src/dao'),
     MafiaUser = require('../../../src/dao/mafiaUser'),
     MafiaGame = require('../../../src/dao/mafiaGame'),
-    playerApi = require('../../../src/api/player');
+    playerApi = require('../../../src/api/player'),
+    utilsApi = require('../../../src/api/utils');
 
 describe('api/player', () => {
     describe('module', () => {
@@ -21,330 +22,286 @@ describe('api/player', () => {
         });
     });
     describe('Player', () => {
-        let Player, forum, dao;
+        let Player, forum, dao, sandbox;
         beforeEach(() => {
+            sandbox = sinon.sandbox.create();
             forum = {};
             dao = new Dao(':memory:');
             Player = playerApi.bindForum(forum, dao);
         });
+        afterEach(() => sandbox.restore());
         describe('addPlayer()', () => {
-            let stubGetGameById, stubAddPlayer, mockGame;
+            let stubGetGameForModActivity, stubExtractUsername, stubAddPlayer, mockGame;
             beforeEach(() => {
                 stubAddPlayer = sinon.stub().resolves();
                 mockGame = {
                     addPlayer: stubAddPlayer
                 };
-                stubGetGameById = sinon.stub(dao, 'getGameById').resolves(mockGame);
+                stubGetGameForModActivity = sandbox.stub(utilsApi, 'getGameForModActivity').resolves(mockGame);
+                stubExtractUsername = sandbox.stub(utilsApi, 'extractUsername').resolves();
                 forum.User = function(username) {
                     this.username = username;
                 };
             });
-            it('should reject when gameId is not presented', () => {
-                return Player.addPlayer(undefined, 'george').should.be.rejectedWith('E_MISSING_GAME_IDENTIFIER');
-            });
-            it('should reject when user is not presented', () => {
-                return Player.addPlayer('1f2a3d4e5d', undefined).should.be.rejectedWith('E_INVALID_USER');
-            });
-            it('should reject when user is empty string', () => {
-                return Player.addPlayer('1f2a3d4e5d', '').should.be.rejectedWith('E_INVALID_USER');
-            });
-            it('should reject when user is generic object', () => {
-                return Player.addPlayer('1f2a3d4e5d', {}).should.be.rejectedWith('E_INVALID_USER');
-            });
             it('should retrieve game by GameIdentifier', () => {
                 const id = `id ${Math.random()} id`;
-                return Player.addPlayer(id, 'george').then(() => {
-                    stubGetGameById.calledWith(id).should.be.true;
+                const mod = `mod ${Math.random()}`;
+                return Player.addPlayer(id, mod, 'george').then(() => {
+                    stubGetGameForModActivity.calledWith(id, mod, dao, forum).should.be.true;
                 });
             });
             it('should reject if game retrieval fails', () => {
-                stubGetGameById.rejects(new Error('E_NO_GAME'));
-                return Player.addPlayer('id', 'george').should.be.rejectedWith('E_NO_GAME');
+                stubGetGameForModActivity.rejects(new Error('E_NO_GAME'));
+                return Player.addPlayer('id', 'mod', 'george').should.be.rejectedWith('E_NO_GAME');
             });
-            it('should add player by string', () => {
+            it('should extract username via utils.extractUsername', () => {
                 const name = `name ${Math.random()} name`;
-                return Player.addPlayer('id', name).then(() => {
-                    stubAddPlayer.calledWith(name).should.be.true;
+                return Player.addPlayer('id', 'mod', name).then(() => {
+                    stubExtractUsername.calledWith(name, forum, 'user').should.be.true;
                 });
             });
-            it('should add player by User', () => {
+            it('should reject when utils.extractUsername rejects', () => {
+                const err = new Error(`err ${Math.random()}`);
+                stubExtractUsername.rejects(err);
+                return Player.addPlayer('id', 'mod', 'name').should.be.rejectedWith(err);
+            });
+            it('should add player by with extractedUsername', () => {
                 const name = `name ${Math.random()} name`;
-                return Player.addPlayer('id', new forum.User(name)).then(() => {
+                stubExtractUsername.resolves(name);
+                return Player.addPlayer('id', 'mod', 'name').then(() => {
                     stubAddPlayer.calledWith(name).should.be.true;
                 });
             });
             it('should resolve to undefined', () => {
-                return Player.addPlayer('1f2a3d4e5d', 'foobar').should.become(undefined);
+                return Player.addPlayer('1f2a3d4e5d', 'mod', 'foobar').should.become(undefined);
             });
         });
         describe('addModerator()', () => {
-            let stubGetGameById, stubAddModerator, mockGame;
+            let stubGetGameForModActivity, stubAddModerator, stubExtractUsername, mockGame;
             beforeEach(() => {
                 stubAddModerator = sinon.stub().resolves();
                 mockGame = {
                     addModerator: stubAddModerator
                 };
-                stubGetGameById = sinon.stub(dao, 'getGameById').resolves(mockGame);
+                stubGetGameForModActivity = sandbox.stub(utilsApi, 'getGameForModActivity').resolves(mockGame);
+                stubExtractUsername = sandbox.stub(utilsApi, 'extractUsername').resolves();
                 forum.User = function(username) {
                     this.username = username;
                 };
             });
-            it('should reject when gameId is not presented', () => {
-                return Player.addModerator(undefined, 'george').should.be.rejectedWith('E_MISSING_GAME_IDENTIFIER');
-            });
-            it('should reject when user is not presented', () => {
-                return Player.addModerator('1f2a3d4e5d', undefined).should.be.rejectedWith('E_INVALID_USER');
-            });
-            it('should reject when user is empty string', () => {
-                return Player.addModerator('1f2a3d4e5d', '').should.be.rejectedWith('E_INVALID_USER');
-            });
-            it('should reject when user is generic object', () => {
-                return Player.addModerator('1f2a3d4e5d', {}).should.be.rejectedWith('E_INVALID_USER');
-            });
             it('should retrieve game by GameIdentifier', () => {
                 const id = `id ${Math.random()} id`;
-                return Player.addModerator(id, 'george').then(() => {
-                    stubGetGameById.calledWith(id).should.be.true;
+                const mod = `mod ${Math.random()}`;
+                return Player.addModerator(id, mod, 'george').then(() => {
+                    stubGetGameForModActivity.calledWith(id, mod, dao, forum).should.be.true;
                 });
             });
             it('should reject if game retrieval fails', () => {
-                stubGetGameById.rejects(new Error('E_NO_GAME'));
-                return Player.addModerator('id', 'george').should.be.rejectedWith('E_NO_GAME');
+                stubGetGameForModActivity.rejects(new Error('E_NO_GAME'));
+                return Player.addModerator('id', 'mod', 'george').should.be.rejectedWith('E_NO_GAME');
             });
-            it('should add Moderator by string', () => {
+            it('should extract username via utils.extractUsername', () => {
                 const name = `name ${Math.random()} name`;
-                return Player.addModerator('id', name).then(() => {
-                    stubAddModerator.calledWith(name).should.be.true;
+                return Player.addModerator('id', 'mod', name).then(() => {
+                    stubExtractUsername.calledWith(name, forum, 'moderator').should.be.true;
                 });
             });
-            it('should add Moderator by User', () => {
+            it('should reject when utils.extractUsername rejects', () => {
+                const err = new Error(`err ${Math.random()}`);
+                stubExtractUsername.rejects(err);
+                return Player.addModerator('id', 'mod', 'name').should.be.rejectedWith(err);
+            });
+            it('should add player by with extractedUsername', () => {
                 const name = `name ${Math.random()} name`;
-                return Player.addModerator('id', new forum.User(name)).then(() => {
+                stubExtractUsername.resolves(name);
+                return Player.addModerator('id', 'mod', 'name').then(() => {
                     stubAddModerator.calledWith(name).should.be.true;
                 });
             });
             it('should resolve to undefined', () => {
-                return Player.addModerator('1f2a3d4e5d', 'foobar').should.become(undefined);
+                return Player.addModerator('1f2a3d4e5d', 'mod', 'foobar').should.become(undefined);
             });
         });
         describe('addPlayerProperty()', () => {
-            let stubGetGameById, stubGetPlayer, stubAddProperty, mockGame, mockPlayer;
+            let stubGetGameForModActivity, stubGetUser, stubAddProperty, mockGame, mockPlayer;
             beforeEach(() => {
                 mockPlayer = new MafiaUser({}, {});
-                stubAddProperty = sinon.stub(mockPlayer, 'addProperty').resolves(true);
+                stubAddProperty = sandbox.stub(mockPlayer, 'addProperty').resolves(true);
                 mockGame = new MafiaGame({}, {});
-                stubGetPlayer = sinon.stub(mockGame, 'getPlayer').resolves(mockPlayer);
-                stubGetGameById = sinon.stub(dao, 'getGameById').resolves(mockGame);
+                stubGetUser = sandbox.stub(utilsApi, 'getUser').resolves(mockPlayer);
+                stubGetGameForModActivity = sandbox.stub(utilsApi, 'getGameForModActivity').resolves(mockGame);
                 forum.User = function(username) {
                     this.username = username;
                 };
             });
             it('should retrieve game by GameIdentifier', () => {
                 const id = `id ${Math.random()} id`;
-                return Player.addPlayerProperty(id, 'george', 'foo').then(() => {
-                    stubGetGameById.calledWith(id).should.be.true;
+                const mod = `mod ${Math.random()} mod`;
+                return Player.addPlayerProperty(id, mod, 'george', 'foo').then(() => {
+                    stubGetGameForModActivity.calledWith(id, mod, dao, forum).should.be.true;
                 });
             });
-            it('should retrieve user by string username', () => {
+            it('should retrieve user via utils', () => {
                 const name = `name ${Math.random()} name`;
-                return Player.addPlayerProperty('id', name, 'foo').then(() => {
-                    stubGetPlayer.calledWith(name).should.be.true;
-                });
-            });
-            it('should retrieve user by forum.User', () => {
-                const name = `name ${Math.random()} name`;
-                return Player.addPlayerProperty('id', new forum.User(name), 'foo').then(() => {
-                    stubGetPlayer.calledWith(name).should.be.true;
+                return Player.addPlayerProperty('id', 'mod', name, 'foo').then(() => {
+                    stubGetUser.calledWith(name, mockGame, forum, 'target').should.be.true;
                 });
             });
             it('should add property as provided', () => {
                 const property = `name ${Math.random()} name`;
-                return Player.addPlayerProperty('id', 'foo', property).then(() => {
+                return Player.addPlayerProperty('id', 'mod', 'foo', property).then(() => {
                     stubAddProperty.calledWith(property).should.be.true;
                 });
             });
             it('should resolve to undefined', () => {
-                return Player.addPlayerProperty('id', 'foo', 'bar').should.become(undefined);
-            });
-            it('should reject if gameId not provided', () => {
-                return Player.addPlayerProperty('', 'george', 'king').should.be.rejectedWith('E_MISSING_GAME_IDENTIFIER');
-            });
-            it('should reject if wrong user type provided', () => {
-                return Player.addPlayerProperty('id', 42, 'king').should.be.rejectedWith('E_INVALID_USER');
+                return Player.addPlayerProperty('id', 'mod', 'foo', 'bar').should.become(undefined);
             });
             it('should reject if game retrieval fails', () => {
-                stubGetGameById.rejects(new Error('E_NO_GAME'));
-                return Player.addPlayerProperty('id', 'george', 'king').should.be.rejectedWith('E_NO_GAME');
+                stubGetGameForModActivity.rejects(new Error('E_NO_GAME'));
+                return Player.addPlayerProperty('id', 'mod', 'george', 'king').should.be.rejectedWith('E_NO_GAME');
             });
             it('should reject if user retrieval fails', () => {
                 const expected = new Error(`error ${Math.random()}`);
-                stubGetPlayer.rejects(expected);
-                return Player.addPlayerProperty('id', 'george', 'king').should.be.rejectedWith(expected);
+                stubGetUser.rejects(expected);
+                return Player.addPlayerProperty('id', 'mod', 'george', 'king').should.be.rejectedWith(expected);
             });
             it('should reject if property setting rejects', () => {
                 const expected = new Error(`error ${Math.random()}`);
                 stubAddProperty.rejects(expected);
-                return Player.addPlayerProperty('id', 'george', 'king').should.be.rejectedWith(expected);
+                return Player.addPlayerProperty('id', 'mod', 'george', 'king').should.be.rejectedWith(expected);
             });
             it('should reject if property setting fails', () => {
                 stubAddProperty.resolves(false);
-                return Player.addPlayerProperty('id', 'george', 'king').should.be.rejectedWith('E_PROPERTY_NOT_ADDED');
+                return Player.addPlayerProperty('id', 'mod', 'george', 'king').should.be.rejectedWith('E_PROPERTY_NOT_ADDED');
             });
         });
         describe('removePlayerProperty()', () => {
-            let stubGetGameById, stubGetPlayer, stubRemoveProperty, mockGame, mockPlayer;
+            let stubGetGameForModActivity, stubGetUser, stubRemoveProperty, mockGame, mockPlayer;
             beforeEach(() => {
                 mockPlayer = new MafiaUser({}, {});
-                stubRemoveProperty = sinon.stub(mockPlayer, 'removeProperty').resolves(true);
+                stubRemoveProperty = sandbox.stub(mockPlayer, 'removeProperty').resolves(true);
                 mockGame = new MafiaGame({}, {});
-                stubGetPlayer = sinon.stub(mockGame, 'getPlayer').resolves(mockPlayer);
-                stubGetGameById = sinon.stub(dao, 'getGameById').resolves(mockGame);
+                stubGetUser = sandbox.stub(utilsApi, 'getUser').resolves(mockPlayer);
+                stubGetGameForModActivity = sandbox.stub(utilsApi, 'getGameForModActivity').resolves(mockGame);
                 forum.User = function(username) {
                     this.username = username;
                 };
             });
             it('should retrieve game by GameIdentifier', () => {
                 const id = `id ${Math.random()} id`;
-                return Player.removePlayerProperty(id, 'george', 'foo').then(() => {
-                    stubGetGameById.calledWith(id).should.be.true;
+                const name = `name ${Math.random()}`;
+                return Player.removePlayerProperty(id, name, 'george', 'foo').then(() => {
+                    stubGetGameForModActivity.calledWith(id, name, dao, forum).should.be.true;
                 });
             });
-            it('should retrieve user by string username', () => {
+            it('should retrieve user utils', () => {
                 const name = `name ${Math.random()} name`;
-                return Player.removePlayerProperty('id', name, 'foo').then(() => {
-                    stubGetPlayer.calledWith(name).should.be.true;
-                });
-            });
-            it('should retrieve user by forum.User', () => {
-                const name = `name ${Math.random()} name`;
-                return Player.removePlayerProperty('id', new forum.User(name), 'foo').then(() => {
-                    stubGetPlayer.calledWith(name).should.be.true;
+                return Player.removePlayerProperty('id', 'mod', name, 'foo').then(() => {
+                    stubGetUser.calledWith(name, mockGame, forum, 'target').should.be.true;
                 });
             });
             it('should remove property as provided', () => {
                 const property = `name ${Math.random()} name`;
-                return Player.removePlayerProperty('id', 'foo', property).then(() => {
+                return Player.removePlayerProperty('id', 'mod', 'foo', property).then(() => {
                     stubRemoveProperty.calledWith(property).should.be.true;
                 });
             });
             it('should resolve to undefined', () => {
-                return Player.removePlayerProperty('id', 'foo', 'bar').should.become(undefined);
-            });
-            it('should reject if gameId not provided', () => {
-                return Player.removePlayerProperty('', 'george', 'king').should.be.rejectedWith('E_MISSING_GAME_IDENTIFIER');
-            });
-            it('should reject if wrong user type provided', () => {
-                return Player.removePlayerProperty('id', 42, 'king').should.be.rejectedWith('E_INVALID_USER');
+                return Player.removePlayerProperty('id', 'mod', 'foo', 'bar').should.become(undefined);
             });
             it('should reject if game retrieval fails', () => {
-                stubGetGameById.rejects(new Error('E_NO_GAME'));
-                return Player.removePlayerProperty('id', 'george', 'king').should.be.rejectedWith('E_NO_GAME');
+                stubGetGameForModActivity.rejects(new Error('E_NO_GAME'));
+                return Player.removePlayerProperty('id', 'mod', 'george', 'king').should.be.rejectedWith('E_NO_GAME');
             });
             it('should reject if user retrieval fails', () => {
                 const expected = new Error(`error ${Math.random()}`);
-                stubGetPlayer.rejects(expected);
-                return Player.removePlayerProperty('id', 'george', 'king').should.be.rejectedWith(expected);
+                stubGetUser.rejects(expected);
+                return Player.removePlayerProperty('id', 'mod', 'george', 'king').should.be.rejectedWith(expected);
             });
             it('should reject if property setting rejects', () => {
                 const expected = new Error(`error ${Math.random()}`);
                 stubRemoveProperty.rejects(expected);
-                return Player.removePlayerProperty('id', 'george', 'king').should.be.rejectedWith(expected);
+                return Player.removePlayerProperty('id', 'mod', 'george', 'king').should.be.rejectedWith(expected);
             });
             it('should reject if property setting fails', () => {
                 stubRemoveProperty.resolves(false);
-                return Player.removePlayerProperty('id', 'george', 'king').should.be.rejectedWith('E_PROPERTY_NOT_AVAILABLE_TO_REMOVE');
+                return Player.removePlayerProperty('id', 'mod', 'george', 'king').should.be.rejectedWith('E_PROPERTY_NOT_AVAILABLE_TO_REMOVE');
             });
         });
         describe('getPlayerProperties()', () => {
-            let stubGetGameById, stubGetPlayer, stubGetProperties, mockGame, mockPlayer;
+            let stubGetGameForModActivity, stubGetUser, stubGetProperties, mockGame, mockPlayer;
             beforeEach(() => {
                 mockPlayer = new MafiaUser({}, {});
-                stubGetProperties = sinon.stub(mockPlayer, 'getProperties').resolves([]);
+                stubGetProperties = sandbox.stub(mockPlayer, 'getProperties').resolves([]);
                 mockGame = new MafiaGame({}, {});
-                stubGetPlayer = sinon.stub(mockGame, 'getPlayer').resolves(mockPlayer);
-                stubGetGameById = sinon.stub(dao, 'getGameById').resolves(mockGame);
+                stubGetUser = sandbox.stub(utilsApi, 'getUser').resolves(mockPlayer);
+                stubGetGameForModActivity = sandbox.stub(utilsApi, 'getGameForModActivity').resolves(mockGame);
                 forum.User = function(username) {
                     this.username = username;
                 };
             });
-            it('should retrieve game by GameIdentifier', () => {
+            it('should retrieve game by getGameForModActivity', () => {
                 const id = `id ${Math.random()} id`;
-                return Player.getPlayerProperties(id, 'george').then(() => {
-                    stubGetGameById.calledWith(id).should.be.true;
+                const name = `name ${Math.random()} name`;
+                return Player.getPlayerProperties(id, name, 'george').then(() => {
+                    stubGetGameForModActivity.calledWith(id, name, dao, forum).should.be.true;
                 });
             });
-            it('should retrieve user by string username', () => {
+            it('should retrieve user by utils', () => {
                 const name = `name ${Math.random()} name`;
-                return Player.getPlayerProperties('id', name).then(() => {
-                    stubGetPlayer.calledWith(name).should.be.true;
-                });
-            });
-            it('should retrieve user by forum.User', () => {
-                const name = `name ${Math.random()} name`;
-                return Player.getPlayerProperties('id', new forum.User(name)).then(() => {
-                    stubGetPlayer.calledWith(name).should.be.true;
+                return Player.getPlayerProperties('id', 'mod', name).then(() => {
+                    stubGetUser.calledWith(name, mockGame, forum, 'target').should.be.true;
                 });
             });
             it('should resolve to result of getProperties()', () => {
                 const expected = [Math.random(), Math.random(), Math.random(), Math.random(), Math.random()];
                 stubGetProperties.resolves(expected);
-                return Player.getPlayerProperties('id', 'foo').should.become(expected);
-            });
-            it('should reject if gameId not provided', () => {
-                return Player.getPlayerProperties('', 'george').should.be.rejectedWith('E_MISSING_GAME_IDENTIFIER');
-            });
-            it('should reject if wrong user type provided', () => {
-                return Player.getPlayerProperties('id', 42).should.be.rejectedWith('E_INVALID_USER');
+                return Player.getPlayerProperties('id', 'mod', 'foo').should.become(expected);
             });
             it('should reject if game retrieval fails', () => {
-                stubGetGameById.rejects(new Error('E_NO_GAME'));
-                return Player.getPlayerProperties('id', 'george').should.be.rejectedWith('E_NO_GAME');
+                stubGetGameForModActivity.rejects(new Error('E_NO_GAME'));
+                return Player.getPlayerProperties('id', 'mod', 'george').should.be.rejectedWith('E_NO_GAME');
             });
             it('should reject if user retrieval fails', () => {
                 const expected = new Error(`error ${Math.random()}`);
-                stubGetPlayer.rejects(expected);
-                return Player.getPlayerProperties('id', 'george').should.be.rejectedWith(expected);
+                stubGetUser.rejects(expected);
+                return Player.getPlayerProperties('id', 'mod', 'george').should.be.rejectedWith(expected);
             });
             it('should reject if property setting rejects', () => {
                 const expected = new Error(`error ${Math.random()}`);
                 stubGetProperties.rejects(expected);
-                return Player.getPlayerProperties('id', 'george').should.be.rejectedWith(expected);
+                return Player.getPlayerProperties('id', 'mod', 'george').should.be.rejectedWith(expected);
             });
         });
-        describe('addPlayerProperty()', () => {
-            let stubGetGameById, stubGetPlayer, stubSetValue, mockGame, mockPlayer;
+        describe('setPlayerValue()', () => {
+            let stubGetGameForModActivity, stubGetUser, stubSetValue, mockGame, mockPlayer;
             beforeEach(() => {
                 mockPlayer = new MafiaUser({}, {});
-                stubSetValue = sinon.stub(mockPlayer, 'setValue').resolves(true);
+                stubSetValue = sandbox.stub(mockPlayer, 'setValue').resolves(true);
                 mockGame = new MafiaGame({}, {});
-                stubGetPlayer = sinon.stub(mockGame, 'getPlayer').resolves(mockPlayer);
-                stubGetGameById = sinon.stub(dao, 'getGameById').resolves(mockGame);
+                stubGetUser = sandbox.stub(utilsApi, 'getUser').resolves(mockPlayer);
+                stubGetGameForModActivity = sandbox.stub(utilsApi, 'getGameForModActivity').resolves(mockGame);
                 forum.User = function(username) {
                     this.username = username;
                 };
             });
-            it('should retrieve game by GameIdentifier', () => {
+            it('should retrieve game by getGameForModActivity', () => {
                 const id = `id ${Math.random()} id`;
-                return Player.setPlayerValue(id, 'george', 'foo', 'bar').then(() => {
-                    stubGetGameById.calledWith(id).should.be.true;
+                const name = `name ${Math.random()} name`;
+                return Player.setPlayerValue(id, name, 'george', 'foo', 'bar').then(() => {
+                    stubGetGameForModActivity.calledWith(id, name, dao, forum).should.be.true;
                 });
             });
-            it('should retrieve user by string username', () => {
+            it('should retrieve user by utils', () => {
                 const name = `name ${Math.random()} name`;
-                return Player.setPlayerValue('id', name, 'foo', 'bar').then(() => {
-                    stubGetPlayer.calledWith(name).should.be.true;
-                });
-            });
-            it('should retrieve user by forum.User', () => {
-                const name = `name ${Math.random()} name`;
-                return Player.setPlayerValue('id', new forum.User(name), 'foo', 'bar').then(() => {
-                    stubGetPlayer.calledWith(name).should.be.true;
+                return Player.setPlayerValue('id', 'mod', name, 'foo', 'bar').then(() => {
+                    stubGetUser.calledWith(name, mockGame, forum, 'target').should.be.true;
                 });
             });
             it('should setValue as provided', () => {
                 const name = `name ${Math.random()} name`;
                 const value = `value ${Math.random()} value`;
-                return Player.setPlayerValue('id', 'foo', name, value).then(() => {
+                return Player.setPlayerValue('id', 'mod', 'foo', name, value).then(() => {
                     stubSetValue.calledWith(name, value).should.be.true;
                 });
             });
@@ -353,100 +310,78 @@ describe('api/player', () => {
                     id: Math.random()
                 };
                 stubSetValue.resolves(expected);
-                return Player.setPlayerValue('id', 'foo', 'bar', 'bar').should.become(expected);
-            });
-            it('should reject if gameId not provided', () => {
-                return Player.setPlayerValue('', 'george', 'king', 'bar').should.be.rejectedWith('E_MISSING_GAME_IDENTIFIER');
-            });
-            it('should reject if wrong user type provided', () => {
-                return Player.setPlayerValue('id', 42, 'king', 'bar').should.be.rejectedWith('E_INVALID_USER');
+                return Player.setPlayerValue('id', 'mod', 'foo', 'bar', 'bar').should.become(expected);
             });
             it('should reject if game retrieval fails', () => {
-                stubGetGameById.rejects(new Error('E_NO_GAME'));
-                return Player.setPlayerValue('id', 'george', 'king', 'bar').should.be.rejectedWith('E_NO_GAME');
+                stubGetGameForModActivity.rejects(new Error('E_NO_GAME'));
+                return Player.setPlayerValue('id', 'mod', 'george', 'king', 'bar').should.be.rejectedWith('E_NO_GAME');
             });
             it('should reject if user retrieval fails', () => {
                 const expected = new Error(`error ${Math.random()}`);
-                stubGetPlayer.rejects(expected);
-                return Player.setPlayerValue('id', 'george', 'king', 'bar').should.be.rejectedWith(expected);
+                stubGetUser.rejects(expected);
+                return Player.setPlayerValue('id', 'mod', 'george', 'king', 'bar').should.be.rejectedWith(expected);
             });
             it('should reject if property setting rejects', () => {
                 const expected = new Error(`error ${Math.random()}`);
                 stubSetValue.rejects(expected);
-                return Player.setPlayerValue('id', 'george', 'king', 'bar').should.be.rejectedWith(expected);
+                return Player.setPlayerValue('id', 'mod', 'george', 'king', 'bar').should.be.rejectedWith(expected);
             });
         });
         describe('getPlayerValues()', () => {
-            let stubGetGameById, stubGetPlayer, mockGame, mockPlayer;
+            let stubGetGameForModActivity, stubGetUser, mockGame, mockPlayer;
             beforeEach(() => {
                 mockPlayer = new MafiaUser({}, {});
                 mockGame = new MafiaGame({}, {});
-                stubGetPlayer = sinon.stub(mockGame, 'getPlayer').resolves(mockPlayer);
-                stubGetGameById = sinon.stub(dao, 'getGameById').resolves(mockGame);
+                stubGetUser = sandbox.stub(utilsApi, 'getUser').resolves(mockPlayer);
+                stubGetGameForModActivity = sandbox.stub(utilsApi, 'getGameForModActivity').resolves(mockGame);
                 forum.User = function(username) {
                     this.username = username;
                 };
             });
-            it('should retrieve game by GameIdentifier', () => {
+            it('should retrieve game by getGameForModActivity', () => {
                 const id = `id ${Math.random()} id`;
-                return Player.getPlayerValues(id, 'george').then(() => {
-                    stubGetGameById.calledWith(id).should.be.true;
+                const name = `name ${Math.random()} name`;
+                return Player.getPlayerValues(id, name, 'george').then(() => {
+                    stubGetGameForModActivity.calledWith(id, name, dao, forum).should.be.true;
                 });
             });
-            it('should retrieve user by string username', () => {
+            it('should retrieve user by utils', () => {
                 const name = `name ${Math.random()} name`;
-                return Player.getPlayerValues('id', name).then(() => {
-                    stubGetPlayer.calledWith(name).should.be.true;
-                });
-            });
-            it('should retrieve user by forum.User', () => {
-                const name = `name ${Math.random()} name`;
-                return Player.getPlayerValues('id', new forum.User(name)).then(() => {
-                    stubGetPlayer.calledWith(name).should.be.true;
+                return Player.getPlayerValues('id', 'mod', name).then(() => {
+                    stubGetUser.calledWith(name, mockGame, forum, 'target').should.be.true;
                 });
             });
             it('should return values as retrieved from game', () => {
                 const expected = {
                     'key ${Math.random()}': Math.random()
                 };
-                stubGetPlayer.resolves({
+                stubGetUser.resolves({
                     values: expected
                 });
-                return Player.getPlayerValues('id', 'id').then((values) => {
+                return Player.getPlayerValues('id', 'mod', 'player').then((values) => {
                     values.should.equal(expected);
                 });
             });
-            it('should reject if gameId not provided', () => {
-                return Player.getPlayerValues('', 'george').should.be.rejectedWith('E_MISSING_GAME_IDENTIFIER');
-            });
-            it('should reject if wrong user type provided', () => {
-                return Player.getPlayerValues('id', 42).should.be.rejectedWith('E_INVALID_USER');
-            });
             it('should reject if game retrieval fails', () => {
-                stubGetGameById.rejects(new Error('E_NO_GAME'));
-                return Player.getPlayerValues('id', 'george').should.be.rejectedWith('E_NO_GAME');
+                stubGetGameForModActivity.rejects(new Error('E_NO_GAME'));
+                return Player.getPlayerValues('id', 'mod', 'george').should.be.rejectedWith('E_NO_GAME');
             });
             it('should reject if user retrieval fails', () => {
                 const expected = new Error(`error ${Math.random()}`);
-                stubGetPlayer.rejects(expected);
-                return Player.getPlayerValues('id', 'george').should.be.rejectedWith(expected);
+                stubGetUser.rejects(expected);
+                return Player.getPlayerValues('id', 'mod', 'george').should.be.rejectedWith(expected);
             });
         });
         describe('sendRoleCard()', () => {
-            let stubGetGameById, stubGetPlayer, stubCreatePM, stubSetValue, stubAddChat, stubGetUserByName,
-                mockGame, mockModerator, mockPlayer;
+            let stubGetGameForModActivity, stubGetUser, stubCreatePM, stubSetValue, stubAddChat, stubGetUserByName,
+                mockGame, mockPlayer;
             beforeEach(() => {
-                mockModerator = new MafiaUser({
-                    isModerator: true
-                }, {});
                 mockPlayer = new MafiaUser({}, {});
-                stubSetValue = sinon.stub(mockPlayer, 'setValue').resolves();
+                stubSetValue = sandbox.stub(mockPlayer, 'setValue').resolves();
                 mockGame = new MafiaGame({}, {});
-                stubAddChat = sinon.stub(mockGame, 'addChat');
-                stubGetPlayer = sinon.stub(mockGame, 'getPlayer').rejects(new Error('BAD_CALL'));
-                stubGetPlayer.onFirstCall().resolves(mockModerator);
-                stubGetPlayer.onSecondCall().resolves(mockPlayer);
-                stubGetGameById = sinon.stub(dao, 'getGameById').resolves(mockGame);
+                stubAddChat = sandbox.stub(mockGame, 'addChat');
+                stubGetUser = sandbox.stub(utilsApi, 'getUser').resolves(mockPlayer);
+                stubGetGameForModActivity = sandbox.stub(utilsApi, 'getGameForModActivity').resolves(mockGame);
                 stubCreatePM = sinon.stub().resolves({});
                 stubGetUserByName = sinon.stub().resolves();
                 forum.User = function(username) {
@@ -457,34 +392,17 @@ describe('api/player', () => {
                     create: stubCreatePM
                 };
             });
-            it('should retrieve game by GameIdentifier', () => {
+            it('should retrieve game by getGameForModActivity', () => {
                 const id = `id ${Math.random()} id`;
-                return Player.sendRoleCard(id, 'george', 'michael', 'test').then(() => {
-                    stubGetGameById.calledWith(id).should.be.true;
-                });
-            });
-            it('should retrieve moderator from dao by string username', () => {
                 const name = `name ${Math.random()} name`;
-                return Player.sendRoleCard('id', name, 'michael', 'text').then(() => {
-                    stubGetPlayer.firstCall.calledWith(name).should.be.true;
+                return Player.sendRoleCard(id, name, 'michael', 'test').then(() => {
+                    stubGetGameForModActivity.calledWith(id, name, dao, forum).should.be.true;
                 });
             });
-            it('should retrieve moderator from dao by forum.User', () => {
-                const name = `name ${Math.random()} name`;
-                return Player.sendRoleCard('id', new forum.User(name), 'michael', 'text').then(() => {
-                    stubGetPlayer.firstCall.calledWith(name).should.be.true;
-                });
-            });
-            it('should retrieve player from dao by string username', () => {
+            it('should retrieve player from util helper', () => {
                 const name = `name ${Math.random()} name`;
                 return Player.sendRoleCard('id', 'george', name, 'text').then(() => {
-                    stubGetPlayer.secondCall.calledWith(name).should.be.true;
-                });
-            });
-            it('should retrieve player from dao by forum.User', () => {
-                const name = `name ${Math.random()} name`;
-                return Player.sendRoleCard('id', 'george', new forum.User(name), 'text').then(() => {
-                    stubGetPlayer.secondCall.calledWith(name).should.be.true;
+                    stubGetUser.calledWith(name, mockGame, forum, 'target').should.be.true;
                 });
             });
             it('should retrieve moderators from forum by name', () => {
@@ -583,10 +501,6 @@ describe('api/player', () => {
             it('should resolve to undefined', () => {
                 return Player.sendRoleCard('id', 'george', 'michael', 'test').should.become(undefined);
             });
-            it('should require sender to be a moderator', () => {
-                mockModerator._data.isModerator = false;
-                return Player.sendRoleCard('id', 'george', 'michael', 'test').should.be.rejectedWith('E_SENDER_IS_NOT_MODERATOR');
-            });
             it('should require player to be alive', () => {
                 mockPlayer._data.isAlive = false;
                 return Player.sendRoleCard('id', 'george', 'michael', 'test').should.be.rejectedWith('E_TARGET_IS_NOT_ALIVE');
@@ -595,27 +509,13 @@ describe('api/player', () => {
                 mockPlayer._data.isModerator = true;
                 return Player.sendRoleCard('id', 'george', 'michael', 'test').should.be.rejectedWith('E_TARGET_IS_MODERATOR');
             });
-            it('should reject if gameId not provided', () => {
-                return Player.sendRoleCard('', 'george', 'michael', 'test').should.be.rejectedWith('E_MISSING_GAME_IDENTIFIER');
-            });
-            it('should reject if wrong moderator type provided', () => {
-                return Player.sendRoleCard('id', 42, 'michael', 'test').should.be.rejectedWith('E_INVALID_USER');
-            });
-            it('should reject if wrong player type provided', () => {
-                return Player.sendRoleCard('id', 'george', 42, 'test').should.be.rejectedWith('E_INVALID_USER');
-            });
             it('should reject if game retrieval fails', () => {
-                stubGetGameById.rejects(new Error('E_NO_GAME'));
+                stubGetGameForModActivity.rejects(new Error('E_NO_GAME'));
                 return Player.sendRoleCard('id', 'george', 'michael', 'test').should.be.rejectedWith('E_NO_GAME');
-            });
-            it('should reject if moderator retrieval fails', () => {
-                const expected = new Error(`error ${Math.random()}`);
-                stubGetPlayer.onFirstCall().rejects(expected);
-                return Player.sendRoleCard('id', 'george', 'michael', 'test').should.be.rejectedWith(expected);
             });
             it('should reject if player retrieval fails', () => {
                 const expected = new Error(`error ${Math.random()}`);
-                stubGetPlayer.onSecondCall().rejects(expected);
+                stubGetUser.rejects(expected);
                 return Player.sendRoleCard('id', 'george', 'michael', 'test').should.be.rejectedWith(expected);
             });
             it('should reject if user lookup fails', () => {

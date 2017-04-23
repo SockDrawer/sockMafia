@@ -15,27 +15,35 @@ exports.getActiveGame = (gameId, dao) => exports.getGame(gameId, dao)
         return game;
     });
 
-exports.getGameForModActivity = (gameId, moderator, dao, forum) => exports.getActiveGame(gameId, dao)
-    .then((game) => exports.getUser(moderator, game, forum).then((user) => [game, user]))
-    .then((args) => {
-        const game = args[0],
-            user = args[1];
-        if (!user.isModerator) {
-            throw new Error('E_ACTOR_NOT_MODERATOR');
-        }
-        return game;
-    });
+exports.getGameForModActivity = (gameId, moderator, dao, forum, tag) => exports.getActiveGame(gameId, dao)
+    .then((game) => exports.getModerator(moderator, game, forum, tag).then(() => game));
 
-exports.extractUsername = (user, forum) => Promise.resolve()
+exports.extractUsername = (user, forum, tag) => Promise.resolve()
     .then(() => {
+        if (typeof tag !== 'string' || !tag) {
+            tag = 'actor';
+        }
         if (typeof user === 'string' && user.length > 0) {
             return user;
         }
         if (user instanceof forum.User) {
             return user.username;
         }
-        throw new Error('E_INVALID_USER');
+        throw new Error(`E_INVALID_${tag.toUpperCase()}`);
     });
 
-exports.getUser = (user, game, forum) => exports.extractUsername(user, forum)
+exports.getUser = (user, game, forum, tag) => exports.extractUsername(user, forum, tag)
     .then((username) => game.getPlayer(username));
+
+exports.getModerator = (moderator, game, forum, tag) => {
+    if (typeof tag !== 'string' || !tag) {
+        tag = 'actor';
+    }
+    return exports.getUser(moderator, game, forum, tag)
+        .then((mod) => {
+            if (!mod.isModerator) {
+                throw new Error(`E_${tag.toUpperCase()}_NOT_MODERATOR`);
+            }
+            return mod;
+        });
+};
