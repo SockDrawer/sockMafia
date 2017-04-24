@@ -4,6 +4,7 @@
 [![optionalDependency Status](https://david-dm.org/sockDrawer/sockMafia/master/optional-status.svg)](https://david-dm.org/SockDrawer/sockMafia/master#info=optionalDependencies)
 [![Build Status](https://travis-ci.org/SockDrawer/sockMafia.svg?branch=master)](https://travis-ci.org/SockDrawer/sockMafia)
 [![Coverage Status](https://coveralls.io/repos/github/SockDrawer/sockMafia/badge.svg?branch=master)](https://coveralls.io/github/SockDrawer/sockMafia?branch=master)
+[![Package Quality](http://npm.packagequality.com/shield/sockmafia.svg)](http://packagequality.com/#?package=sockmafia)
 
 #SockBot Mafia
 
