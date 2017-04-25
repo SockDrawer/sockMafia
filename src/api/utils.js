@@ -40,10 +40,26 @@ exports.getModerator = (moderator, game, forum, tag) => {
         tag = 'actor';
     }
     return exports.getUser(moderator, game, forum, tag)
-        .then((mod) => {
-            if (!mod.isModerator) {
+        .then((user) => {
+            if (!user.isModerator) {
                 throw new Error(`E_${tag.toUpperCase()}_NOT_MODERATOR`);
             }
-            return mod;
+            return user;
+        });
+};
+
+exports.getLivePlayer = (player, game, forum, tag) => {
+    if (typeof tag !== 'string' || !tag) {
+        tag = 'actor';
+    }
+    return exports.getUser(player, game, forum, tag)
+        .then((user) => {
+            if (user.isModerator) {
+                throw new Error(`E_${tag.toUpperCase()}_NOT_PLAYER`);
+            }
+            if (!user.isAlive) {
+                throw new Error(`E_${tag.toUpperCase()}_NOT_ALIVE`);
+            }
+            return user;
         });
 };

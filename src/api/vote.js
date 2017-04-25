@@ -34,36 +34,19 @@ exports.bindForum = (forum, dao) => {
             let game, actingUser, targetUser, postId, voteToken;
             return utils.getActiveGame(gameId, dao)
                 .then(mafiaGame => game = mafiaGame)
-
                 // Retieve and validate actor
-                .then(() => utils.getUser(actor, game, forum))
+                .then(() => utils.getLivePlayer(actor, game, forum, 'actor'))
                 .then((mafiaUser) => {
-                    if (mafiaUser.isModerator) {
-                        throw new Error('E_ACTOR_NOT_PLAYER');
-                    }
-                    if (!mafiaUser.isAlive) {
-                        throw new Error('E_ACTOR_NOT_ALIVE');
-                    }
                     const voteNumber = isAlternateVote && mafiaUser.hasProperty('doublevoter') ? 2 : 1;
                     voteToken = `vote[${voteNumber}]`;
                     actingUser = mafiaUser;
                 })
-
                 // Retrieve and validate target
-                .then(() => utils.getUser(target, game, forum))
-                .then((mafiaUser) => {
-                    if (mafiaUser.isModerator) {
-                        throw new Error('E_TARGET_NOT_PLAYER');
-                    }
-                    if (!mafiaUser.isAlive) {
-                        throw new Error('E_TARGET_NOT_ALIVE');
-                    }
-                    targetUser = mafiaUser;
-                })
-
+                .then(() => utils.getLivePlayer(target, game, forum, 'target'))
+                .then((mafiaUser) => targetUser = mafiaUser)
                 // Validate sourcePost
                 .then(() => {
-                    if (typeof post === 'number') {
+                    if (typeof sourcePost === 'number') {
                         postId = sourcePost;
                     } else if (sourcePost instanceof forum.Post) {
                         postId = sourcePost.id;
@@ -71,20 +54,16 @@ exports.bindForum = (forum, dao) => {
                         throw new Error('E_INVALID_POST');
                     }
                 })
-
-                //Revoke existing vote
-                .then(() => game.getAction(actingUser, targetUser, 'vote', voteToken, game.day, false))
+                //Revoke existing vote for actor
+                .then(() => game.getAction(actingUser, undefined, 'vote', voteToken, game.day, false))
                 .then((priorVote) => {
                     if (priorVote) {
-                        return game.revokeAction(postId, actingUser, targetUser, 'vote', voteToken);
+                        return priorVote.revoke(postId);
                     }
                 })
-
                 // Register new vote
                 .then(() => game.registerAction(postId, actingUser, targetUser, 'vote', voteToken))
-
                 //TODO: perform autolynch
-
                 .then(() => undefined);
         }
     }

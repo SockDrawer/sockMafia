@@ -20,8 +20,12 @@ describe('api/utils', () => {
     });
     afterEach(() => sandbox.restore());
     describe('module', () => {
-        ['getGame', 'getUser'].forEach((fn) => {
-            it(`should expose a '${fn}()' function`, () => {
+        const fns = ['getGame', 'getUser', 'getGameForModActivity', 'extractUsername', 'getUser', 'getModerator', 'getLivePlayer'];
+        it('should expose expected keys', () => {
+            utilsApi.should.have.keys(fns);
+        });
+        fns.forEach((fn) => {
+            it(`should expose '${fn}()' as a function`, () => {
                 utilsApi.should.have.any.keys([fn]);
                 utilsApi[fn].should.be.a.function;
             });
@@ -232,6 +236,54 @@ describe('api/utils', () => {
             const tag = `t${Math.random()}t`;
             mockUser.isModerator = false;
             return utilsApi.getModerator('mod', 'game', 'forum', tag).should.be.rejectedWith(`E_${tag.toUpperCase()}_NOT_MODERATOR`);
+        });
+    });
+    describe('getLivePlayer()', () => {
+        let mockUser, stubGetUser;
+        beforeEach(() => {
+            mockUser = {
+                isModerator: false,
+                isAlive: true
+            };
+            stubGetUser = sandbox.stub(utilsApi, 'getUser').resolves(mockUser);
+        });
+        it('should retrieve user via getUser', () => {
+            const player = `player${Math.random()}`;
+            const game = `game${Math.random()}`;
+            const forum = `forum${Math.random()}`;
+            const tag = `tag${Math.random()}`;
+            return utilsApi.getLivePlayer(player, game, forum, tag).then(() => {
+                stubGetUser.calledWith(player, game, forum, tag).should.be.true;
+            });
+        });
+        it('should provide default tag for omitted parameter', () => {
+            const player = `player${Math.random()}`;
+            const game = `game${Math.random()}`;
+            const forum = `forum${Math.random()}`;
+            return utilsApi.getLivePlayer(player, game, forum).then(() => {
+                stubGetUser.calledWith(player, game, forum, 'actor').should.be.true;
+            });
+        });
+        it('should provide default tag for invalid parameter', () => {
+            const player = `player${Math.random()}`;
+            const game = `game${Math.random()}`;
+            const forum = `forum${Math.random()}`;
+            return utilsApi.getLivePlayer(player, game, forum, 42).then(() => {
+                stubGetUser.calledWith(player, game, forum, 'actor').should.be.true;
+            });
+        });
+        it('should resolve to player', () => {
+            return utilsApi.getLivePlayer('player', 'game', 'forum', 'tag').should.become(mockUser);
+        });
+        it('should reject when retrieved user is moderator', () => {
+            const tag = `t${Math.random()}t`;
+            mockUser.isModerator = true;
+            return utilsApi.getLivePlayer('mod', 'game', 'forum', tag).should.be.rejectedWith(`E_${tag.toUpperCase()}_NOT_PLAYER`);
+        });
+        it('should reject when retrieved user is dead, D. E. D. Dead.', () => {
+            const tag = `t${Math.random()}t`;
+            mockUser.isAlive = false;
+            return utilsApi.getLivePlayer('mod', 'game', 'forum', tag).should.be.rejectedWith(`E_${tag.toUpperCase()}_NOT_ALIVE`);
         });
     });
 });
