@@ -185,6 +185,148 @@ describe('api/vote', () => {
             });
         });
         describe('revokeVote()', () => {
+            let mockGame, mockVoter, mockAction, mockAlternateAction,
+                stubGetActiveGame, stubGetLivePlayer, stubRegisterAction,
+                stubGetAction, stubRevokeAction, stubRevokeAlternateAction;
+            beforeEach(() => {
+                mockGame = new MafiaGame({
+                    day: Math.floor(Math.random() * 50) + 1
+                }, {});
+                mockVoter = new MafiaUser({
+                    username: `name${Math.random()}`
+                }, {});
+                mockAction = new MafiaAction({}, {});
+                mockAlternateAction = new MafiaAction({}, {});
+                stubGetActiveGame = sandbox.stub(utilsApi, 'getActiveGame').resolves(mockGame);
+                stubGetLivePlayer = sandbox.stub(utilsApi, 'getLivePlayer').resolves(mockVoter);
+                stubRegisterAction = sandbox.stub(mockGame, 'registerAction').resolves();
+                stubGetAction = sandbox.stub(mockGame, 'getAction');
+                stubGetAction.onFirstCall().resolves(mockAction);
+                stubGetAction.onSecondCall().resolves(mockAlternateAction);
+                stubRevokeAction = sandbox.stub(mockAction, 'revoke').resolves();
+                stubRevokeAlternateAction = sandbox.stub(mockAlternateAction, 'revoke').resolves();
+            });
+            it('should fetch game by getActiveGame()', () => {
+                const id = `id${Math.random()}`;
+                return Vote.nullifyVote(id, 'actor', 42).then(() => {
+                    stubGetActiveGame.calledWith(id, dao).should.be.true;
+                });
+            });
+            it('should fetch voter by getLivePlayer()', () => {
+                const name = `name${Math.random()}`;
+                return Vote.nullifyVote('id', name, 42).then(() => {
+                    stubGetLivePlayer.calledWith(name, mockGame, forum, 'actor').should.be.true;
+                });
+            });
+            it('should fetch primary vote', () => {
+                const day = Math.random();
+                mockGame._data.day = day;
+                return Vote.nullifyVote('id', 'name', 42).then(() => {
+                    stubGetAction.calledWith(mockVoter, undefined, 'vote', 'vote[1]', day, false).should.be.true;
+                });
+            });
+            it('should revoke primary vote', () => {
+                const id = Math.random();
+                return Vote.nullifyVote('id', 'name', id).then(() => {
+                    stubRevokeAction.calledWith(id).should.be.true;
+                });
+            });
+            it('should not revoke missing primary vote', () => {
+                const id = Math.random();
+                stubGetAction.onFirstCall().resolves(null);
+                return Vote.nullifyVote('id', 'name', id).then(() => {
+                    stubRevokeAction.called.should.be.false;
+                });
+            });
+            it('should fetch secondary post', () => {
+                const day = Math.random();
+                mockGame._data.day = day;
+                return Vote.nullifyVote('id', 'name', 42).then(() => {
+                    stubGetAction.calledWith(mockVoter, undefined, 'vote', 'vote[2]', day, false).should.be.true;
+                });
+            });
+            it('should revoke secondary vote', () => {
+                const id = Math.random();
+                return Vote.nullifyVote('id', 'name', id).then(() => {
+                    stubRevokeAlternateAction.calledWith(id).should.be.true;
+                });
+            });
+            it('should not revoke missing secondary vote', () => {
+                const id = Math.random();
+                stubGetAction.onSecondCall().resolves(null);
+                return Vote.nullifyVote('id', 'name', id).then(() => {
+                    stubRevokeAlternateAction.called.should.be.false;
+                });
+            });
+            it('should issue null vote as primary vote', () => {
+                const id = Math.random();
+                return Vote.nullifyVote('id', 'name', id).then(() => {
+                    stubRegisterAction.calledWith(id, mockVoter, null, 'vote', 'vote[1]');
+                });
+            });
+            it('should resolve to undefined', () => {
+                return Vote.nullifyVote('id', 'name', 42).should.become(undefined);
+            });
+            describe('sourcePost shenanigains', () => {
+                it('should accept post id as number', () => {
+                    const id = Math.random();
+                    return Vote.nullifyVote('id', 'name', id).then(() => {
+                        const postId = stubRevokeAction.firstCall.args.shift();
+                        postId.should.equal(id);
+                    });
+                });
+                it('should accept post id as forum.Post', () => {
+                    const id = Math.random();
+                    const post = new forum.Post(id);
+                    return Vote.nullifyVote('id', 'name', post).then(() => {
+                        const postId = stubRevokeAction.firstCall.args.shift();
+                        postId.should.equal(id);
+                    });
+                });
+                it('should reject invalid typed post id', () => {
+                    const id = `post${Math.random()}`;
+                    return Vote.nullifyVote('id', 'name', id).should.be.rejectedWith('E_INVALID_POST');
+                });
+            });
+            describe('error conditions', () => {
+                it('should reject when game retrieval fails', () => {
+                    const err = new Error(`err${Math.random()}`);
+                    stubGetActiveGame.rejects(err);
+                    return Vote.nullifyVote('id', 'name', 42).should.be.rejectedWith(err);
+                });
+                it('should reject when user retrieval fails', () => {
+                    const err = new Error(`err${Math.random()}`);
+                    stubGetLivePlayer.rejects(err);
+                    return Vote.nullifyVote('id', 'name', 42).should.be.rejectedWith(err);
+                });
+                it('should reject when primary vote retrieval fails', () => {
+                    const err = new Error(`err${Math.random()}`);
+                    stubGetAction.onFirstCall().rejects(err);
+                    return Vote.nullifyVote('id', 'name', 42).should.be.rejectedWith(err);
+                });
+                it('should reject when secondary vote retrieval fails', () => {
+                    const err = new Error(`err${Math.random()}`);
+                    stubGetAction.onSecondCall().rejects(err);
+                    return Vote.nullifyVote('id', 'name', 42).should.be.rejectedWith(err);
+                });
+                it('should reject when primary vote revocation fails', () => {
+                    const err = new Error(`err${Math.random()}`);
+                    stubRevokeAction.rejects(err);
+                    return Vote.nullifyVote('id', 'name', 42).should.be.rejectedWith(err);
+                });
+                it('should reject when secondary vote revocation fails', () => {
+                    const err = new Error(`err${Math.random()}`);
+                    stubRevokeAlternateAction.rejects(err);
+                    return Vote.nullifyVote('id', 'name', 42).should.be.rejectedWith(err);
+                });
+                it('should reject when null vote registration fails', () => {
+                    const err = new Error(`err${Math.random()}`);
+                    stubRegisterAction.rejects(err);
+                    return Vote.nullifyVote('id', 'name', 42).should.be.rejectedWith(err);
+                });
+            });
+        });
+        describe('revokeVote()', () => {
             let mockGame, mockVoter, mockTarget, mockAction,
                 stubGetActiveGame, stubGetLivePlayer, stubGetUser, stubGetAction, stubRevokeAction;
             beforeEach(() => {

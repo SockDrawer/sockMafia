@@ -567,7 +567,7 @@ class MafiaGame {
         actor = getUser(this, this._data.livePlayers, actor);
         target = getUserSlug(target);
         if (!actor) {
-            return Promise.reject('E_ACTOR_NOT_ALIVE');
+            return Promise.reject(new Error('E_ACTOR_NOT_ALIVE'));
         }
         const prior = this.getAction(actor, undefined, type, actionToken, this.day, false);
         let revoker = null;

@@ -69,6 +69,49 @@ exports.bindForum = (forum, dao) => {
         }
 
         /**
+         * Nullify current votes in an active game
+         *
+         * Game rules:
+         *  - The vote can only be nullified in an active game.
+         *  - The vote can only be nullified during a day phase.
+         *  - The vote can only be nullified by a living player in the game.
+         *  - Nullifing votes will revoke all previous votes.
+         *
+         * @param {GameIdentifier}      gameId          The game to modify
+         * @param {string|forum.User}   actor           The actor modifying the game
+         * @param {number|forum.Post}   sourcePost      Source post of the vote
+         * @returns {Promise}           Resolves on completion
+         */
+        static nullifyVote(gameId, actor, sourcePost) {
+            let game, actingUser, postId;
+            return utils.getActiveGame(gameId, dao)
+                .then(mafiaGame => game = mafiaGame)
+                // Retieve and validate actor
+                .then(() => utils.getLivePlayer(actor, game, forum, 'actor'))
+                .then((user) => actingUser = user)
+                // Validate sourcePost
+                .then(() => postId = extractPostId(sourcePost))
+                //Revoke primary existing vote for actor
+                .then(() => game.getAction(actingUser, undefined, 'vote', 'vote[1]', game.day, false))
+                .then((priorVote) => {
+                    if (priorVote) {
+                        return priorVote.revoke(postId);
+                    }
+                })
+                //Revoke alternate existing vote for actor
+                .then(() => game.getAction(actingUser, undefined, 'vote', 'vote[2]', game.day, false))
+                .then((priorVote) => {
+                    if (priorVote) {
+                        return priorVote.revoke(postId);
+                    }
+                })
+                // register null vote
+                .then(() => game.registerAction(postId, actingUser, null, 'vote', 'vote[1]'))
+                //TODO: perform autolynch
+                .then(() => undefined);
+        }
+
+        /**
          * Issue a vote in an active game
          *
          * Game rules:
