@@ -63,3 +63,13 @@ exports.getLivePlayer = (player, game, forum, tag) => {
             return user;
         });
 };
+
+exports.extractPostId = (sourcePost, forum) => Promise.resolve().then(() => {
+    if (typeof sourcePost === 'number') {
+        return sourcePost;
+    } else if (sourcePost instanceof forum.Post) {
+        return sourcePost.id;
+    } else {
+        throw new Error('E_INVALID_POST');
+    }
+});

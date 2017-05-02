@@ -10,15 +10,6 @@ const debug = require('debug')('sockbot:mafia:api:vote');
 const utils = require('./utils');
 
 exports.bindForum = (forum, dao) => {
-    const extractPostId = (sourcePost) => {
-        if (typeof sourcePost === 'number') {
-            return sourcePost;
-        } else if (sourcePost instanceof forum.Post) {
-            return sourcePost.id;
-        } else {
-            throw new Error('E_INVALID_POST');
-        }
-    };
     class Vote {
         /**
          * Issue a vote in an active game
@@ -54,7 +45,8 @@ exports.bindForum = (forum, dao) => {
                 .then(() => utils.getLivePlayer(target, game, forum, 'target'))
                 .then((mafiaUser) => targetUser = mafiaUser)
                 // Validate sourcePost
-                .then(() => postId = extractPostId(sourcePost))
+                .then(() => utils.extractPostId(sourcePost, forum))
+                .then((post) => postId = post)
                 //Revoke existing vote for actor
                 .then(() => game.getAction(actingUser, undefined, 'vote', voteToken, game.day, false))
                 .then((priorVote) => {
@@ -90,7 +82,8 @@ exports.bindForum = (forum, dao) => {
                 .then(() => utils.getLivePlayer(actor, game, forum, 'actor'))
                 .then((user) => actingUser = user)
                 // Validate sourcePost
-                .then(() => postId = extractPostId(sourcePost))
+                .then(() => utils.extractPostId(sourcePost, forum))
+                .then((post) => postId = post)
                 //Revoke primary existing vote for actor
                 .then(() => game.getAction(actingUser, undefined, 'vote', 'vote[1]', game.day, false))
                 .then((priorVote) => {
@@ -142,7 +135,8 @@ exports.bindForum = (forum, dao) => {
                     }
                 })
                 // Validate sourcePost
-                .then(() => postId = extractPostId(sourcePost))
+                .then(() => utils.extractPostId(sourcePost, forum))
+                .then((post) => postId = post)
                 // Revoke existing vote for actor
                 // targetUser will be undefined if target was not provided
                 .then(() => game.getAction(actingUser, targetUser, 'vote', undefined, game.day, false))

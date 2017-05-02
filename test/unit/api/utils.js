@@ -20,7 +20,9 @@ describe('api/utils', () => {
     });
     afterEach(() => sandbox.restore());
     describe('module', () => {
-        const fns = ['getGame', 'getUser', 'getGameForModActivity', 'extractUsername', 'getUser', 'getModerator', 'getLivePlayer'];
+        const fns = ['getGame', 'getUser', 'getGameForModActivity', 'extractUsername',
+            'getUser', 'getModerator', 'getLivePlayer', 'extractPostId'
+        ];
         it('should expose expected keys', () => {
             utilsApi.should.have.keys(fns);
         });
@@ -284,6 +286,29 @@ describe('api/utils', () => {
             const tag = `t${Math.random()}t`;
             mockUser.isAlive = false;
             return utilsApi.getLivePlayer('mod', 'game', 'forum', tag).should.be.rejectedWith(`E_${tag.toUpperCase()}_NOT_ALIVE`);
+        });
+    });
+    describe('extractPostId shenanigains', () => {
+        let forum;
+        beforeEach(() => {
+            forum = forum = {
+                Post: function Post(id) {
+                    this.id = id;
+                }
+            };
+        });
+        it('should accept post id as number', () => {
+            const id = Math.random();
+            return utilsApi.extractPostId(id, forum).should.become(id);
+        });
+        it('should accept post id as forum.Post', () => {
+            const id = Math.random();
+            const post = new forum.Post(id);
+            return utilsApi.extractPostId(post, forum).should.become(id);
+        });
+        it('should reject invalid typed post id', () => {
+            const id = `post${Math.random()}`;
+            return utilsApi.extractPostId(id, forum).should.be.rejectedWith('E_INVALID_POST');
         });
     });
 });
