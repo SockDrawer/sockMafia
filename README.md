@@ -8,6 +8,8 @@
 
 #SockBot Mafia
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/SockDrawer/sockMafia.svg)](https://greenkeeper.io/)
+
 Mafia plugin for [SockBot](https://sockbot.rtfd.org/en/latest/) version 3.1.1 or later.
 
 ## Command Reference
