@@ -6,7 +6,6 @@
  * @license MIT
  */
 
-const debug = require('debug')('sockbot:mafia:api:vote');
 const utils = require('./utils');
 
 exports.bindForum = (forum, dao) => {
@@ -34,6 +33,11 @@ exports.bindForum = (forum, dao) => {
             let game, actingUser, targetUser, postId, voteToken;
             return utils.getActiveGame(gameId, dao)
                 .then(mafiaGame => game = mafiaGame)
+                .then(() => {
+                    if (!game.isDay) {
+                        throw new Error('E_CANNOT_VOTE_AT_NIGHT');
+                    }
+                })
                 // Retieve and validate actor
                 .then(() => utils.getLivePlayer(actor, game, forum, 'actor'))
                 .then((mafiaUser) => {

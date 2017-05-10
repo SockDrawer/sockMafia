@@ -100,6 +100,10 @@ describe('api/vote', () => {
                     stubRegisterAction.calledWith(id, mockVoter, mockTarget, 'vote', 'vote[1]').should.be.true;
                 });
             });
+            it('should refuse to vote at night.', () => {
+                mockGame._data.phase = 'night';
+                return Vote.issueVote('id', 'actor', 'target', false, 42).should.be.rejectedWith('E_CANNOT_VOTE_AT_NIGHT');
+            });
             it('should resolve to undefined', () => Vote.issueVote('id', 'actor', 'target', false, 42).should.become(undefined));
             describe('error conditions', () => {
                 it('should fetch game by getActiveGame()', () => {
