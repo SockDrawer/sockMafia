@@ -305,7 +305,7 @@ describe('nouveau dao', () => {
                 username: name
             };
             return dao.addGame(gameData).then(() => {
-                dao._data[0].livePlayers.should.have.keys([slug]);
+                dao._data[0].players.should.have.keys([slug]);
             });
         });
         it('should add a player as string to the game', () => {
@@ -313,7 +313,7 @@ describe('nouveau dao', () => {
             const slug = string(name).slugify().s;
             gameData.players = name;
             return dao.addGame(gameData).then(() => {
-                dao._data[0].livePlayers.should.have.keys([slug]);
+                dao._data[0].players.should.have.keys([slug]);
             });
         });
         it('should add players to the game', () => {
@@ -327,7 +327,7 @@ describe('nouveau dao', () => {
                 username: name2
             }];
             return dao.addGame(gameData).then(() => {
-                dao._data[0].livePlayers.should.have.keys([slug1, slug2]);
+                dao._data[0].players.should.have.keys([slug1, slug2]);
             });
         });
         it('should add players as strings to the game', () => {
@@ -337,7 +337,7 @@ describe('nouveau dao', () => {
             const slug2 = string(name2).slugify().s;
             gameData.players = [name1, name2];
             return dao.addGame(gameData).then(() => {
-                dao._data[0].livePlayers.should.have.keys([slug1, slug2]);
+                dao._data[0].players.should.have.keys([slug1, slug2]);
             });
         });
         it('should reject when player exists', () => {

@@ -109,8 +109,7 @@ class MafiaGame {
             data.phase = data.phases[0];
         }
         data.isActive = data.isActive !== undefined ? data.isActive : true;
-        data.livePlayers = setDefault(data.livePlayers, {});
-        data.deadPlayers = setDefault(data.deadPlayers, {});
+        data.players = setDefault(data.players, {});
         data.moderators = setDefault(data.moderators, {});
         data.actions = setDefault(data.actions, []);
         data.values = setDefault(data.values, {});
@@ -222,9 +221,7 @@ class MafiaGame {
      * @returns {Array<MafiaUser>} A randomly ordered list of living players
      */
     get livePlayers() {
-        const players = Object.keys(this._data.livePlayers);
-        shuffle(players);
-        return players.map((player) => new MafiaUser(this._data.livePlayers[player], this));
+        return this.allPlayers.filter(player => player.isAlive);
     }
 
     /**
@@ -233,9 +230,7 @@ class MafiaGame {
      * @returns {Array<MafiaUser>} A randomly ordered list of dead players
      */
     get deadPlayers() {
-        const players = Object.keys(this._data.deadPlayers);
-        shuffle(players);
-        return players.map((player) => new MafiaUser(this._data.deadPlayers[player], this));
+        return this.allPlayers.filter(player => !player.isAlive);
     }
 
     /**
@@ -244,9 +239,9 @@ class MafiaGame {
      * @returns {Array<MafiaUser>} A randomly ordered list of all players
      */
     get allPlayers() {
-        const players = this.livePlayers.concat(this.deadPlayers);
+        const players = Object.keys(this._data.players);
         shuffle(players);
-        return players;
+        return players.map((player) => new MafiaUser(this._data.players[player], this));
     }
 
     /**
@@ -308,13 +303,12 @@ class MafiaGame {
         const user = new MafiaUser({
             username: username
         }, this);
-        const livingConflict = this._data.livePlayers[user.userslug];
-        const deadConflict = this._data.deadPlayers[user.userslug];
+        const playerConflict = this._data.players[user.userslug];
         const modConflict = this._data.moderators[user.userslug];
-        if (livingConflict || deadConflict || modConflict) {
+        if (playerConflict || modConflict) {
             return Promise.reject('E_USER_EXIST');
         }
-        this._data.livePlayers[user.userslug] = user.toJSON();
+        this._data.players[user.userslug] = user.toJSON();
         debug(`Added player ${username}`);
         return this.save().then(() => user);
     }
@@ -330,10 +324,9 @@ class MafiaGame {
             username: username,
             isModerator: true
         }, this);
-        const livingConflict = this._data.livePlayers[moderator.userslug];
-        const deadConflict = this._data.deadPlayers[moderator.userslug];
+        const playerConflict = this._data.players[moderator.userslug];
         const modConflict = this._data.moderators[moderator.userslug];
-        if (livingConflict || deadConflict || modConflict) {
+        if (playerConflict || modConflict) {
             return Promise.reject('E_USER_EXIST');
         }
         this._data.moderators[moderator.userslug] = moderator.toJSON();
@@ -350,11 +343,7 @@ class MafiaGame {
      * @returns {MafiaUser} Requested MafiaUser, null if no matching user found
      */
     _getPlayer(user) {
-        const liveUser = getUser(this, this._data.livePlayers, user);
-        if (liveUser) {
-            return liveUser;
-        }
-        return getUser(this, this._data.deadPlayers, user);
+        return getUser(this, this._data.players, user);
     }
 
     /**
@@ -394,11 +383,9 @@ class MafiaGame {
      * @returns {Promise<MafiaUser>} Resolves to terminated user, Rejects if target user was not alive to be killed.
      */
     killPlayer(user) {
-        const player = getUser(this, this._data.livePlayers, user);
-        if (player) {
+        const player = getUser(this, this._data.players, user);
+        if (player && player.isAlive) {
             player.isAlive = false;
-            delete this._data.livePlayers[player.userslug];
-            this._data.deadPlayers[player.userslug] = player.toJSON();
             debug(`Killed player ${user}`);
             return this.save().then(() => player);
         }
@@ -412,11 +399,9 @@ class MafiaGame {
      * @returns {Promise<MafiaUser>} resolves to the resurected user, rejects if user was not dead to resurect.
      */
     resurectPlayer(user) {
-        const player = getUser(this, this._data.deadPlayers, user);
-        if (player) {
+        const player = getUser(this, this._data.players, user);
+        if (player && !player.isAlive) {
             player.isAlive = true;
-            delete this._data.deadPlayers[player.userslug];
-            this._data.livePlayers[player.userslug] = player.toJSON();
             debug(`Resurrected ${user}`);
             return this.save().then(() => player);
         }
@@ -545,7 +530,7 @@ class MafiaGame {
                 action.action === type &&
                 (
                     includeDeadPlayers ||
-                    !!this._data.livePlayers[action.actor]
+                    !!(this._data.players[action.actor] && this._data.players[action.actor].isAlive)
                 );
         });
         return actions.map((action) => new MafiaAction(action, this));
@@ -564,9 +549,9 @@ class MafiaGame {
      * @returns {Promise<MafiaAction>} Resolves to created action
      */
     registerAction(postId, actor, target, type, actionToken) {
-        actor = getUser(this, this._data.livePlayers, actor);
+        actor = getUser(this, this._data.players, actor);
         target = getUserSlug(target);
-        if (!actor) {
+        if (!actor || !actor.isAlive) {
             return Promise.reject(new Error('E_ACTOR_NOT_ALIVE'));
         }
         const prior = this.getAction(actor, undefined, type, actionToken, this.day, false);
@@ -601,8 +586,8 @@ class MafiaGame {
      * @returns {Promise<MafiaAction>} Resolves to revoked action
      */
     revokeAction(postId, actor, target, type, actionToken) {
-        actor = getUser(this, this._data.livePlayers, actor);
-        if (!actor) {
+        actor = getUser(this, this._data.players, actor);
+        if (!actor || !actor.isAlive) {
             return Promise.reject('E_ACTOR_NOT_ALIVE');
         }
         const action = this.getAction(actor, target, type, actionToken, this.day, false);
