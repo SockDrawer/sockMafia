@@ -1260,6 +1260,7 @@ describe('mod controller', () => {
 			});
 		});
 	});
+
 	describe('set()', () => {
 
 		let mockGame, mockUser, mockTarget, mockdao, modController;
@@ -2255,6 +2256,221 @@ describe('mod controller', () => {
 			return controller.sendRoleCard(command).then(() => {
 				const args = controller.forum.Chat.create.firstCall.args;
 				args[1].should.equal(text);
+			});
+		});
+	});
+
+	
+	describe('endGame()', ()  => {
+			let mockGame, mockUser, mockdao, modController, mockRequest;
+
+		beforeEach(() => {
+
+			mockUser = {
+				username: 'God',
+				getPlayerProperty: () => [],
+				isModerator: true
+			};
+
+
+			mockGame = {
+				isActive: true,
+				name: 'testMafia',
+				getAllPlayers: () => ['Rachel', 'Ross', 'Joey', 'Chandler', 'Phoebe', 'Monica'],
+				livePlayers: [mockUser, mockUser, mockUser],
+				killPlayer: () => Promise.resolve(),
+				nextPhase: () => Promise.resolve(),
+				newDay: () => Promise.resolve(),
+				setActive: () => Promise.resolve(),
+				toJSON: () => 1,
+				getActions: () => 1,
+				getPlayer: () => mockUser,
+				getModerator: () => mockUser,
+				topicId: 12,
+				day: 1,
+				setValue: () => Promise.resolve(),
+				phase: 'night'
+			};
+
+			mockdao = {
+				getGameByTopicId: () => Promise.resolve(mockGame),
+				getGameByChatId: () => Promise.resolve(mockGame)
+			};
+
+			modController = new ModController(mockdao);
+			
+			mockRequest = sandbox.stub(require('axios'), 'post');
+		});
+		
+		it('Should reject non-mods', () => {
+			const command = {
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
+				args: ['scum'],
+				parent: {
+					ids: {
+						topic: 12345
+					}
+				},
+			};
+			mockUser.isModerator = false;
+
+			return modController.endHandler(command).then(() => {
+				//Output back to mod
+				view.reportError.calledWith(command).should.be.true;
+				const modOutput = view.reportError.getCall(0).args[2].toString();
+				modOutput.should.include('You are not a moderator');
+			});
+		});
+		
+		it('Should reject lack of winner', () => {
+			const command = {
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
+				args: [],
+				parent: {
+					ids: {
+						topic: 12345
+					}
+				},
+			};
+
+			return modController.endHandler(command).then(() => {
+				//Output back to mod
+				view.reportError.calledWith(command).should.be.true;
+			});
+		});
+		
+		it('Should reject bad winner', () => {
+			const command = {
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
+				args: ['banana'],
+				parent: {
+					ids: {
+						topic: 12345
+					}
+				},
+			};
+
+			return modController.endHandler(command).then(() => {
+				//Output back to mod
+				view.reportError.calledWith(command).should.be.true;
+			});
+		});
+
+		it('Should reject non-existant game', () => {
+			const command = {
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
+				args: ['scum'],
+				parent: {
+					ids: {
+						topic: 12345
+					}
+				},
+			};
+
+			sandbox.stub(mockdao, 'getGameByTopicId').rejects('No such game');
+			sandbox.spy(mockGame, 'nextPhase');
+
+			return modController.endHandler(command).then(() => {
+				//Output back to mod
+				view.reportError.calledWith(command).should.be.true;
+				const modOutput = view.reportError.getCall(0).args[2];
+				modOutput.should.be.an('Error');
+				modOutput.toString().should.include('Error: No such game');
+			});
+		});
+		
+		it('Should set the game inactive', () => {
+			const command = {
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
+				args: ['scum'],
+				parent: {
+					ids: {
+						topic: 12345
+					}
+				},
+			};
+
+			sandbox.spy(mockGame, 'setActive');
+
+			return modController.endHandler(command).then(() => {
+				mockGame.setActive.should.have.been.calledWith(false);
+			});
+		});
+
+		it('Should set the winner', () => {
+			const command = {
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
+				args: ['scum'],
+				parent: {
+					ids: {
+						topic: 12345
+					}
+				},
+			};
+
+			sandbox.spy(mockGame, 'setValue');
+
+			return modController.endHandler(command).then(() => {
+				mockGame.setValue.should.have.been.calledWith('winner', 'scum');
+			});
+		});
+
+		it('Should send stats', () => {
+			const command = {
+				getTopic: () => Promise.resolve({
+					id: 12345
+				}),
+				getUser: () => Promise.resolve({
+					username: 'tehNinja'
+				}),
+				args: ['scum'],
+				parent: {
+					ids: {
+						topic: 12345
+					}
+				},
+			};
+			
+			const fakeData = {
+				some: 'keys',
+				are: 'included'
+			};
+			
+			sandbox.stub(mockGame, 'toJSON').returns(fakeData);
+			
+			return modController.endHandler(command).then(() => {
+				mockGame.toJSON.called.should.be.true;
+				mockRequest.should.have.been.calledWith('http://mafia.sockdrawer.io:5984/games', fakeData);
 			});
 		});
 	});

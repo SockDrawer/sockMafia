@@ -11,6 +11,7 @@ const view = require('./view');
 const Promise = require('bluebird');
 const debug = require('debug')('sockbot:mafia:modController');
 const Utils = require('./utils');
+const axios = require('axios');
 
 
 exports.internals = {};
@@ -179,6 +180,10 @@ class MafiaModController {
 		'You are a **cop**! Each night you can investigate one person using `!target playerName in TargetGame`.\n' +
 		'!send-rolecard TargetUsername in TargetGame\n' +
 		'```\n');
+		
+		forum.Commands.add('endGame', 'End the game and declare the winner (mod only)', this.endHandler.bind(this));
+		forum.Commands.addExtendedHelp('endGame', 'End the game\n\n' +
+		'Usage: `!endGame [winner]`');
 	}
 
 
@@ -722,6 +727,47 @@ class MafiaModController {
 				view.reportError(command, 'Error listing night actions: ', err);
 			});
 	}
+	
+	endHandler(command) {
+		let game, mod;
+		let winner = command.args[0];
+
+		if (!winner) {
+			view.reportError(command, 'No winner set. Please use `!winner scum`, `!winner town`, or `!winner 3party` to declare a winner');
+			return Promise.resolve();
+		}
+
+		winner = winner.toLowerCase();
+
+		if (['town', 'scum', '3party'].indexOf(winner) === -1) {
+			view.reportError(command, 'No winner set. Please use `!winner scum`, `!winner town`, or `!winner 3party` to declare a winner');
+			return Promise.resolve();
+		}
+		
+
+		return Promise.all([this.getGame(command), command.getUser()])
+			.then((responses) => {
+				game = responses[0];
+				
+				debug('Ending game ' + game.id);
+				try {
+					mod = game.getModerator(responses[1].username);
+				} catch (_) {
+					return Promise.reject(new Error('You are not a moderator'));
+				}
+				return mod.isModerator ? Promise.resolve() : Promise.reject('You are not a moderator');
+			})
+			.then(() => game.setActive(false))
+			.then(() => game.setValue('winner', winner))
+			.then(() => view.respondInThread(game.topicId, `The game is over! ${winner} has won!`))
+			.then(() => debug('about to send data'))
+			.then(() => axios.post('http://mafia.sockdrawer.io:5984/games', game.toJSON()))
+			.then(() => debug('data sent!'))
+			.catch((err) => {
+				logRecoveredError('Error ending game: ' + err);
+				view.reportError(command, 'Error ending game: ', err);
+			});
+		}
 }
 
 module.exports = MafiaModController;

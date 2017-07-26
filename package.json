@@ -1,6 +1,6 @@
 {
   "name": "sockmafia",
-  "version": "4.0.3",
+  "version": "4.1.3",
   "description": "Mafia plugin for sockbot",
   "main": "src/mafiabot.js",
   "scripts": {
@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/yamikuronue/sockMafia#readme",
   "dependencies": {
+    "axios": "^0.16.2",
     "bluebird": "^3.1.1",
     "debug": "^2.2.0",
     "fs-readfile-promise": "^3.0.0",
@@ -46,6 +47,7 @@
     "istanbul": "^0.4.1",
     "jsdoc-to-markdown": "^2.0.1",
     "mocha": "^2.3.4",
+    "nock": "^9.0.14",
     "publish-please": "2.1.4",
     "sinon": "^1.15.1",
     "sinon-as-promised": "^4.0.0",
