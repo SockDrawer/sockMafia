@@ -180,6 +180,10 @@ class MafiaModController {
 		'You are a **cop**! Each night you can investigate one person using `!target playerName in TargetGame`.\n' +
 		'!send-rolecard TargetUsername in TargetGame\n' +
 		'```\n');
+		
+		forum.Commands.add('endGame', 'End the game and declare the winner (mod only)', this.endHandler.bind(this));
+		forum.Commands.addExtendedHelp('endGame', 'End the game\n\n' +
+		'Usage: `!endGame [winner]`');
 	}
 
 
@@ -755,8 +759,10 @@ class MafiaModController {
 			})
 			.then(() => game.setActive(false))
 			.then(() => game.setValue('winner', winner))
+			.then(() => view.respondInThread(game.topicId, `The game is over! ${winner} has won!`))
 			.then(() => debug('about to send data'))
 			.then(() => axios.post('http://mafia.sockdrawer.io:5984/games', game.toJSON()))
+			.then(() => debug('data sent!'))
 			.catch((err) => {
 				logRecoveredError('Error ending game: ' + err);
 				view.reportError(command, 'Error ending game: ', err);
